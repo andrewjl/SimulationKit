@@ -12,7 +12,6 @@ final class LedgerTests: XCTestCase {
             assets: [
                 Asset(
                     id: 0,
-                    rate: 4,
                     balance: 100.0
                 )
             ],
@@ -21,7 +20,7 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(ledger.currentBalance(), 100.0)
 
         ledger.liabilities.append(
-            Liability(id: 0, rate: 3, balance: 100.0)
+            Liability(id: 0, balance: 100.0)
         )
         XCTAssertEqual(ledger.currentBalance(), 0.0)
     }
@@ -31,7 +30,6 @@ final class LedgerTests: XCTestCase {
             assets: [
                 Asset(
                     id: 0,
-                    rate: 4,
                     balance: 100.0
                 )
             ],
@@ -58,7 +56,6 @@ final class LedgerTests: XCTestCase {
             liabilities: [
                 Liability(
                     id: 0,
-                    rate: 4,
                     balance: 100.0
                 )
             ]
@@ -83,19 +80,16 @@ final class LedgerTests: XCTestCase {
             assets: [
                 Asset(
                     id: 0,
-                    rate: 4,
                     balance: 100.0
                 ),
                 Asset(
                     id: 1,
-                    rate: 4,
                     balance: 150.0
                 ),
             ],
             liabilities: [
                 Liability(
                     id: 0,
-                    rate: 4,
                     balance: 50.0
                 )
             ]

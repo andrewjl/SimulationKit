@@ -8,7 +8,7 @@ import XCTest
 
 final class AssetTests: XCTestCase {
     func testCreation() throws {
-        let asset = Asset(id: 0, rate: 4, balance: 100.0)
+        let asset = Asset(id: 0, balance: 100.0)
 
         XCTAssertEqual(asset.transactions.count, 1)
         XCTAssertEqual(asset.transactions.first, Asset.Transaction.debit(amount: 100.0))
@@ -16,14 +16,14 @@ final class AssetTests: XCTestCase {
     }
 
     func testTick() throws {
-        let asset = Asset(id: 0, rate: 5, balance: 200.0)
-        let nextAsset = asset.tick()
+        let asset = Asset(id: 0, balance: 200.0)
+        let nextAsset = asset.tick(rate: 5)
 
         XCTAssertEqual(nextAsset.currentBalance(), 210.0)
     }
 
     func testCredit() throws {
-        let asset = Asset(id: 0, rate: 5, transactions: [.credit(amount: 100.0)])
+        let asset = Asset(id: 0, transactions: [.credit(amount: 100.0)])
         XCTAssertEqual(
             asset.currentBalance(),
             -100.0,
@@ -39,7 +39,7 @@ final class AssetTests: XCTestCase {
     }
 
     func testDebit() throws {
-        let asset = Asset(id: 0, rate: 5, transactions: [.debit(amount: 100.0)])
+        let asset = Asset(id: 0, transactions: [.debit(amount: 100.0)])
         XCTAssertEqual(
             asset.currentBalance(),
             100.0,
@@ -62,7 +62,7 @@ final class AssetTests: XCTestCase {
     }
 
     func testIncrease() throws {
-        let asset = Asset(id: 0, rate: 5, balance: 100.0)
+        let asset = Asset(id: 0, balance: 100.0)
         let increasedAsset = asset.increased(by: 20.0)
         XCTAssertEqual(
             increasedAsset.currentBalance(),
@@ -72,7 +72,7 @@ final class AssetTests: XCTestCase {
     }
 
     func testDecrease() throws {
-        let asset = Asset(id: 0, rate: 5, balance: 100.0)
+        let asset = Asset(id: 0, balance: 100.0)
         let decreasedAsset = asset.decreased(by: 20.0)
         XCTAssertEqual(
             decreasedAsset.currentBalance(),
@@ -107,8 +107,8 @@ final class AssetTests: XCTestCase {
 
     func testArray() throws {
         var assets = [
-            Asset(id: 0, rate: 5, balance: 100.0),
-            Asset(id: 1, rate: 5, balance: 50.0),
+            Asset(id: 0, balance: 100.0),
+            Asset(id: 1, balance: 50.0),
         ]
         XCTAssertEqual(assets.currentBalance(), 150.0)
 

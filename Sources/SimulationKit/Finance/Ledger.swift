@@ -110,15 +110,6 @@ struct Ledger {
         return assetSum - liabilitySum
     }
 
-    func tick(tick: Tick) -> Self {
-        let ledger = Ledger(
-            assets: assets.map { $0.tick() },
-            liabilities: liabilities.map { $0.tick() }
-        )
-
-        return ledger
-    }
-
     func tick(event: Event) -> Self {
         switch event {
         case .asset(let transaction, let id):
@@ -156,15 +147,11 @@ struct Ledger {
     func asPoints(tick: Tick) -> Points {
         let assetBalances: [UInt: Decimal] = Dictionary(uniqueKeysWithValues: assets.map { ($0.id, $0.currentBalance()) })
         let liabilityBalances = Dictionary(uniqueKeysWithValues: liabilities.map { ($0.id, $0.currentBalance()) })
-        let assetRates = Dictionary(uniqueKeysWithValues: assets.map { ($0.id, $0.rate) })
-        let liabilityRates = Dictionary(uniqueKeysWithValues: liabilities.map { ($0.id, $0.rate) })
         let timestamp = tick.time
 
         return Points(
             assetBalances: assetBalances,
             liabilityBalances: liabilityBalances,
-            assetRates: assetRates,
-            liabilityRates: liabilityRates,
             timestamp: timestamp
         )
     }
@@ -179,9 +166,6 @@ extension Ledger {
     struct Points: CustomStringConvertible {
         let assetBalances: [UInt: Decimal]
         let liabilityBalances: [UInt: Decimal]
-
-        let assetRates: [UInt: UInt]
-        let liabilityRates: [UInt: UInt]
 
         let timestamp: UInt32
 

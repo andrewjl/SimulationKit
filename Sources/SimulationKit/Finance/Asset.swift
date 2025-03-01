@@ -9,16 +9,13 @@ import Foundation
 // Debit: Increase
 struct Asset {
     let id: UInt
-    let rate: UInt
     var transactions: [Self.Transaction] = []
 
     init(
         id: UInt,
-        rate: UInt,
         balance: Decimal
     ) {
         self.id = id
-        self.rate = rate
         if balance.isSignMinus {
             self.transactions = [.credit(amount: balance)]
         } else {
@@ -28,17 +25,15 @@ struct Asset {
 
     init(
         id: UInt,
-        rate: UInt,
         transactions: [Self.Transaction]
     ) {
         self.id = id
-        self.rate = rate
         self.transactions = transactions
     }
 
-    func tick() -> Self {
+    func tick(rate: Int) -> Self {
         let gain = currentBalance().decimalizedAdjustment(
-            percentage: rate
+            percentage: UInt(rate)
         )
         return self.increased(by: gain)
     }
@@ -93,7 +88,6 @@ extension Asset {
     func transacted(_ transaction: Transaction) -> Self {
         return Self(
             id: id,
-            rate: rate,
             transactions: transactions + [transaction]
         )
     }
@@ -103,7 +97,6 @@ extension Asset: CustomStringConvertible {
     var description: String {
         return """
             Balance: \(currentBalance())
-            Rate: \(rate)
         """
     }
 }

@@ -9,16 +9,13 @@ import Foundation
 // Debit: Decrease
 struct Liability {
     let id: UInt
-    let rate: UInt
     var transactions: [Self.Transaction] = []
 
     init(
         id: UInt,
-        rate: UInt,
         balance: Decimal
     ) {
         self.id = id
-        self.rate = rate
         if balance.isSignMinus {
             self.transactions = [.debit(amount: balance)]
         } else {
@@ -28,17 +25,15 @@ struct Liability {
 
     init(
         id: UInt,
-        rate: UInt,
         transactions: [Self.Transaction]
     ) {
         self.id = id
-        self.rate = rate
         self.transactions = transactions
     }
 
-    func tick() -> Self {
+    func tick(rate: Int) -> Self {
         let gain = currentBalance().decimalizedAdjustment(
-            percentage: rate
+            percentage: UInt(rate)
         )
         return self.increased(by: gain)
     }
@@ -98,7 +93,6 @@ extension Liability {
     func transacted(_ transaction: Transaction) -> Self {
         return Self(
             id: id,
-            rate: rate,
             transactions: transactions + [transaction]
         )
     }

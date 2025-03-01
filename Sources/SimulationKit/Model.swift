@@ -28,15 +28,22 @@ class ConceptualModel {
 
 typealias Model = ConceptualModel
 
+struct RiskFreeRate {
+    var rate: Int
+}
+
 class ExecutionalModel {
     var ledger: Ledger
+    var riskFreeRate: RiskFreeRate
     var totalPeriods: UInt32
 
     init(
         ledger: Ledger,
+        rate: RiskFreeRate,
         totalPeriods: UInt32
     ) {
         self.ledger = ledger
+        self.riskFreeRate = rate
         self.totalPeriods = totalPeriods
     }
 
@@ -52,36 +59,38 @@ class ExecutionalModel {
     }
 
     func events(ledger: Ledger) -> [Ledger.Event] {
-        ledger.assets.map {
-            Ledger.Event.asset(
-                transaction: Asset.Transaction.increasing(by: $0.currentBalance().decimalizedAdjustment(percentage: $0.rate)),
-                id: $0.id
-            )
-        } + ledger.liabilities.map {
-            Ledger.Event.liability(
-                transaction: Liability.Transaction.increasing(by: $0.currentBalance().decimalizedAdjustment(percentage: $0.rate)),
-                id: $0.id
-            )
+        let increaseAssetLedgerEvents = ledger.assets.map {
+            Ledger.Event.asset(transaction: $0.increaseTransaction(by: UInt(self.riskFreeRate.rate)), id: $0.id)
         }
+        let increaseLiabilityLedgerEvents = ledger.liabilities.map {
+            Ledger.Event.liability(transaction: $0.increaseTransaction(by: UInt(self.riskFreeRate.rate)), id: $0.id)
+        }
+
+        return increaseAssetLedgerEvents + increaseLiabilityLedgerEvents
     }
 }
 
 extension ExecutionalModel {
     static func makeExecutionalModel(model: Model) -> ExecutionalModel {
         let assets = (1...model.assetsCount).map {
-            Asset(id: UInt($0), rate: model.rate, balance: model.initialAssetBalance)
+            Asset(id: UInt($0), balance: model.initialAssetBalance)
         }
 
         let liabilities = (1...model.liabilitiesCount).map {
-            Liability(id: UInt($0), rate: model.rate, balance: model.initialLiabilityBalance)
+            Liability(id: UInt($0), balance: model.initialLiabilityBalance)
         }
 
         let ledger = Ledger(
             assets: assets,
             liabilities: liabilities
         )
+        let riskFreeRate = RiskFreeRate(rate: Int(model.rate))
 
-        let execModel = ExecutionalModel(ledger: ledger, totalPeriods: model.duration)
+        let execModel = ExecutionalModel(
+            ledger: ledger,
+            rate: riskFreeRate,
+            totalPeriods: model.duration
+        )
 
         return execModel
     }
