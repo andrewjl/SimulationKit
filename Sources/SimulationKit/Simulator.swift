@@ -33,7 +33,7 @@ class Simulator {
     private func run(
         model: Model
     ) -> Run {
-        let execModel = ExecutionalModel.makeExecutionalModel(model: model)
+        let execModel = Simulation.make(from: model)
         let clock = Clock()
 
         var steps: [Step] = []

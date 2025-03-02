@@ -35,9 +35,7 @@ final class SimulatorTests: XCTestCase {
 
     func testSimulationSingleRunExecution() throws {
         let model = Model.makeModel()
-        let simulation = ExecutionalModel.makeExecutionalModel(
-            model: model
-        )
+        let simulation = Simulation.make(from: model)
         let clock = Clock()
 
         let step1 = simulation.tick(clock: clock)

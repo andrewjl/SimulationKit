@@ -32,7 +32,7 @@ struct RiskFreeRate {
     var rate: Int
 }
 
-class ExecutionalModel {
+class Simulation {
     var ledger: Ledger
     var riskFreeRate: RiskFreeRate
     var totalPeriods: UInt32
@@ -70,8 +70,8 @@ class ExecutionalModel {
     }
 }
 
-extension ExecutionalModel {
-    static func makeExecutionalModel(model: Model) -> ExecutionalModel {
+extension Simulation {
+    static func make(from model: Model) -> Simulation {
         let assets = (1...model.assetsCount).map {
             Asset(id: UInt($0), balance: model.initialAssetBalance)
         }
@@ -86,7 +86,7 @@ extension ExecutionalModel {
         )
         let riskFreeRate = RiskFreeRate(rate: Int(model.rate))
 
-        let execModel = ExecutionalModel(
+        let execModel = Simulation(
             ledger: ledger,
             rate: riskFreeRate,
             totalPeriods: model.duration

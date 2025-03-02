@@ -25,7 +25,7 @@ final class HistorianTests: XCTestCase {
             at: Clock.startingTime,
             for: run.handle
         )
-        let initialModelLedger = ExecutionalModel.makeExecutionalModel(model: model).ledger
+        let initialModelLedger = Simulation.make(from: model).ledger
         XCTAssertEqual(startingLedger?.currentBalance(), initialModelLedger.currentBalance())
     }
 
@@ -43,7 +43,7 @@ final class HistorianTests: XCTestCase {
             "Simulation run duration should be the same as specified in the model"
         )
 
-        let initialModelLedger = ExecutionalModel.makeExecutionalModel(model: model).ledger
+        let initialModelLedger = Simulation.make(from: model).ledger
 
         let assetEvents: [Ledger.Event] = initialModelLedger.assets.map { Ledger.Event.asset(transaction: $0.increaseTransaction(by: model.rate), id: $0.id) }
         let liabilityEvents: [Ledger.Event] = initialModelLedger.liabilities.map { Ledger.Event.liability(transaction: $0.increaseTransaction(by: model.rate), id: $0.id) }
