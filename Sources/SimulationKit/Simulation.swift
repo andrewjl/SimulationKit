@@ -5,23 +5,48 @@
 
 import Foundation
 
-struct RiskFreeRate {
+struct RiskFreeRate: Equatable {
     var rate: Int
 }
 
 class Simulation {
-    var ledgers: [Ledger]
-    var riskFreeRate: RiskFreeRate
+    struct State: Equatable {
+        var ledgers: [Ledger]
+        var riskFreeRate: RiskFreeRate
+
+        func apply(event: Event) -> Self {
+            switch event {
+            case .changeRiskFreeRate(newRate: let rate):
+                return State(ledgers: ledgers, riskFreeRate: RiskFreeRate(rate: rate))
+            case .ledgerTransactions(transactions: let transactions):
+                let nextLedgers: [Ledger] = ledgers.enumerated().map {
+                    let ledgerID = $0.element.id
+                    return $0.element.tick(events: transactions.filter({ $0.ledgerID == ledgerID }))
+                }
+                return State(ledgers: nextLedgers, riskFreeRate: self.riskFreeRate)
+            }
+        }
+    }
+
+    var state: State
+    var ledgers: [Ledger] {
+        state.ledgers
+    }
+    var riskFreeRate: RiskFreeRate {
+        state.riskFreeRate
+    }
     var totalPeriods: UInt32
+    var plannedEvents: [Capture<Event>]
 
     init(
         ledgers: [Ledger],
         rate: RiskFreeRate,
-        totalPeriods: UInt32
+        totalPeriods: UInt32,
+        plannedEvents: [Capture<Event>] = []
     ) {
-        self.ledgers = ledgers
-        self.riskFreeRate = rate
+        self.state = State(ledgers: ledgers, riskFreeRate: rate)
         self.totalPeriods = totalPeriods
+        self.plannedEvents = plannedEvents
     }
 
     func start(clock: Clock) -> Step {
@@ -29,14 +54,13 @@ class Simulation {
             fatalError("Can only start simulation once.")
         }
 
-        let events: [[Ledger.Event]] = (0..<ledgers.count).map { (i: Int) in return [] as [Ledger.Event] }
+        let events: [Simulation.Event] = []
+        let capture = SimulationCapture(entity: (state: state, events: events), timestamp: clock.time)
 
         let _ = clock.next()
 
         return Step(
-            ledgers: ledgers,
-            events: events,
-            currentPeriod: Clock.startingTime,
+            capture: capture,
             totalPeriods: totalPeriods
         )
     }
@@ -53,12 +77,50 @@ class Simulation {
     }
 
     func successiveStep(tick: Tick) -> Step {
-        let events = ledgers.map { self.events(ledger: $0) }
-        let nextLedgers: [Ledger] = ledgers.enumerated().map {
-            return $0.element.tick(events: events[$0.offset])
+        let relevantPlannedEvents = plannedEvents.filter({ $0.timestamp == tick.time }).map { $0.entity }
+
+        for event in relevantPlannedEvents {
+            state = state.apply(event: event)
         }
-        ledgers = nextLedgers
-        return Step(ledgers: ledgers, events: events, currentPeriod: tick.time, totalPeriods: totalPeriods)
+        let computedEvents = state.ledgers
+            .map { self.events(ledger: $0) }
+            .map { Event.ledgerTransactions(transactions: $0) }
+
+        for computedEvent in computedEvents {
+            state = state.apply(event: computedEvent)
+        }
+
+        let capture = SimulationCapture(
+            entity: (
+                state: state,
+                events: relevantPlannedEvents + computedEvents
+            ),
+            timestamp: tick.time
+        )
+
+        return Step(
+            capture: capture,
+            totalPeriods: totalPeriods
+        )
+    }
+
+    func computedEvents(state: State) -> [Simulation.Event] {
+        return self.ledgers
+            .map { self.events(ledger: $0) }
+            .map { Simulation.Event.ledgerTransactions(transactions: $0) }
+    }
+
+    func preplannedEvents(tick: Tick) -> [Simulation.Event] {
+        return plannedEvents
+            .filter({ $0.timestamp == tick.time })
+            .map { $0.entity }
+    }
+
+    func upcomingEvents(
+        state: State,
+        tick: Tick
+    ) -> [Simulation.Event] {
+        return computedEvents(state: state) + preplannedEvents(tick: tick)
     }
 
     func events(ledger: Ledger) -> [Ledger.Event] {
@@ -78,6 +140,13 @@ class Simulation {
         }
 
         return increaseAssetLedgerEvents + increaseLiabilityLedgerEvents
+    }
+}
+
+extension Simulation {
+    enum Event {
+        case changeRiskFreeRate(newRate: Int)
+        case ledgerTransactions(transactions: [Ledger.Event])
     }
 }
 
@@ -111,3 +180,16 @@ extension Simulation {
     }
 }
 
+typealias SimulationCapture = Capture<(state: Simulation.State, events: [Simulation.Event])>
+
+struct Step {
+    var capture: SimulationCapture
+    var totalPeriods: UInt32
+
+    var currentPeriod: UInt32 {
+        capture.timestamp
+    }
+    var isFinal: Bool {
+        return currentPeriod == totalPeriods
+    }
+}

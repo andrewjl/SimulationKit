@@ -46,7 +46,7 @@ final class SimulatorTests: XCTestCase {
         let run = try XCTUnwrap(runs.first)
 
         XCTAssertEqual(
-            run.finalLedgers.entity.count,
+            run.finalState.ledgers.count,
             model.ledgersCount
         )
     }
@@ -60,10 +60,12 @@ final class SimulatorTests: XCTestCase {
 
         XCTAssertEqual(initial.currentPeriod, 0)
         XCTAssertEqual(initial.totalPeriods, model.duration)
-        XCTAssertEqual(initial.ledgers.count, model.ledgersCount)
-        XCTAssertEqual(initial.events.count, model.ledgersCount)
+        XCTAssertEqual(initial.capture.entity.state.ledgers.count, model.ledgersCount)
 
-        XCTAssertEqual(initial.ledgers.first?.currentBalance(), 400.0)
+        XCTAssertEqual(
+            initial.capture.entity.state.ledgers.first?.currentBalance(),
+            400.0
+        )
 
         XCTAssertEqual(clock.time, 1)
 
@@ -71,10 +73,12 @@ final class SimulatorTests: XCTestCase {
 
         XCTAssertEqual(step1.currentPeriod, 1)
         XCTAssertEqual(step1.totalPeriods, model.duration)
-        XCTAssertEqual(step1.ledgers.count, model.ledgersCount)
-        XCTAssertEqual(step1.events.count, model.ledgersCount)
+        XCTAssertEqual(step1.capture.entity.state.ledgers.count, model.ledgersCount)
 
-        XCTAssertEqual(step1.ledgers.first?.currentBalance(), 420.0)
+        XCTAssertEqual(
+            step1.capture.entity.state.ledgers.first?.currentBalance(),
+            420.0
+        )
 
         XCTAssertEqual(clock.time, 2)
 
@@ -82,9 +86,12 @@ final class SimulatorTests: XCTestCase {
 
         XCTAssertEqual(step2.currentPeriod, 2)
         XCTAssertEqual(step2.totalPeriods, model.duration)
-        XCTAssertEqual(step2.ledgers.count, model.ledgersCount)
-        XCTAssertEqual(step2.events.count, model.ledgersCount)
-        XCTAssertEqual(step2.ledgers.first?.currentBalance(), 441.0)
+        XCTAssertEqual(step2.capture.entity.state.ledgers.count, model.ledgersCount)
+
+        XCTAssertEqual(
+            step2.capture.entity.state.ledgers.first?.currentBalance(),
+            441.0
+        )
 
         XCTAssertEqual(clock.time, 3)
     }

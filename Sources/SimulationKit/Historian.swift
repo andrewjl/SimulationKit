@@ -112,8 +112,8 @@ enum TimeSeriesContainer {
 struct Record {
     var id: UInt
     var period: UInt32
-    var startingLedgers: [Ledger]
-    var events: [Capture<[[Ledger.Event]]>]
+    var startingLedgers: Simulation.State
+    var events: [Capture<[Simulation.Event]>]
 }
 
 struct Measurement {
@@ -131,25 +131,24 @@ struct Measurement {
 }
 
 class Historian {
-    var captures: [Capture<(ledgers: [Ledger], events: [[Ledger.Event]])>] = []
+    var captures: [SimulationCapture] = []
     var records: [Record] = []
 
     func process(
         step: Step
     ) {
         captures.append(
-            Capture(entity: (ledgers: step.ledgers, events: step.events), timestamp: step.currentPeriod)
+            step.capture
         )
 
-        if step.currentPeriod == step.totalPeriods {
-            let startingCapture = captures.first ?? Capture(entity: (ledgers: step.ledgers, events: step.events), timestamp: step.currentPeriod)
-            let allEvents = captures.map { Capture(entity: $0.entity.events, timestamp: $0.timestamp) }
+        if step.isFinal {
+            let startingCapture = captures.first ?? step.capture
 
             let record = Record(
                 id: UInt(records.count),
                 period: step.currentPeriod,
-                startingLedgers: startingCapture.entity.ledgers,
-                events: allEvents
+                startingLedgers: startingCapture.entity.state,
+                events: captures.map { Capture(entity: $0.entity.events, timestamp: $0.timestamp) }
             )
             records.append(record)
             reset()
@@ -183,15 +182,15 @@ class Historian {
     func reconstructedLedgers(
         at period: UInt32,
         for handle: UInt
-    ) -> [Ledger]? {
+    ) -> Simulation.State? {
         guard let record = record(for: handle) else {
             return nil
         }
 
-        var ledgers = record.startingLedgers
+        var state = record.startingLedgers
 
         if period == Clock.startingTime {
-            return ledgers
+            return state
         }
 
         let relevantEvents = record.events.filter {
@@ -199,10 +198,11 @@ class Historian {
         }
 
         for eventsCapture in relevantEvents {
-            let enumerated = ledgers.enumerated()
-            ledgers = enumerated.map { $0.element.tick(events: eventsCapture.entity[$0.offset]) }
+            for event in eventsCapture.entity {
+                state = state.apply(event: event)
+            }
         }
 
-        return ledgers
+        return state
     }
 }

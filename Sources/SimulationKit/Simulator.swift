@@ -50,10 +50,8 @@ class Simulator {
 
         let handle = historian.records.last?.id ?? 0
 
-        let finalCapture = Capture(entity: execModel.ledgers, timestamp: steps.last?.currentPeriod ?? 0)
-
         let run = Run(
-            finalLedgers: finalCapture,
+            finalState: execModel.state,
             totalPeriods: model.duration,
             handle: handle
         )
@@ -62,15 +60,8 @@ class Simulator {
     }
 }
 
-struct Step {
-    var ledgers: [Ledger]
-    var events: [[Ledger.Event]]
-    var currentPeriod: UInt32
-    var totalPeriods: UInt32
-}
-
 struct Run {
-    var finalLedgers: Capture<[Ledger]>
+    var finalState: Simulation.State
     var totalPeriods: UInt32
     var handle: UInt
 }

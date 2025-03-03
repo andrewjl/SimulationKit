@@ -7,7 +7,7 @@ import Foundation
 
 // Credit: Increase
 // Debit: Decrease
-struct Liability {
+struct Liability: Equatable {
     let id: UInt
     var transactions: [Self.Transaction] = []
 

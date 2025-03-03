@@ -105,7 +105,7 @@ extension Array where Array.Element == Ledger {
     }
 }
 
-struct Ledger {
+struct Ledger: Equatable {
     static var autoincrementedID: UInt = 0
 
     var id: UInt
