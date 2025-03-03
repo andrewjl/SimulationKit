@@ -35,7 +35,7 @@ extension Liability {
 
 extension Array where Array.Element == Asset {
     func event(_ event: Ledger.Event) -> Self {
-        guard case Ledger.Event.asset(transaction: let transaction, id: let id) = event else {
+        guard case Ledger.Event.asset(transaction: let transaction, id: let id, ledgerID: _) = event else {
             return self
         }
 
@@ -57,7 +57,7 @@ extension Array where Array.Element == Asset {
 
 extension Array where Array.Element == Liability {
     func event(_ event: Ledger.Event) -> Self {
-        guard case Ledger.Event.liability(transaction: let transaction, id: let id) = event else {
+        guard case Ledger.Event.liability(transaction: let transaction, id: let id, ledgerID: _) = event else {
             return self
         }
 
@@ -80,7 +80,7 @@ extension Array where Array.Element == Liability {
 extension Array where Array.Element == Ledger.Event {
     func event(assetID: UInt) -> Ledger.Event? {
         self.first(where: {
-            guard case let Ledger.Event.asset(transaction: _, id: id) = $0 else {
+            guard case let Ledger.Event.asset(transaction: _, id: id, ledgerID: _) = $0 else {
                 return false
             }
 
@@ -90,7 +90,7 @@ extension Array where Array.Element == Ledger.Event {
 
     func event(liabilityID: UInt) -> Ledger.Event? {
         self.first(where: {
-            guard case let Ledger.Event.liability(transaction: _, id: id) = $0 else {
+            guard case let Ledger.Event.liability(transaction: _, id: id, ledgerID: _) = $0 else {
                 return false
             }
 
@@ -99,7 +99,16 @@ extension Array where Array.Element == Ledger.Event {
     }
 }
 
+extension Array where Array.Element == Ledger {
+    func currentBalances() -> [Decimal] {
+        return self.map { $0.currentBalance() }
+    }
+}
+
 struct Ledger {
+    static var autoincrementedID: UInt = 0
+
+    var id: UInt
     var assets: [Asset]
     var liabilities: [Liability]
 
@@ -112,13 +121,15 @@ struct Ledger {
 
     func tick(event: Event) -> Self {
         switch event {
-        case .asset(let transaction, let id):
+        case .asset(let transaction, let id, _):
             return Ledger(
+                id: id,
                 assets: assets.map { $0.id == id ? $0.transacted(transaction) : $0 },
                 liabilities: liabilities
             )
-        case .liability(let transaction, let id):
+        case .liability(let transaction, let id, _):
             return Ledger(
+                id: id,
                 assets: assets,
                 liabilities: liabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             )
@@ -131,14 +142,15 @@ struct Ledger {
 
         for event in events {
             switch event {
-            case .asset(let transaction, let id):
+            case .asset(let transaction, let id, _):
                 eventedAssets = eventedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .liability(let transaction, let id):
+            case .liability(let transaction, let id, _):
                 eventedLiabilities = eventedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             }
         }
         
         return Self(
+            id: id,
             assets: eventedAssets,
             liabilities: eventedLiabilities
         )
@@ -157,8 +169,33 @@ struct Ledger {
     }
 
     enum Event {
-        case asset(transaction: Asset.Transaction, id: UInt)
-        case liability(transaction: Liability.Transaction, id: UInt)
+        case asset(transaction: Asset.Transaction, id: UInt, ledgerID: UInt)
+        case liability(transaction: Liability.Transaction, id: UInt, ledgerID: UInt)
+
+        var ledgerID: UInt {
+            switch self {
+                case .asset(_, _, let ledgerID):
+                    return ledgerID
+                case .liability(_, _, let ledgerID):
+                    return ledgerID
+            }
+        }
+    }
+}
+
+extension Ledger {
+    static func make(
+        assets: [Asset],
+        liabilities: [Liability]
+    ) -> Self {
+        defer {
+            Self.autoincrementedID += 1
+        }
+        return Self(
+            id: Self.autoincrementedID,
+            assets: assets,
+            liabilities: liabilities
+        )
     }
 }
 

@@ -113,10 +113,10 @@ final class LiabilityTests: XCTestCase {
 
         XCTAssertEqual(liabilities.currentBalance(), 150.0)
 
-        liabilities = liabilities.event(.liability(transaction: .credit(amount: 50.0), id: 1))
+        liabilities = liabilities.event(.liability(transaction: .credit(amount: 50.0), id: 1, ledgerID: 0))
         XCTAssertEqual(liabilities.currentBalance(), 200.0)
 
-        liabilities = liabilities.event(.liability(transaction: .credit(amount: 50.0), id: 2))
+        liabilities = liabilities.event(.liability(transaction: .credit(amount: 50.0), id: 2, ledgerID: 0))
         XCTAssertEqual(liabilities.currentBalance(), 200.0)
     }
 }

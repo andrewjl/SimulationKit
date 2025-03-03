@@ -8,7 +8,7 @@ import XCTest
 
 final class LedgerTests: XCTestCase {
     func testBalance() throws {
-        var ledger = Ledger(
+        var ledger = Ledger.make(
             assets: [
                 Asset(
                     id: 0,
@@ -26,7 +26,7 @@ final class LedgerTests: XCTestCase {
     }
 
     func testSingleEventAsset() throws {
-        var assetLedger = Ledger(
+        var assetLedger = Ledger.make(
             assets: [
                 Asset(
                     id: 0,
@@ -37,21 +37,29 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(assetLedger.currentBalance(), 100.0)
 
-        assetLedger = assetLedger.tick(event: .asset(transaction: .debit(amount: 50.0), id: 0))
+        assetLedger = assetLedger.tick(
+            event: .asset(transaction: .debit(amount: 50.0), id: 0, ledgerID: assetLedger.id)
+        )
         XCTAssertEqual(assetLedger.currentBalance(), 150.0)
 
-        assetLedger = assetLedger.tick(event: .asset(transaction: .credit(amount: 25.0), id: 0))
+        assetLedger = assetLedger.tick(
+            event: .asset(transaction: .credit(amount: 25.0), id: 0, ledgerID: assetLedger.id)
+        )
         XCTAssertEqual(assetLedger.currentBalance(), 125.0)
 
-        assetLedger = assetLedger.tick(event: .asset(transaction: .increasing(by: 30.0), id: 0))
+        assetLedger = assetLedger.tick(
+            event: .asset(transaction: .increasing(by: 30.0), id: 0, ledgerID: assetLedger.id)
+        )
         XCTAssertEqual(assetLedger.currentBalance(), 155.0)
 
-        assetLedger = assetLedger.tick(event: .asset(transaction: .decreasing(by: 30.0), id: 0))
+        assetLedger = assetLedger.tick(
+            event: .asset(transaction: .decreasing(by: 30.0), id: 0, ledgerID: assetLedger.id)
+        )
         XCTAssertEqual(assetLedger.currentBalance(), 125.0)
     }
 
     func testSingleEventLiability() throws {
-        var liabilityLedger = Ledger(
+        var liabilityLedger = Ledger.make(
             assets: [],
             liabilities: [
                 Liability(
@@ -62,21 +70,29 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(liabilityLedger.currentBalance(), -100.0)
 
-        liabilityLedger = liabilityLedger.tick(event: .liability(transaction: .credit(amount: 50.0), id: 0))
+        liabilityLedger = liabilityLedger.tick(
+            event: .liability(transaction: .credit(amount: 50.0), id: 0, ledgerID: liabilityLedger.id)
+        )
         XCTAssertEqual(liabilityLedger.currentBalance(), -150.0)
 
-        liabilityLedger = liabilityLedger.tick(event: .liability(transaction: .debit(amount: 50.0), id: 0))
+        liabilityLedger = liabilityLedger.tick(
+            event: .liability(transaction: .debit(amount: 50.0), id: 0, ledgerID: liabilityLedger.id)
+        )
         XCTAssertEqual(liabilityLedger.currentBalance(), -100.0)
 
-        liabilityLedger = liabilityLedger.tick(event: .liability(transaction: .increasing(by: 20.0), id: 0))
+        liabilityLedger = liabilityLedger.tick(
+            event: .liability(transaction: .increasing(by: 20.0), id: 0, ledgerID: liabilityLedger.id)
+        )
         XCTAssertEqual(liabilityLedger.currentBalance(), -120.0)
 
-        liabilityLedger = liabilityLedger.tick(event: .liability(transaction: .decreasing(by: 20.0), id: 0))
+        liabilityLedger = liabilityLedger.tick(
+            event: .liability(transaction: .decreasing(by: 20.0), id: 0, ledgerID: liabilityLedger.id)
+        )
         XCTAssertEqual(liabilityLedger.currentBalance(), -100.0)
     }
 
     func testMultipleEvents() throws {
-        var ledger = Ledger(
+        var ledger = Ledger.make(
             assets: [
                 Asset(
                     id: 0,
@@ -96,9 +112,9 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(ledger.currentBalance(), 200.0)
         ledger = ledger.tick(events: [
-            .asset(transaction: .debit(amount: 5.0), id: 0),
-            .asset(transaction: .debit(amount: 5.0), id: 1),
-            .liability(transaction: .decreasing(by: 35.0), id: 0)
+            .asset(transaction: .debit(amount: 5.0), id: 0, ledgerID: ledger.id),
+            .asset(transaction: .debit(amount: 5.0), id: 1, ledgerID: ledger.id),
+            .liability(transaction: .decreasing(by: 35.0), id: 0, ledgerID: ledger.id)
         ])
         XCTAssertEqual(ledger.currentBalance(), 245.0)
     }

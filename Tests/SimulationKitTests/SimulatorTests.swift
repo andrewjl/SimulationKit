@@ -22,15 +22,33 @@ final class SimulatorTests: XCTestCase {
         let clock = Clock()
 
         let tick = clock.next()
-        XCTAssertEqual(tick.time, 1)
+        XCTAssertEqual(tick.time, Clock.startingTime)
 
         let nextTick = clock.next()
-        XCTAssertEqual(nextTick.time, 2)
+        XCTAssertEqual(nextTick.time, 1)
 
         clock.reset()
 
         let resetTick = clock.next()
-        XCTAssertEqual(resetTick.time, 1)
+        XCTAssertEqual(resetTick.time, Clock.startingTime)
+    }
+
+    func testRun() throws {
+        let model = Model(
+            rate: 5,
+            initialAssetBalance: 300,
+            initialLiabilityBalance: 100,
+            ledgersCount: 2
+        )
+        let simulator = Simulator()
+        let runs = simulator.execute(model: model)
+
+        let run = try XCTUnwrap(runs.first)
+
+        XCTAssertEqual(
+            run.finalLedgers.entity.count,
+            model.ledgersCount
+        )
     }
 
     func testSimulationSingleRunExecution() throws {
@@ -38,11 +56,25 @@ final class SimulatorTests: XCTestCase {
         let simulation = Simulation.make(from: model)
         let clock = Clock()
 
+        let initial = simulation.start(clock: clock)
+
+        XCTAssertEqual(initial.currentPeriod, 0)
+        XCTAssertEqual(initial.totalPeriods, model.duration)
+        XCTAssertEqual(initial.ledgers.count, model.ledgersCount)
+        XCTAssertEqual(initial.events.count, model.ledgersCount)
+
+        XCTAssertEqual(initial.ledgers.first?.currentBalance(), 400.0)
+
+        XCTAssertEqual(clock.time, 1)
+
         let step1 = simulation.tick(clock: clock)
 
         XCTAssertEqual(step1.currentPeriod, 1)
         XCTAssertEqual(step1.totalPeriods, model.duration)
-        XCTAssertEqual(step1.ledger.currentBalance(), 400.0)
+        XCTAssertEqual(step1.ledgers.count, model.ledgersCount)
+        XCTAssertEqual(step1.events.count, model.ledgersCount)
+
+        XCTAssertEqual(step1.ledgers.first?.currentBalance(), 420.0)
 
         XCTAssertEqual(clock.time, 2)
 
@@ -50,17 +82,11 @@ final class SimulatorTests: XCTestCase {
 
         XCTAssertEqual(step2.currentPeriod, 2)
         XCTAssertEqual(step2.totalPeriods, model.duration)
-        XCTAssertEqual(step2.ledger.currentBalance(), 420.0)
+        XCTAssertEqual(step2.ledgers.count, model.ledgersCount)
+        XCTAssertEqual(step2.events.count, model.ledgersCount)
+        XCTAssertEqual(step2.ledgers.first?.currentBalance(), 441.0)
 
         XCTAssertEqual(clock.time, 3)
-
-        let step3 = simulation.tick(clock: clock)
-
-        XCTAssertEqual(step3.currentPeriod, 3)
-        XCTAssertEqual(step3.totalPeriods, model.duration)
-        XCTAssertEqual(step3.ledger.currentBalance(), 441.0)
-
-        XCTAssertEqual(clock.time, 4)
     }
 
     func testSimulationMultipleRunExecution() {

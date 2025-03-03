@@ -112,10 +112,10 @@ final class AssetTests: XCTestCase {
         ]
         XCTAssertEqual(assets.currentBalance(), 150.0)
 
-        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 1))
+        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 1, ledgerID: 0))
         XCTAssertEqual(assets.currentBalance(), 200.0)
 
-        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 2))
+        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 2, ledgerID: 0))
         XCTAssertEqual(assets.currentBalance(), 200.0)
     }
 }

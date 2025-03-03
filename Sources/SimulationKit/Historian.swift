@@ -66,10 +66,10 @@ extension Liability.Transaction {
 extension Ledger.Event {
     func tag() -> String {
         switch self {
-        case .asset(transaction: let transaction, id: let id):
-            return transaction.tag(id: id)
-        case .liability(transaction: let transaction, id: let id):
-            return transaction.tag(id: id)
+        case .asset(transaction: let transaction, id: let id, ledgerID: let ledgerID):
+            return "Ledger-\(ledgerID)-" + transaction.tag(id: id)
+        case .liability(transaction: let transaction, id: let id, ledgerID: let ledgerID):
+            return "Ledger-\(ledgerID)-" + transaction.tag(id: id)
         }
     }
 }
@@ -112,8 +112,8 @@ enum TimeSeriesContainer {
 struct Record {
     var id: UInt
     var period: UInt32
-    var startingLedger: Ledger
-    var events: [Capture<[Ledger.Event]>]
+    var startingLedgers: [Ledger]
+    var events: [Capture<[[Ledger.Event]]>]
 }
 
 struct Measurement {
@@ -131,35 +131,25 @@ struct Measurement {
 }
 
 class Historian {
-    var ledgerPoints: [Capture<Ledger.Points>] = []
-    var ledgers: [Capture<Ledger>] = []
-
-    var events: [Capture<[Ledger.Event]>] = []
-
+    var captures: [Capture<(ledgers: [Ledger], events: [[Ledger.Event]])>] = []
     var records: [Record] = []
 
     func process(
         step: Step
     ) {
-        let ledger = step.ledger
+        captures.append(
+            Capture(entity: (ledgers: step.ledgers, events: step.events), timestamp: step.currentPeriod)
+        )
 
-        let points = ledger.asPoints(tick: Tick(tickDuration: 1, time: step.currentPeriod))
-        ledgers.append(
-            Capture(entity: ledger, timestamp: step.currentPeriod)
-        )
-        ledgerPoints.append(
-            Capture(entity: points, timestamp: step.currentPeriod)
-        )
-        events.append(
-            Capture(entity: step.events, timestamp: step.currentPeriod)
-        )
         if step.currentPeriod == step.totalPeriods {
-            let startingLedgerCapture = ledgers.first ?? Capture(entity: step.ledger, timestamp: step.currentPeriod)
+            let startingCapture = captures.first ?? Capture(entity: (ledgers: step.ledgers, events: step.events), timestamp: step.currentPeriod)
+            let allEvents = captures.map { Capture(entity: $0.entity.events, timestamp: $0.timestamp) }
+
             let record = Record(
                 id: UInt(records.count),
                 period: step.currentPeriod,
-                startingLedger: startingLedgerCapture.entity,
-                events: events
+                startingLedgers: startingCapture.entity.ledgers,
+                events: allEvents
             )
             records.append(record)
             reset()
@@ -167,8 +157,7 @@ class Historian {
     }
 
     func reset() {
-        ledgers.removeAll()
-        ledgerPoints.removeAll()
+        captures.removeAll()
     }
 
     func record(for handle: UInt) -> Record? {
@@ -191,26 +180,29 @@ class Historian {
 //        return Array<String>(record.allTimeSeries.keys)
 //    }
 
-    func reconstructedLedger(
+    func reconstructedLedgers(
         at period: UInt32,
         for handle: UInt
-    ) -> Ledger? {
+    ) -> [Ledger]? {
         guard let record = record(for: handle) else {
             return nil
         }
 
-        var ledger = record.startingLedger
+        var ledgers = record.startingLedgers
 
         if period == Clock.startingTime {
-            return ledger
+            return ledgers
         }
 
-        let relevantEvents = record.events.filter { $0.timestamp <= period }
+        let relevantEvents = record.events.filter {
+            $0.timestamp <= period
+        }
 
         for eventsCapture in relevantEvents {
-            ledger = ledger.tick(events: eventsCapture.entity)
+            let enumerated = ledgers.enumerated()
+            ledgers = enumerated.map { $0.element.tick(events: eventsCapture.entity[$0.offset]) }
         }
 
-        return ledger
+        return ledgers
     }
 }

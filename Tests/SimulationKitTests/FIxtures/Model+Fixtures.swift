@@ -8,10 +8,13 @@ import Foundation
 
 extension Model {
     static func makeModel() -> Model {
-        let model = Model(
+        let model =
+
+        Model(
             rate: 5,
             initialAssetBalance: 300,
-            initialLiabilityBalance: 100
+            initialLiabilityBalance: 100,
+            ledgersCount: 1
         )
         return model
     }

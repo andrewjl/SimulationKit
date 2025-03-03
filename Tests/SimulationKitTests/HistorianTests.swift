@@ -21,12 +21,12 @@ final class HistorianTests: XCTestCase {
             "Simulation run duration should be the same as specified in the model"
         )
 
-        let startingLedger = historian.reconstructedLedger(
+        let startingLedgers = historian.reconstructedLedgers(
             at: Clock.startingTime,
             for: run.handle
         )
-        let initialModelLedger = Simulation.make(from: model).ledger
-        XCTAssertEqual(startingLedger?.currentBalance(), initialModelLedger.currentBalance())
+        let initialModelLedgers = Simulation.make(from: model).ledgers
+        XCTAssertEqual(startingLedgers?.currentBalances(), initialModelLedgers.currentBalances())
     }
 
     func testOutputSecond() throws {
@@ -43,22 +43,41 @@ final class HistorianTests: XCTestCase {
             "Simulation run duration should be the same as specified in the model"
         )
 
-        let initialModelLedger = Simulation.make(from: model).ledger
+        let initialModelLedgers = Simulation.make(from: model).ledgers
 
-        let assetEvents: [Ledger.Event] = initialModelLedger.assets.map { Ledger.Event.asset(transaction: $0.increaseTransaction(by: model.rate), id: $0.id) }
-        let liabilityEvents: [Ledger.Event] = initialModelLedger.liabilities.map { Ledger.Event.liability(transaction: $0.increaseTransaction(by: model.rate), id: $0.id) }
-        let firstPeriodEvents = assetEvents + liabilityEvents
+        let assetEvents: [[Ledger.Event]] = initialModelLedgers
+            .map { (ledger: Ledger) -> [Ledger.Event] in
+                let ledgerID = ledger.id
+                return ledger.assets.map {
+                    Ledger.Event.asset(transaction: $0.increaseTransaction(by: model.rate), id: $0.id, ledgerID: ledgerID)
+                }
+            }
 
-        let successiveModelLedger = initialModelLedger.tick(
-            events: firstPeriodEvents
-        )
 
-        let secondPeriodLedger = historian.reconstructedLedger(
-            at: 2,
+        let liabilityEvents: [[Ledger.Event]] = initialModelLedgers
+            .map { (ledger: Ledger) -> [Ledger.Event] in
+                let ledgerID = ledger.id
+                return ledger.liabilities.map {
+                    Ledger.Event.liability(transaction: $0.increaseTransaction(by: model.rate), id: $0.id, ledgerID: ledgerID)
+                }
+            }
+
+
+        let initialEvents = (assetEvents + liabilityEvents).joined()
+
+        let successiveModelLedgers: [Ledger] = initialModelLedgers.map { (ledger: Ledger) -> Ledger in
+            return ledger.tick(events: initialEvents.filter { $0.ledgerID == ledger.id } )
+        }
+
+        let firstElapsedPeriodReconstruction = historian.reconstructedLedgers(
+            at: 1,
             for: run.handle
         )
 
-        XCTAssertEqual(secondPeriodLedger?.currentBalance(), successiveModelLedger.currentBalance())
+        XCTAssertEqual(
+            firstElapsedPeriodReconstruction?.currentBalances(),
+            successiveModelLedgers.currentBalances()
+        )
     }
 
     func testOutputLast() throws {
@@ -75,12 +94,15 @@ final class HistorianTests: XCTestCase {
             "Simulation run duration should be the same as specified in the model"
         )
 
-        let reconstructedLedger = historian.reconstructedLedger(
+        let reconstructedLedgers = historian.reconstructedLedgers(
             at: model.duration,
             for: run.handle
         )
 
-        XCTAssertEqual(run.finalLedger.entity.currentBalance(), reconstructedLedger?.currentBalance())
+        XCTAssertEqual(
+            reconstructedLedgers?.currentBalances(),
+            run.finalLedgers.entity.currentBalances()
+        )
     }
 
     func testRecordAccess() throws {
@@ -103,9 +125,7 @@ final class HistorianTests: XCTestCase {
 
         simulator.execute(model: model)
 
-        XCTAssertTrue(historian.ledgers.isEmpty)
-        XCTAssertTrue(historian.ledgerPoints.isEmpty)
-
+        XCTAssertTrue(historian.captures.isEmpty)
         XCTAssertEqual(historian.records.count, 1)
     }
 }

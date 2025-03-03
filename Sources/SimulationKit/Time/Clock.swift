@@ -6,7 +6,7 @@
 import Foundation
 
 class Clock {
-    static let startingTime: UInt32 = 1
+    static let startingTime: UInt32 = 0
 
     var time: UInt32 = Clock.startingTime
 
