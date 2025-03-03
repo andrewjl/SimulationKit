@@ -156,18 +156,6 @@ struct Ledger: Equatable {
         )
     }
 
-    func asPoints(tick: Tick) -> Points {
-        let assetBalances: [UInt: Decimal] = Dictionary(uniqueKeysWithValues: assets.map { ($0.id, $0.currentBalance()) })
-        let liabilityBalances = Dictionary(uniqueKeysWithValues: liabilities.map { ($0.id, $0.currentBalance()) })
-        let timestamp = tick.time
-
-        return Points(
-            assetBalances: assetBalances,
-            liabilityBalances: liabilityBalances,
-            timestamp: timestamp
-        )
-    }
-
     enum Event {
         case asset(transaction: Asset.Transaction, id: UInt, ledgerID: UInt)
         case liability(transaction: Liability.Transaction, id: UInt, ledgerID: UInt)
@@ -196,26 +184,5 @@ extension Ledger {
             assets: assets,
             liabilities: liabilities
         )
-    }
-}
-
-extension Ledger {
-    struct Points: CustomStringConvertible {
-        let assetBalances: [UInt: Decimal]
-        let liabilityBalances: [UInt: Decimal]
-
-        let timestamp: UInt32
-
-        var description: String {
-            return """
-            Assets
-            ID | Time | Balance
-            \(assetBalances.map { "\($0.key) | \($0.value)" }.joined(separator: "\n"))
-
-            Liabilities
-            ID | Time | Balance
-            \(liabilityBalances.map { "\($0.key) | \($0.value)" }.joined(separator: "\n"))
-            """
-        }
     }
 }
