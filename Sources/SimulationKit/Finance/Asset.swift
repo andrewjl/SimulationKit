@@ -16,11 +16,7 @@ struct Asset: Equatable {
         balance: Decimal
     ) {
         self.id = id
-        if balance.isSignMinus {
-            self.transactions = [.credit(amount: balance)]
-        } else {
-            self.transactions = [.debit(amount: balance)]
-        }
+        self.transactions = [Transaction(amount: balance)]
     }
 
     init(
@@ -58,6 +54,14 @@ struct Asset: Equatable {
             }
         }
 
+        init(amount: Decimal) {
+            if amount.isSignMinus {
+                self = .credit(amount: -amount)
+            } else {
+                self = .debit(amount: amount)
+            }
+        }
+
         static func decreasing(by amount: Decimal) -> Self {
             return .credit(amount: amount)
         }
@@ -70,19 +74,27 @@ struct Asset: Equatable {
 
 extension Asset {
     func decreased(by amount: Decimal) -> Self {
-        return self.credited(amount: amount)
+        return transacted(
+            Transaction.decreasing(by: amount)
+        )
     }
 
     func increased(by amount: Decimal) -> Self {
-        return self.debited(amount: amount)
+        return transacted(
+            Transaction.increasing(by: amount)
+        )
     }
 
     func credited(amount: Decimal) -> Self {
-        return transacted(.credit(amount: amount))
+        return transacted(
+            .credit(amount: amount)
+        )
     }
 
     func debited(amount: Decimal) -> Self {
-        return transacted(.debit(amount: amount))
+        return transacted(
+            .debit(amount: amount)
+        )
     }
 
     func transacted(_ transaction: Transaction) -> Self {

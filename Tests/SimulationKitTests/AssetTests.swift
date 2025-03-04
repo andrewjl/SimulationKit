@@ -15,6 +15,14 @@ final class AssetTests: XCTestCase {
         XCTAssertEqual(asset.currentBalance(), 100.0)
     }
 
+    func testNegativeBalance() throws {
+        let asset = Asset(id: 0, balance: -100.0)
+
+        XCTAssertEqual(asset.transactions.count, 1)
+        XCTAssertEqual(asset.transactions.first, Asset.Transaction.credit(amount: 100.0))
+        XCTAssertEqual(asset.currentBalance(), -100.0)
+    }
+
     func testTick() throws {
         let asset = Asset(id: 0, balance: 200.0)
         let nextAsset = asset.tick(rate: 5)
