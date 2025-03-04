@@ -2,8 +2,6 @@
 //  SimulationTests.swift
 //  
 //
-//  Created by Andrew Lauer Barinov on 12/16/21.
-//
 
 import XCTest
 @testable import SimulationKit

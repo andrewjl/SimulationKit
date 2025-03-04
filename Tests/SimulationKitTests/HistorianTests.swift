@@ -49,7 +49,7 @@ final class HistorianTests: XCTestCase {
         let simulation = Simulation.make(from: model)
 
         let events = simulation.state.ledgers.map {
-            simulation.events(ledger: $0)
+            simulation.computeEvents(ledger: $0)
         }
         .map {
             return Simulation.Event.ledgerTransactions(transactions: $0)

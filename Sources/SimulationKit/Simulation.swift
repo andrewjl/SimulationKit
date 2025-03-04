@@ -83,7 +83,7 @@ class Simulation {
             state = state.apply(event: event)
         }
         let computedEvents = state.ledgers
-            .map { self.events(ledger: $0) }
+            .map { self.computeEvents(ledger: $0) }
             .map { Event.ledgerTransactions(transactions: $0) }
 
         for computedEvent in computedEvents {
@@ -106,7 +106,7 @@ class Simulation {
 
     func computedEvents(state: State) -> [Simulation.Event] {
         return self.ledgers
-            .map { self.events(ledger: $0) }
+            .map { self.computeEvents(ledger: $0) }
             .map { Simulation.Event.ledgerTransactions(transactions: $0) }
     }
 
@@ -123,7 +123,7 @@ class Simulation {
         return computedEvents(state: state) + preplannedEvents(tick: tick)
     }
 
-    func events(ledger: Ledger) -> [Ledger.Event] {
+    func computeEvents(ledger: Ledger) -> [Ledger.Event] {
         let increaseAssetLedgerEvents = ledger.assets.map {
             Ledger.Event.asset(
                 transaction: $0.increaseTransaction(by: UInt(self.riskFreeRate.rate)),
