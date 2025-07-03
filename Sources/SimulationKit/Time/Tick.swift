@@ -15,33 +15,6 @@ struct Tick {
     }
 }
 
-extension Tick {
-    static func standard(time: UInt32 = 0) -> Self {
-        return Tick(tickDuration: 1, time: time)
-    }
-}
-
-extension Tick {
-    func timestampedPoint<Quantity>(amount: Quantity) -> Point<Quantity> {
-        return Point(amount: amount, timestamp: time)
-    }
-}
-
-struct Point<Quantity> {
-    let amount: Quantity
-    let timestamp: UInt32
-}
-
-extension Point {
-    init(
-        amount: Quantity,
-        tick: Tick
-    ) {
-        self.amount = amount
-        self.timestamp = tick.time
-    }
-}
-
 extension Decimal {
     func computeAdjustment(percentage: UInt) -> Self {
         let decimalized = Decimal(percentage)/Decimal(100)
@@ -54,20 +27,20 @@ extension Decimal {
 }
 
 struct TimeSeries<Quantity> {
-    var points: [Point<Quantity>] = []
+    var captures: [Capture<Quantity>] = []
 
     func tick(
-        amount: Quantity,
+        quantity: Quantity,
         tick: Tick
     ) -> Self {
-        let point = Point(amount: amount, tick: tick)
+        let capture = Capture(entity: quantity, timestamp: tick.time)
         return TimeSeries(
-            points: points + [point]
+            captures: captures + [capture]
         )
     }
 
     func quantity(at timetamp: UInt32) -> Quantity? {
-        return points.first(where: { $0.timestamp == timetamp })?.amount
+        return captures.first(where: { $0.timestamp == timetamp })?.entity
     }
 }
 
