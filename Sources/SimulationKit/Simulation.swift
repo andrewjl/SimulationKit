@@ -18,23 +18,16 @@ class Simulation {
             switch event {
             case .changeRiskFreeRate(newRate: let rate):
                 return State(ledgers: ledgers, riskFreeRate: RiskFreeRate(rate: rate))
-            case .ledgerTransactions(transactions: let transactions):
-                let nextLedgers: [Ledger] = ledgers.enumerated().map {
-                    let ledgerID = $0.element.id
-                    return $0.element.tick(events: transactions.filter({ $0.ledgerID == ledgerID }))
-                }
-                return State(ledgers: nextLedgers, riskFreeRate: self.riskFreeRate)
+            case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
+                return State(
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.tick(events: transactions) : $0 },
+                    riskFreeRate: self.riskFreeRate
+                )
             }
         }
     }
 
     var state: State
-    var ledgers: [Ledger] {
-        state.ledgers
-    }
-    var riskFreeRate: RiskFreeRate {
-        state.riskFreeRate
-    }
     var totalPeriods: UInt32
     var plannedEvents: [Capture<Event>]
 
@@ -82,9 +75,7 @@ class Simulation {
         for event in relevantPlannedEvents {
             state = state.apply(event: event)
         }
-        let computedEvents = state.ledgers
-            .map { self.computeEvents(ledger: $0) }
-            .map { Event.ledgerTransactions(transactions: $0) }
+        let computedEvents = self.computedEvents(state: state)
 
         for computedEvent in computedEvents {
             state = state.apply(event: computedEvent)
@@ -105,9 +96,13 @@ class Simulation {
     }
 
     func computedEvents(state: State) -> [Simulation.Event] {
-        return self.ledgers
-            .map { self.computeEvents(ledger: $0) }
-            .map { Simulation.Event.ledgerTransactions(transactions: $0) }
+        return self.state.ledgers
+            .map {
+                Simulation.Event.ledgerTransactions(
+                    transactions: self.computeEvents(ledger: $0),
+                    ledgerID: $0.id
+                )
+            }
     }
 
     func preplannedEvents(tick: Tick) -> [Simulation.Event] {
@@ -126,16 +121,14 @@ class Simulation {
     func computeEvents(ledger: Ledger) -> [Ledger.Event] {
         let increaseAssetLedgerEvents = ledger.assets.map {
             Ledger.Event.asset(
-                transaction: $0.increaseTransaction(by: UInt(self.riskFreeRate.rate)),
-                id: $0.id,
-                ledgerID: ledger.id
+                transaction: $0.increaseTransaction(by: UInt(self.state.riskFreeRate.rate)),
+                id: $0.id
             )
         }
         let increaseLiabilityLedgerEvents = ledger.liabilities.map {
             Ledger.Event.liability(
-                transaction: $0.increaseTransaction(by: UInt(self.riskFreeRate.rate)),
-                id: $0.id,
-                ledgerID: ledger.id
+                transaction: $0.increaseTransaction(by: UInt(self.state.riskFreeRate.rate)),
+                id: $0.id
             )
         }
 
@@ -146,7 +139,7 @@ class Simulation {
 extension Simulation {
     enum Event {
         case changeRiskFreeRate(newRate: Int)
-        case ledgerTransactions(transactions: [Ledger.Event])
+        case ledgerTransactions(transactions: [Ledger.Event], ledgerID: UInt)
     }
 }
 

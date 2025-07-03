@@ -27,13 +27,6 @@ struct Liability: Equatable {
         self.transactions = transactions
     }
 
-    func tick(rate: Int) -> Self {
-        let gain = currentBalance().decimalizedAdjustment(
-            percentage: UInt(rate)
-        )
-        return self.increased(by: gain)
-    }
-
     func currentBalance() -> Decimal {
         let balance = transactions.map { $0.amount }.reduce(0, +)
         return balance

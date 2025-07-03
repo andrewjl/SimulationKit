@@ -23,13 +23,6 @@ final class AssetTests: XCTestCase {
         XCTAssertEqual(asset.currentBalance(), -100.0)
     }
 
-    func testTick() throws {
-        let asset = Asset(id: 0, balance: 200.0)
-        let nextAsset = asset.tick(rate: 5)
-
-        XCTAssertEqual(nextAsset.currentBalance(), 210.0)
-    }
-
     func testCredit() throws {
         let asset = Asset(id: 0, transactions: [.credit(amount: 100.0)])
         XCTAssertEqual(
@@ -120,10 +113,10 @@ final class AssetTests: XCTestCase {
         ]
         XCTAssertEqual(assets.currentBalance(), 150.0)
 
-        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 1, ledgerID: 0))
+        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 1))
         XCTAssertEqual(assets.currentBalance(), 200.0)
 
-        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 2, ledgerID: 0))
+        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 2))
         XCTAssertEqual(assets.currentBalance(), 200.0)
     }
 }

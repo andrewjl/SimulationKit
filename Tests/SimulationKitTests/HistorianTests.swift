@@ -48,12 +48,13 @@ final class HistorianTests: XCTestCase {
 
         let simulation = Simulation.make(from: model)
 
-        let events = simulation.state.ledgers.map {
-            simulation.computeEvents(ledger: $0)
-        }
-        .map {
-            return Simulation.Event.ledgerTransactions(transactions: $0)
-        }
+        let events = simulation.state.ledgers
+            .map {
+                return Simulation.Event.ledgerTransactions(
+                    transactions: simulation.computeEvents(ledger: $0),
+                    ledgerID: $0.id
+                )
+            }
 
         let initialState = Simulation.make(from: model).state
         let successiveState = events.reduce(initialState, { return $0.apply(event: $1) })

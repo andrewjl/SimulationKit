@@ -35,7 +35,7 @@ extension Liability {
 
 extension Array where Array.Element == Asset {
     func event(_ event: Ledger.Event) -> Self {
-        guard case Ledger.Event.asset(transaction: let transaction, id: let id, ledgerID: _) = event else {
+        guard case Ledger.Event.asset(transaction: let transaction, id: let id) = event else {
             return self
         }
 
@@ -57,7 +57,7 @@ extension Array where Array.Element == Asset {
 
 extension Array where Array.Element == Liability {
     func event(_ event: Ledger.Event) -> Self {
-        guard case Ledger.Event.liability(transaction: let transaction, id: let id, ledgerID: _) = event else {
+        guard case Ledger.Event.liability(transaction: let transaction, id: let id) = event else {
             return self
         }
 
@@ -80,7 +80,7 @@ extension Array where Array.Element == Liability {
 extension Array where Array.Element == Ledger.Event {
     func event(assetID: UInt) -> Ledger.Event? {
         self.first(where: {
-            guard case let Ledger.Event.asset(transaction: _, id: id, ledgerID: _) = $0 else {
+            guard case let Ledger.Event.asset(transaction: _, id: id) = $0 else {
                 return false
             }
 
@@ -90,7 +90,7 @@ extension Array where Array.Element == Ledger.Event {
 
     func event(liabilityID: UInt) -> Ledger.Event? {
         self.first(where: {
-            guard case let Ledger.Event.liability(transaction: _, id: id, ledgerID: _) = $0 else {
+            guard case let Ledger.Event.liability(transaction: _, id: id) = $0 else {
                 return false
             }
 
@@ -121,13 +121,13 @@ struct Ledger: Equatable {
 
     func tick(event: Event) -> Self {
         switch event {
-        case .asset(let transaction, let id, _):
+        case .asset(let transaction, let id):
             return Ledger(
                 id: id,
                 assets: assets.map { $0.id == id ? $0.transacted(transaction) : $0 },
                 liabilities: liabilities
             )
-        case .liability(let transaction, let id, _):
+        case .liability(let transaction, let id):
             return Ledger(
                 id: id,
                 assets: assets,
@@ -142,9 +142,9 @@ struct Ledger: Equatable {
 
         for event in events {
             switch event {
-            case .asset(let transaction, let id, _):
+            case .asset(let transaction, let id):
                 eventedAssets = eventedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .liability(let transaction, let id, _):
+            case .liability(let transaction, let id):
                 eventedLiabilities = eventedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             }
         }
@@ -157,17 +157,8 @@ struct Ledger: Equatable {
     }
 
     enum Event {
-        case asset(transaction: Asset.Transaction, id: UInt, ledgerID: UInt)
-        case liability(transaction: Liability.Transaction, id: UInt, ledgerID: UInt)
-
-        var ledgerID: UInt {
-            switch self {
-                case .asset(_, _, let ledgerID):
-                    return ledgerID
-                case .liability(_, _, let ledgerID):
-                    return ledgerID
-            }
-        }
+        case asset(transaction: Asset.Transaction, id: UInt)
+        case liability(transaction: Liability.Transaction, id: UInt)
     }
 }
 
