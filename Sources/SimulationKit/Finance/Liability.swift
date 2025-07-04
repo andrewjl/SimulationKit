@@ -8,6 +8,8 @@ import Foundation
 // Credit: Increase
 // Debit: Decrease
 struct Liability: Equatable {
+    static var autoincrementedID: UInt = 0
+
     let id: UInt
     var transactions: [Self.Transaction] = []
 
@@ -64,6 +66,29 @@ struct Liability: Equatable {
         }
     }
 }
+
+extension Liability {
+    static func make(from transactions: [Transaction]) -> Self {
+        defer {
+            Self.autoincrementedID += 1
+        }
+        return Self(
+            id: Self.autoincrementedID,
+            transactions: transactions
+        )
+    }
+
+    static func make(from balance: Decimal) -> Self {
+        defer {
+            Self.autoincrementedID += 1
+        }
+        return Self(
+            id: Self.autoincrementedID,
+            balance: balance
+        )
+    }
+}
+
 
 extension Liability {
     func decreased(by amount: Decimal) -> Self {

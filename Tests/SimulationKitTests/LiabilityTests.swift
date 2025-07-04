@@ -8,7 +8,7 @@ import XCTest
 
 final class LiabilityTests: XCTestCase {
     func testCreation() throws {
-        let liability = Liability(id: 0, balance: 100.0)
+        let liability = Liability.make(from: 100.0)
 
         XCTAssertEqual(liability.transactions.count, 1)
         XCTAssertEqual(liability.transactions.first, Liability.Transaction.credit(amount: 100.0))
@@ -16,7 +16,7 @@ final class LiabilityTests: XCTestCase {
     }
 
     func testNegativeBalance() throws {
-        let liability = Liability(id: 0, balance: -100.0)
+        let liability = Liability.make(from: -100.0)
 
         XCTAssertEqual(liability.transactions.count, 1)
         XCTAssertEqual(liability.transactions.first, Liability.Transaction.debit(amount: 100.0))
@@ -24,7 +24,7 @@ final class LiabilityTests: XCTestCase {
     }
 
     func testCredit() throws {
-        let liability = Liability(id: 0, transactions: [.credit(amount: 100.0)])
+        let liability = Liability.make(from: [.credit(amount: 100.0)])
         XCTAssertEqual(
             liability.currentBalance(),
             100.0,
@@ -40,7 +40,7 @@ final class LiabilityTests: XCTestCase {
     }
 
     func testDebit() throws {
-        let liability = Liability(id: 0, transactions: [.debit(amount: 100.0)])
+        let liability = Liability.make(from: [.debit(amount: 100.0)])
         XCTAssertEqual(
             liability.currentBalance(),
             -100.0,
@@ -63,7 +63,7 @@ final class LiabilityTests: XCTestCase {
     }
 
     func testIncrease() throws {
-        let liability = Liability(id: 0, balance: 100.0)
+        let liability = Liability.make(from: 100.0)
         let increasedLiability = liability.increased(by: 20.0)
         XCTAssertEqual(
             increasedLiability.currentBalance(),
@@ -73,7 +73,7 @@ final class LiabilityTests: XCTestCase {
     }
 
     func testDecrease() throws {
-        let liability = Liability(id: 0, balance: 100.0)
+        let liability = Liability.make(from: 100.0)
         let decreasedLiability = liability.decreased(by: 20.0)
         XCTAssertEqual(
             decreasedLiability.currentBalance(),
@@ -85,7 +85,7 @@ final class LiabilityTests: XCTestCase {
     func testTransactions() throws {
         let increase = Liability.Transaction.increasing(by: 50.0)
 
-        guard case Liability.Transaction.credit(amount: let creditedAmount) = increase else {
+        guard case let Liability.Transaction.credit(creditedAmount) = increase else {
             fatalError()
         }
         XCTAssertEqual(
@@ -103,6 +103,16 @@ final class LiabilityTests: XCTestCase {
             debitedAmount,
             50.0,
             "Decreased liability transaction should be a debit of +50.0"
+        )
+    }
+
+    func testAutoIncrementedID() throws {
+        let zeroth = Liability.make(from: 100.0)
+        let first = Liability.make(from: 150.0)
+
+        XCTAssertNotEqual(
+            zeroth.id,
+            first.id
         )
     }
 

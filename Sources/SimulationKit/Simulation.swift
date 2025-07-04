@@ -145,17 +145,16 @@ extension Simulation {
 
 extension Simulation {
     static func make(from model: Model) -> Simulation {
-        let assets = (1...model.assetsCount).map {
-            Asset(id: UInt($0), balance: model.initialAssetBalance)
+        let assets = (1...model.assetsCount).map { (_: Int) in
+            Asset.make(from: model.initialAssetBalance)
         }
 
-        let liabilities = (1...model.liabilitiesCount).map {
-            Liability(id: UInt($0), balance: model.initialLiabilityBalance)
+        let liabilities = (1...model.liabilitiesCount).map { (_: Int) in
+            Liability.make(from: model.initialLiabilityBalance)
         }
 
-        let ledgers = (1...model.ledgersCount).map {
-            return Ledger(
-                id: UInt($0),
+        let ledgers = (1...model.ledgersCount).map { (_: Int) in
+            return Ledger.make(
                 assets: assets,
                 liabilities: liabilities
             )
