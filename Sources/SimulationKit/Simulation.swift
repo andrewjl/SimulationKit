@@ -137,7 +137,7 @@ class Simulation {
 }
 
 extension Simulation {
-    enum Event {
+    enum Event: Equatable {
         case changeRiskFreeRate(newRate: Int)
         case ledgerTransactions(transactions: [Ledger.Event], ledgerID: UInt)
     }
@@ -165,7 +165,8 @@ extension Simulation {
         let execModel = Simulation(
             ledgers: ledgers,
             rate: riskFreeRate,
-            totalPeriods: model.duration
+            totalPeriods: model.duration,
+            plannedEvents: model.plannedEvents
         )
 
         return execModel

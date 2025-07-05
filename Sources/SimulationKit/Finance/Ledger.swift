@@ -156,7 +156,7 @@ struct Ledger: Equatable {
         )
     }
 
-    enum Event {
+    enum Event: Equatable {
         case asset(transaction: Asset.Transaction, id: UInt)
         case liability(transaction: Liability.Transaction, id: UInt)
     }

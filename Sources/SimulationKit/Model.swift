@@ -15,17 +15,20 @@ class ConceptualModel {
     var liabilitiesCount: Int = 2
 
     var duration: UInt32 = 7
+    var plannedEvents: [Capture<Simulation.Event>]
 
     init(
         rate: UInt,
         initialAssetBalance: Decimal,
         initialLiabilityBalance: Decimal,
-        ledgersCount: Int = 3
+        ledgersCount: Int = 3,
+        plannedEvents: [Capture<Simulation.Event>] = []
     ) {
         self.rate = rate
         self.initialAssetBalance = initialAssetBalance
         self.initialLiabilityBalance = initialLiabilityBalance
         self.ledgersCount = ledgersCount
+        self.plannedEvents = plannedEvents
     }
 }
 

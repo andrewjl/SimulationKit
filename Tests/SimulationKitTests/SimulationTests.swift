@@ -51,5 +51,30 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(clock.time, 3)
     }
+
+    func testPlannedEvents() throws {
+        let plannedEvent = Simulation.Event.changeRiskFreeRate(newRate: 7)
+        let model = Model.makeModel(
+            plannedEvents: [
+                Capture(
+                    entity: plannedEvent,
+                    timestamp: 2
+                )
+            ]
+        )
+        let simulation = Simulation.make(from: model)
+        let clock = Clock()
+
+        let _ = simulation.start(clock: clock)
+        let _ = simulation.tick(clock: clock)
+        let elapsedSecondPeriod = simulation.tick(clock: clock)
+
+        XCTAssertEqual(
+            clock.time,
+            3
+        )
+
+        XCTAssertTrue(elapsedSecondPeriod.capture.entity.events.contains(plannedEvent))
+    }
 }
 
