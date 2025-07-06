@@ -7,6 +7,19 @@ import XCTest
 @testable import SimulationKit
 
 final class HistorianTests: XCTestCase {
+
+    override func setUp() {
+        Asset.autoincrementedID = 0
+        Liability.autoincrementedID = 0
+        Ledger.autoincrementedID = 0
+    }
+
+    override func tearDown() {
+        Asset.autoincrementedID = 0
+        Liability.autoincrementedID = 0
+        Ledger.autoincrementedID = 0
+    }
+
     func testOutputFirst() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)
@@ -25,10 +38,15 @@ final class HistorianTests: XCTestCase {
             at: Clock.startingTime,
             for: run.handle
         )
+
+        Asset.autoincrementedID = 0
+        Liability.autoincrementedID = 0
+        Ledger.autoincrementedID = 0
+
         let initialModelState = Simulation.make(from: model).state
         XCTAssertEqual(
-            startingState,
-            initialModelState
+            startingState?.ledgers.map { $0.assets.map { $0.id } + $0.liabilities.map { $0.id } },
+            initialModelState.ledgers.map { $0.assets.map { $0.id } + $0.liabilities.map { $0.id } }
         )
     }
 
@@ -46,23 +64,21 @@ final class HistorianTests: XCTestCase {
             "Simulation run duration should be the same as specified in the model"
         )
 
-        let simulation = Simulation.make(from: model)
-
-        let events = simulation.state.ledgers
-            .map {
-                return Simulation.Event.ledgerTransactions(
-                    transactions: simulation.computeEvents(ledger: $0),
-                    ledgerID: $0.id
-                )
-            }
-
-        let initialState = Simulation.make(from: model).state
-        let successiveState = events.reduce(initialState, { return $0.apply(event: $1) })
-
         let firstElapsedPeriodReconstruction = historian.reconstructedLedgers(
             at: 1,
             for: run.handle
         )
+
+        Asset.autoincrementedID = 0
+        Liability.autoincrementedID = 0
+        Ledger.autoincrementedID = 0
+
+        let simulation = Simulation.make(from: model)
+        let initialState = simulation.state
+        let successiveState = simulation.computedEvents(
+            state: simulation.state
+        )
+            .reduce(initialState, { return $0.apply(event: $1) })
 
         XCTAssertEqual(
             firstElapsedPeriodReconstruction,

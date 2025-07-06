@@ -11,8 +11,8 @@ final class SimulationTests: XCTestCase {
         let model = Model.makeModel()
         let simulation = Simulation.make(from: model)
         let clock = Clock()
-
-        let initial = simulation.start(clock: clock)
+        let tick = clock.next()
+        let initial = simulation.start(tick: tick)
 
         XCTAssertEqual(initial.currentPeriod, 0)
         XCTAssertEqual(initial.totalPeriods, model.duration)
@@ -25,7 +25,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(clock.time, 1)
 
-        let step1 = simulation.tick(clock: clock)
+        let step1 = simulation.tick(clock.next())
 
         XCTAssertEqual(step1.currentPeriod, 1)
         XCTAssertEqual(step1.totalPeriods, model.duration)
@@ -38,7 +38,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(clock.time, 2)
 
-        let step2 = simulation.tick(clock: clock)
+        let step2 = simulation.tick(clock.next())
 
         XCTAssertEqual(step2.currentPeriod, 2)
         XCTAssertEqual(step2.totalPeriods, model.duration)
@@ -50,6 +50,31 @@ final class SimulationTests: XCTestCase {
         )
 
         XCTAssertEqual(clock.time, 3)
+    }
+
+    func testClock() throws {
+        let model = Model.makeModel()
+        let simulation = Simulation.make(from: model)
+        let clock = Clock()
+
+        XCTAssertEqual(
+            clock.time,
+            Clock.startingTime
+        )
+
+        let _ = simulation.start(tick: clock.next())
+
+        XCTAssertEqual(
+            clock.time,
+            1
+        )
+
+        let _ = simulation.tick(clock.next())
+
+        XCTAssertEqual(
+            clock.time,
+            2
+        )
     }
 
     func testPlannedEvents() throws {
@@ -65,16 +90,18 @@ final class SimulationTests: XCTestCase {
         let simulation = Simulation.make(from: model)
         let clock = Clock()
 
-        let _ = simulation.start(clock: clock)
-        let _ = simulation.tick(clock: clock)
-        let elapsedSecondPeriod = simulation.tick(clock: clock)
+        let _ = simulation.start(tick: clock.next())
+        let _ = simulation.tick(clock.next())
+        let elapsedSecondPeriod = simulation.tick(clock.next())
 
         XCTAssertEqual(
             clock.time,
             3
         )
 
-        XCTAssertTrue(elapsedSecondPeriod.capture.entity.events.contains(plannedEvent))
+        XCTAssertTrue(
+            elapsedSecondPeriod.capture.entity.events.contains(plannedEvent)
+        )
     }
 }
 

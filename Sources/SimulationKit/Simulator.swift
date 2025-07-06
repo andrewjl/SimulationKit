@@ -38,12 +38,14 @@ class Simulator {
 
         var steps: [Step] = []
 
+        let tick = clock.next()
+
         historian.process(
-            step: execModel.start(clock: clock)
+            step: execModel.start(tick: tick)
         )
 
         for _ in 0..<model.duration {
-            let step = execModel.tick(clock: clock)
+            let step = execModel.tick(clock.next())
             steps.append(step)
             historian.process(step: step)
         }

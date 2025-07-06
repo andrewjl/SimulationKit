@@ -26,8 +26,14 @@ class Simulation {
             }
         }
     }
+    private var capture: Capture<State>
+    var state: State {
+        capture.entity
+    }
+    var currentTime: UInt32 {
+        capture.timestamp + 1
+    }
 
-    var state: State
     var totalPeriods: UInt32
     var plannedEvents: [Capture<Event>]
 
@@ -37,20 +43,21 @@ class Simulation {
         totalPeriods: UInt32,
         plannedEvents: [Capture<Event>] = []
     ) {
-        self.state = State(ledgers: ledgers, riskFreeRate: rate)
+        self.capture = Capture(
+            entity: State(ledgers: ledgers, riskFreeRate: rate),
+            timestamp: Clock.startingTime
+        )
         self.totalPeriods = totalPeriods
         self.plannedEvents = plannedEvents
     }
 
-    func start(clock: Clock) -> Step {
-        guard clock.time == Clock.startingTime else {
+    func start(tick: Tick) -> Step {
+        guard tick.time == Clock.startingTime else {
             fatalError("Can only start simulation once.")
         }
 
         let events: [Simulation.Event] = []
-        let capture = SimulationCapture(entity: (state: state, events: events), timestamp: clock.time)
-
-        let _ = clock.next()
+        let capture = SimulationCapture(entity: (state: state, events: events), timestamp: tick.time)
 
         return Step(
             capture: capture,
@@ -58,27 +65,34 @@ class Simulation {
         )
     }
 
-    func tick(clock: Clock) -> Step {
-        guard clock.time > Clock.startingTime else {
+    func tick(_ tick: Tick) -> Step {
+        guard tick.time > Clock.startingTime else {
             fatalError("Simulation not started yet.")
         }
 
-        let tick = clock.current()
-        let step = successiveStep(tick: tick)
-        let _ = clock.next()
-        return step
+        guard tick.time == currentTime else {
+            fatalError("Simulation not synchronized.")
+        }
+
+        return successiveStep(tick: tick)
     }
 
     func successiveStep(tick: Tick) -> Step {
         let relevantPlannedEvents = plannedEvents.filter({ $0.timestamp == tick.time }).map { $0.entity }
 
         for event in relevantPlannedEvents {
-            state = state.apply(event: event)
+            capture = Capture(
+                entity: state.apply(event: event),
+                timestamp: tick.time
+            )
         }
         let computedEvents = self.computedEvents(state: state)
 
         for computedEvent in computedEvents {
-            state = state.apply(event: computedEvent)
+            capture = Capture(
+                entity: state.apply(event: computedEvent),
+                timestamp: tick.time
+            )
         }
 
         let capture = SimulationCapture(
