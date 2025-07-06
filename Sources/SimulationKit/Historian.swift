@@ -112,7 +112,7 @@ enum TimeSeriesContainer {
 struct Record {
     var id: UInt
     var period: UInt32
-    var startingLedgers: Simulation.State
+    var startingState: Simulation.State
     var events: [Capture<[Simulation.Event]>]
 }
 
@@ -147,7 +147,7 @@ class Historian {
             let record = Record(
                 id: UInt(records.count),
                 period: step.currentPeriod,
-                startingLedgers: startingCapture.entity.state,
+                startingState: startingCapture.entity.state,
                 events: captures.map { Capture(entity: $0.entity.events, timestamp: $0.timestamp) }
             )
             records.append(record)
@@ -187,7 +187,7 @@ class Historian {
             return nil
         }
 
-        var state = record.startingLedgers
+        var state = record.startingState
 
         if period == Clock.startingTime {
             return state
