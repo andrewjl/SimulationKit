@@ -7,19 +7,6 @@ import XCTest
 @testable import SimulationKit
 
 final class HistorianTests: XCTestCase {
-
-    override func setUp() {
-        Asset.autoincrementedID = 0
-        Liability.autoincrementedID = 0
-        Ledger.autoincrementedID = 0
-    }
-
-    override func tearDown() {
-        Asset.autoincrementedID = 0
-        Liability.autoincrementedID = 0
-        Ledger.autoincrementedID = 0
-    }
-
     func testOutputFirst() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)

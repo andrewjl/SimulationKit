@@ -163,6 +163,24 @@ struct Ledger: Equatable {
 }
 
 extension Ledger {
+    func adding(_ asset: Asset) -> Self {
+        return Self(
+            id: id,
+            assets: assets + [asset],
+            liabilities: liabilities
+        )
+    }
+
+    func adding(_ liability: Liability) -> Self {
+        return Self(
+            id: id,
+            assets: assets,
+            liabilities: liabilities + [liability]
+        )
+    }
+}
+
+extension Ledger {
     static func make(
         assets: [Asset],
         liabilities: [Liability]

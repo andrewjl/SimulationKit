@@ -23,6 +23,16 @@ class Simulation {
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.tick(events: transactions) : $0 },
                     riskFreeRate: self.riskFreeRate
                 )
+            case .createAsset(balance: let balance, ledgerID: let ledgerID):
+                return State(
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(from: balance)) : $0 },
+                    riskFreeRate: riskFreeRate
+                )
+            case .createLiability(balance: let balance, ledgerID: let ledgerID):
+                return State(
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance)) : $0 },
+                    riskFreeRate: riskFreeRate
+                )
             }
         }
     }
@@ -154,11 +164,17 @@ extension Simulation {
     enum Event: Equatable {
         case changeRiskFreeRate(newRate: Int)
         case ledgerTransactions(transactions: [Ledger.Event], ledgerID: UInt)
+        case createAsset(balance: Decimal, ledgerID: UInt)
+        case createLiability(balance: Decimal, ledgerID: UInt)
     }
 }
 
 extension Simulation {
     static func make(from model: Model) -> Simulation {
+        Asset.autoincrementedID = 0
+        Liability.autoincrementedID = 0
+        Ledger.autoincrementedID = 0
+
         let assets = (1...model.assetsCount).map { (_: Int) in
             Asset.make(from: model.initialAssetBalance)
         }

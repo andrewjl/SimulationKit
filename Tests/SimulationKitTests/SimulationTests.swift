@@ -78,12 +78,17 @@ final class SimulationTests: XCTestCase {
     }
 
     func testPlannedEvents() throws {
-        let plannedEvent = Simulation.Event.changeRiskFreeRate(newRate: 7)
+        let riskFreeRatePlannedEvent = Simulation.Event.changeRiskFreeRate(newRate: 7)
+        let createAssetEvent = Simulation.Event.createAsset(balance: 150.0, ledgerID: 0)
         let model = Model.makeModel(
             plannedEvents: [
                 Capture(
-                    entity: plannedEvent,
+                    entity: riskFreeRatePlannedEvent,
                     timestamp: 2
+                ),
+                Capture(
+                    entity: createAssetEvent,
+                    timestamp: 3
                 )
             ]
         )
@@ -100,7 +105,23 @@ final class SimulationTests: XCTestCase {
         )
 
         XCTAssertTrue(
-            elapsedSecondPeriod.capture.entity.events.contains(plannedEvent)
+            elapsedSecondPeriod.capture.entity.events.contains(riskFreeRatePlannedEvent)
+        )
+
+        let elapsedThirdPeriod = simulation.tick(clock.next())
+
+        XCTAssertEqual(
+            clock.time,
+            4
+        )
+
+        XCTAssertTrue(
+            elapsedThirdPeriod.capture.entity.events.contains(createAssetEvent)
+        )
+
+        XCTAssertEqual(
+            elapsedThirdPeriod.capture.entity.state.ledgers.first(where: { $0.id == 0 })?.assets.count,
+            model.assetsCount + 1
         )
     }
 }
