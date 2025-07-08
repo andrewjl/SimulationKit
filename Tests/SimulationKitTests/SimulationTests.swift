@@ -8,7 +8,8 @@ import XCTest
 
 final class SimulationTests: XCTestCase {
     func testSingleRunSteps() throws {
-        let model = Model.makeModel()
+        let ledgersCount = 1
+        let model = Model.makeModel(ledgersCount: ledgersCount)
         let simulation = Simulation.make(from: model)
         let clock = Clock()
         let tick = clock.next()
@@ -16,7 +17,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(initial.currentPeriod, 0)
         XCTAssertEqual(initial.totalPeriods, model.duration)
-        XCTAssertEqual(initial.capture.entity.state.ledgers.count, model.ledgersCount)
+        XCTAssertEqual(initial.capture.entity.state.ledgers.count, ledgersCount)
 
         XCTAssertEqual(
             initial.capture.entity.state.ledgers.first?.currentBalance(),
@@ -29,7 +30,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(step1.currentPeriod, 1)
         XCTAssertEqual(step1.totalPeriods, model.duration)
-        XCTAssertEqual(step1.capture.entity.state.ledgers.count, model.ledgersCount)
+        XCTAssertEqual(step1.capture.entity.state.ledgers.count, ledgersCount)
 
         XCTAssertEqual(
             step1.capture.entity.state.ledgers.first?.currentBalance(),
@@ -42,7 +43,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(step2.currentPeriod, 2)
         XCTAssertEqual(step2.totalPeriods, model.duration)
-        XCTAssertEqual(step2.capture.entity.state.ledgers.count, model.ledgersCount)
+        XCTAssertEqual(step2.capture.entity.state.ledgers.count, ledgersCount)
 
         XCTAssertEqual(
             step2.capture.entity.state.ledgers.first?.currentBalance(),
@@ -80,7 +81,9 @@ final class SimulationTests: XCTestCase {
     func testPlannedEvents() throws {
         let riskFreeRatePlannedEvent = Simulation.Event.changeRiskFreeRate(newRate: 7)
         let createAssetEvent = Simulation.Event.createAsset(balance: 150.0, ledgerID: 0)
+        let initialAssetsCount = 2
         let model = Model.makeModel(
+            assetsCount: initialAssetsCount,
             plannedEvents: [
                 Capture(
                     entity: riskFreeRatePlannedEvent,
@@ -121,7 +124,101 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(
             elapsedThirdPeriod.capture.entity.state.ledgers.first(where: { $0.id == 0 })?.assets.count,
-            model.assetsCount + 1
+            initialAssetsCount + 1
+        )
+    }
+
+    func testStateGenerator() throws {
+        let initialEvents: [Simulation.Event] = [
+            Simulation.Event.changeRiskFreeRate(newRate: 7),
+            Simulation.Event.createAsset(balance: 100.0, ledgerID: 0),
+            Simulation.Event.createLiability(balance: 100.0, ledgerID: 0)
+        ]
+
+        let state = StateGenerator.generate(from: initialEvents)
+
+        XCTAssertEqual(
+            state.riskFreeRate.rate,
+            7
+        )
+        XCTAssertEqual(
+            state.ledgers.count,
+            1
+        )
+
+        let ledger = try XCTUnwrap(
+            state.ledgers.first(where: { $0.id == 0 })
+        )
+
+        XCTAssertEqual(
+            ledger.currentBalance(),
+            0.0
+        )
+    }
+
+    func testModel() throws {
+        let assetsCount = 1
+        let liabilitiesCount = 1
+        let ledgersCount = 6
+        let model = Model(
+            rate: 4,
+            initialAssetBalance: 500.0,
+            initialLiabilityBalance: 200.0,
+            assetsCount: assetsCount,
+            liabilitiesCount: liabilitiesCount,
+            ledgersCount: ledgersCount,
+            plannedEvents: []
+        )
+
+        let initialEvents = model.initialEvents()
+
+        XCTAssertEqual(
+            initialEvents.count,
+            13,
+            "The models initial events should contain 1 rate change event and 1 event for each asset & liability assigned to a ledger."
+        )
+
+        let _: Simulation.Event = try XCTUnwrap(
+            initialEvents.compactMap {
+                guard case Simulation.Event.changeRiskFreeRate = $0 else {
+                    return nil
+                }
+
+                return $0
+            }
+            .first
+        )
+
+        let assetEvents: [Simulation.Event] = try XCTUnwrap(
+            initialEvents.compactMap {
+                guard case Simulation.Event.createAsset = $0 else {
+                    return nil
+                }
+
+                return $0
+            }
+        )
+
+        XCTAssertEqual(
+            assetEvents.count,
+            assetsCount * ledgersCount,
+            "The models initial events should contain \(assetsCount) asset creation event for each ledger."
+        )
+
+        let liabilityEvents: [Simulation.Event] = try XCTUnwrap(
+            initialEvents.compactMap {
+                guard case Simulation.Event.createLiability = $0 else {
+                    return nil
+                }
+
+                return $0
+            }
+        )
+
+        XCTAssertEqual(
+            liabilityEvents.count,
+            liabilitiesCount * ledgersCount,
+            "The models initial events should contain \(liabilitiesCount) liability creation event for each ledger."
         )
     }
 }

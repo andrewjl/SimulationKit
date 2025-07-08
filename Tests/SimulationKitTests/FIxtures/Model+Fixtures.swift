@@ -7,14 +7,19 @@ import Foundation
 @testable import SimulationKit
 
 extension Model {
-    static func makeModel(plannedEvents: [Capture<Simulation.Event>] = []) -> Model {
+    static func makeModel(
+        assetsCount: Int = 2,
+        ledgersCount: Int = 1,
+        plannedEvents: [Capture<Simulation.Event>] = []
+    ) -> Model {
         let model =
 
         Model(
             rate: 5,
             initialAssetBalance: 300,
             initialLiabilityBalance: 100,
-            ledgersCount: 1,
+            assetsCount: assetsCount,
+            ledgersCount: ledgersCount,
             plannedEvents: plannedEvents
         )
         return model

@@ -6,7 +6,55 @@
 import Foundation
 
 struct RiskFreeRate: Equatable {
+    static var `default` = 10
+
     var rate: Int
+}
+
+class StateGenerator {
+    static func generate(from model: ConceptualModel) -> Simulation.State {
+        self.generate(
+            from: model.initialEvents()
+        )
+    }
+
+    static func generate(from initialEvents: [Simulation.Event]) -> Simulation.State {
+        let riskFreeRate = riskFreeRate(from: initialEvents)
+        let ledgers = ledgers(from: initialEvents)
+
+        return Simulation.State(
+            ledgers: ledgers,
+            riskFreeRate: riskFreeRate
+        )
+    }
+
+    static func ledgers(
+        from initialEvents: [Simulation.Event]
+    ) -> [Ledger] {
+        var ledgers = [UInt: Ledger]()
+
+        for case let Simulation.Event.createAsset(balance, ledgerID) in initialEvents {
+            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, assets: [], liabilities: [])]
+                .adding(Asset.make(from: balance))
+        }
+
+        for case let Simulation.Event.createLiability(balance, ledgerID) in initialEvents {
+            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, assets: [], liabilities: [])]
+                .adding(Liability.make(from: balance))
+        }
+
+        return Array<Ledger>(ledgers.values)
+    }
+
+    static func riskFreeRate(
+        from initialEvents: [Simulation.Event]
+    ) -> RiskFreeRate {
+        var rate = RiskFreeRate.default
+        for case let Simulation.Event.changeRiskFreeRate(newRate) in initialEvents {
+            rate = newRate
+        }
+        return RiskFreeRate(rate: rate)
+    }
 }
 
 class Simulation {
@@ -48,17 +96,15 @@ class Simulation {
     var plannedEvents: [Capture<Event>]
 
     init(
-        ledgers: [Ledger],
-        rate: RiskFreeRate,
-        totalPeriods: UInt32,
-        plannedEvents: [Capture<Event>] = []
+        model: ConceptualModel
     ) {
         self.capture = Capture(
-            entity: State(ledgers: ledgers, riskFreeRate: rate),
+            entity: StateGenerator.generate(from: model),
             timestamp: Clock.startingTime
         )
-        self.totalPeriods = totalPeriods
-        self.plannedEvents = plannedEvents
+
+        self.totalPeriods = model.duration
+        self.plannedEvents = model.plannedEvents
     }
 
     func start(tick: Tick) -> Step {
@@ -175,31 +221,11 @@ extension Simulation {
         Liability.autoincrementedID = 0
         Ledger.autoincrementedID = 0
 
-        let assets = (1...model.assetsCount).map { (_: Int) in
-            Asset.make(from: model.initialAssetBalance)
-        }
-
-        let liabilities = (1...model.liabilitiesCount).map { (_: Int) in
-            Liability.make(from: model.initialLiabilityBalance)
-        }
-
-        let ledgers = (1...model.ledgersCount).map { (_: Int) in
-            return Ledger.make(
-                assets: assets,
-                liabilities: liabilities
-            )
-        }
-
-        let riskFreeRate = RiskFreeRate(rate: Int(model.rate))
-
-        let execModel = Simulation(
-            ledgers: ledgers,
-            rate: riskFreeRate,
-            totalPeriods: model.duration,
-            plannedEvents: model.plannedEvents
+        let simulation = Simulation(
+            model: model
         )
 
-        return execModel
+        return simulation
     }
 }
 

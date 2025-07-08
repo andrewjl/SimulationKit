@@ -34,11 +34,12 @@ final class SimulatorTests: XCTestCase {
     }
 
     func testSingleRun() throws {
+        let ledgersCount = 2
         let model = Model(
             rate: 5,
             initialAssetBalance: 300,
             initialLiabilityBalance: 100,
-            ledgersCount: 2
+            ledgersCount: ledgersCount
         )
         let simulator = Simulator()
         let runs = simulator.execute(model: model)
@@ -47,7 +48,7 @@ final class SimulatorTests: XCTestCase {
 
         XCTAssertEqual(
             run.finalState.ledgers.count,
-            model.ledgersCount
+            ledgersCount
         )
         XCTAssertEqual(
             run.totalPeriods,
@@ -56,7 +57,8 @@ final class SimulatorTests: XCTestCase {
     }
 
     func testMultipleRuns() {
-        let model = Model.makeModel()
+        let ledgersCount = 1
+        let model = Model.makeModel(ledgersCount: ledgersCount)
         let simulator = Simulator()
         let runs = simulator.execute(model: model, runsCount: 5)
         XCTAssertEqual(runs.count, 5)
@@ -64,7 +66,7 @@ final class SimulatorTests: XCTestCase {
         for run in runs {
             XCTAssertEqual(
                 run.finalState.ledgers.count,
-                model.ledgersCount
+                ledgersCount
             )
             XCTAssertEqual(
                 run.totalPeriods,
