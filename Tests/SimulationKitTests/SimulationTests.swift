@@ -167,15 +167,20 @@ final class SimulationTests: XCTestCase {
             assetsCount: assetsCount,
             liabilitiesCount: liabilitiesCount,
             ledgersCount: ledgersCount,
-            plannedEvents: []
+            plannedEvents: [
+                Capture(
+                    entity: Simulation.Event.createEmptyLedger(ledgerID: 6),
+                    timestamp: 0
+                )
+            ]
         )
 
         let initialEvents = model.initialEvents()
 
         XCTAssertEqual(
             initialEvents.count,
-            13,
-            "The models initial events should contain 1 rate change event and 1 event for each asset & liability assigned to a ledger."
+            14,
+            "The models initial events should contain 1 rate change event, 1 event for each asset & liability assigned to a ledger, and 1 event for any empty ledgers."
         )
 
         let _: Simulation.Event = try XCTUnwrap(

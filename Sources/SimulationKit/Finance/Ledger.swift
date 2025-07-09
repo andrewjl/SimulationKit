@@ -109,8 +109,8 @@ struct Ledger: Equatable {
     static var autoincrementedID: UInt = 0
 
     var id: UInt
-    var assets: [Asset]
-    var liabilities: [Liability]
+    var assets: [Asset] = []
+    var liabilities: [Liability] = []
 
     func currentBalance() -> Decimal {
         let assetSum = assets.map { $0.currentBalance() }.reduce(Decimal.zero, +)

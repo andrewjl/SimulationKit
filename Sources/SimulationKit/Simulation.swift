@@ -33,13 +33,17 @@ class StateGenerator {
     ) -> [Ledger] {
         var ledgers = [UInt: Ledger]()
 
+        for case let Simulation.Event.createEmptyLedger(ledgerID) in initialEvents {
+            ledgers[ledgerID] = Ledger(id: ledgerID)
+        }
+
         for case let Simulation.Event.createAsset(balance, ledgerID) in initialEvents {
-            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, assets: [], liabilities: [])]
+            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID)]
                 .adding(Asset.make(from: balance))
         }
 
         for case let Simulation.Event.createLiability(balance, ledgerID) in initialEvents {
-            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, assets: [], liabilities: [])]
+            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID)]
                 .adding(Liability.make(from: balance))
         }
 
@@ -79,6 +83,16 @@ class Simulation {
             case .createLiability(balance: let balance, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance)) : $0 },
+                    riskFreeRate: riskFreeRate
+                )
+            case .createEmptyLedger(ledgerID: let ledgerID):
+                let ledger = Ledger(
+                    id: ledgerID,
+                    assets: [],
+                    liabilities: []
+                )
+                return State(
+                    ledgers: ledgers + [ledger],
                     riskFreeRate: riskFreeRate
                 )
             }
@@ -212,6 +226,7 @@ extension Simulation {
         case ledgerTransactions(transactions: [Ledger.Event], ledgerID: UInt)
         case createAsset(balance: Decimal, ledgerID: UInt)
         case createLiability(balance: Decimal, ledgerID: UInt)
+        case createEmptyLedger(ledgerID: UInt)
     }
 }
 
