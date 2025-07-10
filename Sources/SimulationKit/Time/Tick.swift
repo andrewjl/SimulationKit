@@ -21,7 +21,7 @@ extension Decimal {
         return (Decimal(1) + decimalized) * self
     }
 
-    func decimalizedAdjustment(percentage: UInt) -> Self {
+    func decimalizedAdjustment(percentage: Int) -> Self {
         return (Decimal(percentage)/Decimal(100))*self
     }
 }

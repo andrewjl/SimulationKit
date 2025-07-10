@@ -203,20 +203,11 @@ class Simulation {
     }
 
     func computeEvents(ledger: Ledger) -> [Ledger.Event] {
-        let increaseAssetLedgerEvents = ledger.assets.map {
-            Ledger.Event.asset(
-                transaction: $0.increaseTransaction(by: UInt(self.state.riskFreeRate.rate)),
-                id: $0.id
-            )
-        }
-        let increaseLiabilityLedgerEvents = ledger.liabilities.map {
-            Ledger.Event.liability(
-                transaction: $0.increaseTransaction(by: UInt(self.state.riskFreeRate.rate)),
-                id: $0.id
-            )
-        }
-
-        return increaseAssetLedgerEvents + increaseLiabilityLedgerEvents
+        return ledger.adjustAllAssetBalances(
+            by: self.state.riskFreeRate.rate
+        ) + ledger.adjustAllLiabilityBalances(
+            by: self.state.riskFreeRate.rate
+        )
     }
 }
 

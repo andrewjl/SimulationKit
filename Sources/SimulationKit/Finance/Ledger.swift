@@ -6,30 +6,32 @@
 import Foundation
 
 extension Asset {
-    func increased(by percentageRate: UInt) -> Self {
-        let gain = currentBalance().decimalizedAdjustment(percentage: percentageRate)
+    func adjusted(by percentageRate: Int) -> Self {
         return self.transacted(
-            .increasing(by: gain)
+            self.adjustmentTransaction(by: percentageRate)
         )
     }
 
-    func increaseTransaction(by percentageRate: UInt) -> Self.Transaction {
-        let gain = currentBalance().decimalizedAdjustment(percentage: percentageRate)
-        return .increasing(by: gain)
+    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
+        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
+        return Transaction(
+            amount: adjustmentAmount
+        )
     }
 }
 
 extension Liability {
-    func increased(by percentageRate: UInt) -> Self {
-        let gain = currentBalance().decimalizedAdjustment(percentage: percentageRate)
+    func adjusted(by percentageRate: Int) -> Self {
         return self.transacted(
-            .increasing(by: gain)
+            self.adjustmentTransaction(by: percentageRate)
         )
     }
 
-    func increaseTransaction(by percentageRate: UInt) -> Self.Transaction {
-        let gain = currentBalance().decimalizedAdjustment(percentage: percentageRate)
-        return .increasing(by: gain)
+    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
+        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
+        return Transaction(
+            amount: adjustmentAmount
+        )
     }
 }
 
@@ -46,12 +48,12 @@ extension Array where Array.Element == Asset {
         self.map { $0.currentBalance() }.reduce(Decimal.zero, +)
     }
 
-    func increased(by percentageRate: UInt) -> Self {
-        self.map { $0.increased(by: percentageRate) }
+    func adjusted(by percentageRate: Int) -> Self {
+        self.map { $0.adjusted(by: percentageRate) }
     }
 
-    func increaseTransactions(by percentageRate: UInt) -> [Array.Element.Transaction] {
-        self.map { $0.increaseTransaction(by: percentageRate) }
+    func adjustmentTransactions(by percentageRate: Int) -> [Array.Element.Transaction] {
+        self.map { $0.adjustmentTransaction(by: percentageRate) }
     }
 }
 
@@ -68,12 +70,16 @@ extension Array where Array.Element == Liability {
         self.map { $0.currentBalance() }.reduce(Decimal.zero, +)
     }
 
-    func increased(by percentageRate: UInt) -> Self {
-        self.map { $0.increased(by: percentageRate) }
+    func adjusted(
+        by percentageRate: Int
+    ) -> Self {
+        self.map { $0.adjusted(by: percentageRate) }
     }
 
-    func increaseTransactions(by percentageRate: UInt) -> [Array.Element.Transaction] {
-        self.map { $0.increaseTransaction(by: percentageRate) }
+    func adjustmentTransactions(
+        by percentageRate: Int
+    ) -> [Array.Element.Transaction] {
+        self.map { $0.adjustmentTransaction(by: percentageRate) }
     }
 }
 
@@ -159,6 +165,30 @@ struct Ledger: Equatable {
     enum Event: Equatable {
         case asset(transaction: Asset.Transaction, id: UInt)
         case liability(transaction: Liability.Transaction, id: UInt)
+    }
+
+    func adjustAllAssetBalances(
+        by rate: Int
+    ) -> [Event] {
+        return assets
+            .map {
+                Event.asset(
+                    transaction: $0.adjustmentTransaction(by: rate),
+                    id: $0.id
+                )
+            }
+    }
+
+    func adjustAllLiabilityBalances(
+        by rate: Int
+    ) -> [Event] {
+        return liabilities
+            .map {
+                Event.liability(
+                    transaction: $0.adjustmentTransaction(by: rate),
+                    id: $0.id
+                )
+            }
     }
 }
 
