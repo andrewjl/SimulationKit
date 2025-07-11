@@ -111,11 +111,59 @@ final class LedgerTests: XCTestCase {
             ]
         )
         XCTAssertEqual(ledger.currentBalance(), 200.0)
-        ledger = ledger.tick(events: [
-            .asset(transaction: .debit(amount: 5.0), id: 0),
-            .asset(transaction: .debit(amount: 5.0), id: 1),
-            .liability(transaction: .decreasing(by: 35.0), id: 0)
-        ])
+        ledger = ledger
+            .evented([
+                .asset(transaction: .debit(amount: 5.0), id: 0),
+                .asset(transaction: .debit(amount: 5.0), id: 1),
+                .liability(transaction: .decreasing(by: 35.0), id: 0)
+            ]
+        )
         XCTAssertEqual(ledger.currentBalance(), 245.0)
+    }
+
+    func tesrAdjustments() throws {
+        var ledger = Ledger.make(
+            assets: [
+                Asset(
+                    id: 0,
+                    balance: 1000.0
+                ),
+                Asset(
+                    id: 1,
+                    balance: 2000.0
+                ),
+            ],
+            liabilities: [
+                Liability(
+                    id: 0,
+                    balance: 1500.0
+                )
+            ]
+        )
+        let expectedStartingBalance: Decimal = 1000.0 + 2000.0 - 1500.0
+        XCTAssertEqual(
+            ledger.currentBalance(),
+            expectedStartingBalance
+        )
+
+        ledger = ledger.adjustAllAssetBalances(
+            by: 2
+        )
+
+        let expectedPostAssetAdjustmentBalance: Decimal = 1020.0 + 2040.0 - 1500.0
+        XCTAssertEqual(
+            ledger.currentBalance(),
+            expectedPostAssetAdjustmentBalance
+        )
+
+        ledger = ledger.adjustAllLiabilityBalances(
+            by: 3
+        )
+
+        let expectedPostLiabilityAdjustmentBalance: Decimal = 1020.0 + 2040.0 - 1545.0
+        XCTAssertEqual(
+            ledger.currentBalance(),
+            expectedPostLiabilityAdjustmentBalance
+        )
     }
 }

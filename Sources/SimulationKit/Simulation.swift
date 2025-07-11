@@ -72,7 +72,7 @@ class Simulation {
                 return State(ledgers: ledgers, riskFreeRate: RiskFreeRate(rate: rate))
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.tick(events: transactions) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.evented(transactions) : $0 },
                     riskFreeRate: self.riskFreeRate
                 )
             case .createAsset(balance: let balance, ledgerID: let ledgerID):
@@ -148,33 +148,24 @@ class Simulation {
     }
 
     func successiveStep(tick: Tick) -> Step {
-        let relevantPlannedEvents = plannedEvents.filter({ $0.timestamp == tick.time }).map { $0.entity }
+        let events = upcomingEvents(state: state, tick: tick)
+        let successiveState = events.reduce(state, { $0.apply(event: $1) })
 
-        for event in relevantPlannedEvents {
-            capture = Capture(
-                entity: state.apply(event: event),
-                timestamp: tick.time
-            )
-        }
-        let computedEvents = self.computedEvents(state: state)
+        capture = Capture(
+            entity: successiveState,
+            timestamp: tick.time
+        )
 
-        for computedEvent in computedEvents {
-            capture = Capture(
-                entity: state.apply(event: computedEvent),
-                timestamp: tick.time
-            )
-        }
-
-        let capture = SimulationCapture(
+        let simulationCapture = SimulationCapture(
             entity: (
                 state: state,
-                events: relevantPlannedEvents + computedEvents
+                events: events
             ),
             timestamp: tick.time
         )
 
         return Step(
-            capture: capture,
+            capture: simulationCapture,
             totalPeriods: totalPeriods
         )
     }
@@ -183,7 +174,9 @@ class Simulation {
         return self.state.ledgers
             .map {
                 Simulation.Event.ledgerTransactions(
-                    transactions: self.computeEvents(ledger: $0),
+                    transactions: $0.eventsAdjustingAllBalances(
+                        by: self.capture.entity.riskFreeRate.rate
+                    ),
                     ledgerID: $0.id
                 )
             }
@@ -200,14 +193,6 @@ class Simulation {
         tick: Tick
     ) -> [Simulation.Event] {
         return computedEvents(state: state) + preplannedEvents(tick: tick)
-    }
-
-    func computeEvents(ledger: Ledger) -> [Ledger.Event] {
-        return ledger.adjustAllAssetBalances(
-            by: self.state.riskFreeRate.rate
-        ) + ledger.adjustAllLiabilityBalances(
-            by: self.state.riskFreeRate.rate
-        )
     }
 }
 

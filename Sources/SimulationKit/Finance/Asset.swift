@@ -122,10 +122,17 @@ extension Asset {
     }
 }
 
-extension Asset: CustomStringConvertible {
-    var description: String {
-        return """
-            Balance: \(currentBalance())
-        """
+extension Asset {
+    func adjusted(by percentageRate: Int) -> Self {
+        return self.transacted(
+            self.adjustmentTransaction(by: percentageRate)
+        )
+    }
+
+    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
+        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
+        return Transaction(
+            amount: adjustmentAmount
+        )
     }
 }

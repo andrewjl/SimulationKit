@@ -89,7 +89,6 @@ extension Liability {
     }
 }
 
-
 extension Liability {
     func decreased(by amount: Decimal) -> Self {
         return transacted(
@@ -119,6 +118,21 @@ extension Liability {
         return Self(
             id: id,
             transactions: transactions + [transaction]
+        )
+    }
+}
+
+extension Liability {
+    func adjusted(by percentageRate: Int) -> Self {
+        return self.transacted(
+            self.adjustmentTransaction(by: percentageRate)
+        )
+    }
+
+    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
+        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
+        return Transaction(
+            amount: adjustmentAmount
         )
     }
 }

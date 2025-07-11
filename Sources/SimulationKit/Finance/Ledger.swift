@@ -5,36 +5,6 @@
 
 import Foundation
 
-extension Asset {
-    func adjusted(by percentageRate: Int) -> Self {
-        return self.transacted(
-            self.adjustmentTransaction(by: percentageRate)
-        )
-    }
-
-    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
-        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
-        return Transaction(
-            amount: adjustmentAmount
-        )
-    }
-}
-
-extension Liability {
-    func adjusted(by percentageRate: Int) -> Self {
-        return self.transacted(
-            self.adjustmentTransaction(by: percentageRate)
-        )
-    }
-
-    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
-        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
-        return Transaction(
-            amount: adjustmentAmount
-        )
-    }
-}
-
 extension Array where Array.Element == Asset {
     func event(_ event: Ledger.Event) -> Self {
         guard case Ledger.Event.asset(transaction: let transaction, id: let id) = event else {
@@ -142,7 +112,7 @@ struct Ledger: Equatable {
         }
     }
 
-    func tick(events: [Event]) -> Self {
+    func evented(_ events: [Event]) -> Self {
         var eventedAssets = assets
         var eventedLiabilities = liabilities
 
@@ -167,28 +137,60 @@ struct Ledger: Equatable {
         case liability(transaction: Liability.Transaction, id: UInt)
     }
 
-    func adjustAllAssetBalances(
+    func eventsAdjustingAllAssetBalances(
         by rate: Int
     ) -> [Event] {
-        return assets
-            .map {
-                Event.asset(
-                    transaction: $0.adjustmentTransaction(by: rate),
-                    id: $0.id
-                )
-            }
+        return zip(
+            assets
+                .adjustmentTransactions(
+                    by: rate
+                ),
+            assets.map { $0.id }
+        ).map {
+            Event.asset(transaction: $0.0, id: $0.1)
+        }
+    }
+
+    func eventsAdjustingAllLiabilityBalances(
+        by rate: Int
+    ) -> [Event] {
+        return zip(
+            liabilities
+                .adjustmentTransactions(
+                    by: rate
+                ),
+            liabilities.map { $0.id }
+        ).map {
+            Event.liability(transaction: $0.0, id: $0.1)
+        }
+    }
+
+    func eventsAdjustingAllBalances(
+        by rate: Int
+    ) -> [Event] {
+        self.eventsAdjustingAllAssetBalances(
+            by: rate
+        ) + self.eventsAdjustingAllLiabilityBalances(
+            by: rate
+        )
+    }
+}
+
+extension Ledger {
+    func adjustAllAssetBalances(
+        by rate: Int
+    ) -> Self {
+        self.evented(
+            self.eventsAdjustingAllAssetBalances(by: rate)
+        )
     }
 
     func adjustAllLiabilityBalances(
         by rate: Int
-    ) -> [Event] {
-        return liabilities
-            .map {
-                Event.liability(
-                    transaction: $0.adjustmentTransaction(by: rate),
-                    id: $0.id
-                )
-            }
+    ) -> Self {
+        self.evented(
+            self.eventsAdjustingAllLiabilityBalances(by: rate)
+        )
     }
 }
 
