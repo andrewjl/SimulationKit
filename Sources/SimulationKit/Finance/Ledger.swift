@@ -214,8 +214,8 @@ extension Ledger {
 
 extension Ledger {
     static func make(
-        assets: [Asset],
-        liabilities: [Liability]
+        assets: [Asset] = [],
+        liabilities: [Liability] = []
     ) -> Self {
         defer {
             Self.autoincrementedID += 1
