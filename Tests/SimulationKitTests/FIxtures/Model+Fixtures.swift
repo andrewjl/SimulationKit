@@ -12,9 +12,7 @@ extension Model {
         ledgersCount: Int = 1,
         plannedEvents: [Capture<Simulation.Event>] = []
     ) -> Model {
-        let model =
-
-        Model(
+        return Model(
             rate: 5,
             initialAssetBalance: 300,
             initialLiabilityBalance: 100,
@@ -22,6 +20,5 @@ extension Model {
             ledgersCount: ledgersCount,
             plannedEvents: plannedEvents
         )
-        return model
     }
 }
