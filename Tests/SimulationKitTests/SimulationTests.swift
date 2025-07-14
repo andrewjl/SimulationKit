@@ -9,7 +9,32 @@ import XCTest
 final class SimulationTests: XCTestCase {
     func testSingleRunSteps() throws {
         let ledgersCount = 1
-        let model = Model.makeModel(ledgersCount: ledgersCount)
+
+        let ledgerID = UUID().uuidString
+
+        let model = Model.makeModel(
+            plannedEvents: [
+                Capture(
+                    entity: Simulation.Event.changeRiskFreeRate(
+                        newRate: 5
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createEmptyLedger(
+                        ledgerID: ledgerID
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createAsset(
+                        balance: 400.0,
+                        ledgerID: ledgerID
+                    ),
+                    timestamp: 0
+                ),
+            ]
+        )
         let simulation = Simulation.make(from: model)
         let clock = Clock()
         let tick = clock.next()
@@ -17,7 +42,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(initial.currentPeriod, 0)
         XCTAssertEqual(initial.totalPeriods, model.duration)
-        XCTAssertEqual(initial.capture.entity.state.ledgers.count, ledgersCount)
+        XCTAssertEqual(initial.capture.entity.state.ledgers.count, 1)
 
         XCTAssertEqual(
             initial.capture.entity.state.ledgers.first?.currentBalance(),
@@ -79,15 +104,38 @@ final class SimulationTests: XCTestCase {
     }
 
     func testPlannedEvents() throws {
-        let riskFreeRatePlannedEvent = Simulation.Event.changeRiskFreeRate(newRate: 7)
-        let createAssetEvent = Simulation.Event.createAsset(balance: 150.0, ledgerID: 0)
-        let initialAssetsCount = 2
+        let riskFreeRatePlannedEvent = Simulation.Event.changeRiskFreeRate(
+            newRate: 7
+        )
+        
+        let ledgerIDs = [
+            UUID().uuidString
+        ]
+
+        let initialAssetsCount:Int = 2
+
+        let createAssetEvent = Simulation.Event.createAsset(
+            balance: 150.0,
+            ledgerID: ledgerIDs[0]
+        )
+
         let model = Model.makeModel(
-            assetsCount: initialAssetsCount,
             plannedEvents: [
                 Capture(
                     entity: riskFreeRatePlannedEvent,
                     timestamp: 2
+                ),
+                Capture(
+                    entity: Simulation.Event.createEmptyLedger(ledgerID: ledgerIDs[0]),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: createAssetEvent,
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: createAssetEvent,
+                    timestamp: 0
                 ),
                 Capture(
                     entity: createAssetEvent,
@@ -95,11 +143,12 @@ final class SimulationTests: XCTestCase {
                 )
             ]
         )
+
         let simulation = Simulation.make(from: model)
         let clock = Clock()
 
         let _ = simulation.start(tick: clock.next())
-        let _ = simulation.tick(clock.next())
+        let elapsedFirstPeriod = simulation.tick(clock.next())
         let elapsedSecondPeriod = simulation.tick(clock.next())
 
         XCTAssertEqual(
@@ -122,8 +171,20 @@ final class SimulationTests: XCTestCase {
             elapsedThirdPeriod.capture.entity.events.contains(createAssetEvent)
         )
 
+        let finalLedger = try XCTUnwrap(
+            elapsedThirdPeriod
+                .capture
+                .entity
+                .state
+                .ledgers
+                .first(
+                    where: { $0.id == ledgerIDs[0] }
+                ),
+            "Missing initial ledger in the third period snapshot"
+        )
+
         XCTAssertEqual(
-            elapsedThirdPeriod.capture.entity.state.ledgers.first(where: { $0.id == 0 })?.assets.count,
+            finalLedger.assets.count,
             initialAssetsCount + 1
         )
     }
@@ -131,14 +192,14 @@ final class SimulationTests: XCTestCase {
     func testStateGenerator() throws {
         let initialEvents: [Simulation.Event] = [
             Simulation.Event.changeRiskFreeRate(newRate: 7),
-            Simulation.Event.createAsset(balance: 100.0, ledgerID: 0),
-            Simulation.Event.createLiability(balance: 100.0, ledgerID: 0)
+            Simulation.Event.createAsset(balance: 100.0, ledgerID: "0"),
+            Simulation.Event.createLiability(balance: 100.0, ledgerID: "0")
         ]
 
         let state = StateGenerator.generate(from: initialEvents)
 
         XCTAssertEqual(
-            state.riskFreeRate.rate,
+            state.bank.riskFreeRate,
             7
         )
         XCTAssertEqual(
@@ -147,7 +208,7 @@ final class SimulationTests: XCTestCase {
         )
 
         let ledger = try XCTUnwrap(
-            state.ledgers.first(where: { $0.id == 0 })
+            state.ledgers.first(where: { $0.id == "0" })
         )
 
         XCTAssertEqual(
@@ -157,31 +218,127 @@ final class SimulationTests: XCTestCase {
     }
 
     func testModel() throws {
-        let assetsCount = 1
-        let liabilitiesCount = 1
-        let ledgersCount = 6
+
+        let plannedEvents = [
+            Capture(
+                entity: Simulation.Event.changeRiskFreeRate(newRate: 5),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createEmptyLedger(ledgerID: "1"),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createEmptyLedger(ledgerID: "2"),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createEmptyLedger(ledgerID: "3"),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createEmptyLedger(ledgerID: "4"),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createEmptyLedger(ledgerID: "5"),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createEmptyLedger(ledgerID: "6"),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createAsset(
+                    balance: 100.0,
+                    ledgerID: "1"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createAsset(
+                    balance: 100.0,
+                    ledgerID: "2"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createAsset(
+                    balance: 100.0,
+                    ledgerID: "3"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createAsset(
+                    balance: 100.0,
+                    ledgerID: "4"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createAsset(
+                    balance: 100.0,
+                    ledgerID: "5"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createAsset(
+                    balance: 100.0,
+                    ledgerID: "6"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createLiability(
+                    balance: 100.0,
+                    ledgerID: "1"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createLiability(
+                    balance: 100.0,
+                    ledgerID: "2"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createLiability(
+                    balance: 100.0,
+                    ledgerID: "3"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createLiability(
+                    balance: 100.0,
+                    ledgerID: "4"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createLiability(
+                    balance: 100.0,
+                    ledgerID: "5"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.createLiability(
+                    balance: 100.0,
+                    ledgerID: "6"
+                ),
+                timestamp: 0
+            )
+        ]
+
         let model = Model(
-            rate: 4,
-            initialAssetBalance: 500.0,
-            initialLiabilityBalance: 200.0,
-            assetsCount: assetsCount,
-            liabilitiesCount: liabilitiesCount,
-            ledgersCount: ledgersCount,
-            plannedEvents: [
-                Capture(
-                    entity: Simulation.Event.createEmptyLedger(ledgerID: 6),
-                    timestamp: 0
-                )
-            ]
+            plannedEvents: plannedEvents
         )
 
         let initialEvents = model.initialEvents()
-
-        XCTAssertEqual(
-            initialEvents.count,
-            14,
-            "The models initial events should contain 1 rate change event, 1 event for each asset & liability assigned to a ledger, and 1 event for any empty ledgers."
-        )
 
         let _: Simulation.Event = try XCTUnwrap(
             initialEvents.compactMap {
@@ -206,8 +363,8 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(
             assetEvents.count,
-            assetsCount * ledgersCount,
-            "The models initial events should contain \(assetsCount) asset creation event for each ledger."
+            6,
+            "The models initial events should contain 1 asset creation event for each ledger."
         )
 
         let liabilityEvents: [Simulation.Event] = try XCTUnwrap(
@@ -222,8 +379,52 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(
             liabilityEvents.count,
-            liabilitiesCount * ledgersCount,
-            "The models initial events should contain \(liabilitiesCount) liability creation event for each ledger."
+            6,
+            "The models initial events should contain 1 liability creation event for each ledger."
+        )
+    }
+
+    func testSimulationState() throws {
+        let state = Simulation.State(
+            ledgers: [],
+            bank: Bank(
+                riskFreeRate: 4
+            )
+        )
+
+        let ledgerID = UUID().uuidString
+
+        let firstSuccessorState = state.apply(
+            event: .createEmptyLedger(
+                ledgerID: ledgerID
+            )
+        )
+
+        let firstSuccessorStateLedger = try XCTUnwrap(
+            firstSuccessorState.ledgers.first,
+            "Expected at least one extant ledger after create empty ledger event"
+        )
+
+        XCTAssertTrue(
+            firstSuccessorStateLedger.assets.count == 0,
+            "Expected no assets in empty ledger"
+        )
+
+        let secondSuccessorState = firstSuccessorState.apply(
+            event: .createAsset(
+                balance: 100.0,
+                ledgerID: ledgerID
+            )
+        )
+
+        let secondSuccessorStateLedger = try XCTUnwrap(
+            secondSuccessorState.ledgers.first,
+            "Expected at least one extant ledger"
+        )
+
+        XCTAssertTrue(
+            secondSuccessorStateLedger.assets.count == 1,
+            "Expected one assets ledger"
         )
     }
 }

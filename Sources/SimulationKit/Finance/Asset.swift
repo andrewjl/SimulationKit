@@ -8,13 +8,11 @@ import Foundation
 // Credit: Decrease
 // Debit: Increase
 struct Asset: Equatable {
-    static var autoincrementedID: UInt = 0
-
-    let id: UInt
+    let id: String
     var transactions: [Self.Transaction] = []
 
     init(
-        id: UInt,
+        id: String,
         balance: Decimal
     ) {
         self.id = id
@@ -22,7 +20,7 @@ struct Asset: Equatable {
     }
 
     init(
-        id: UInt,
+        id: String,
         transactions: [Self.Transaction]
     ) {
         self.id = id
@@ -35,55 +33,88 @@ struct Asset: Equatable {
     }
 
     enum Transaction: Equatable {
-        case credit(amount: Decimal)
-        case debit(amount: Decimal)
+        case credit(id: String, amount: Decimal)
+        case debit(id: String, amount: Decimal)
 
         var amount: Decimal {
             switch self {
-            case .credit(amount: let amount):
+            case .credit(id: _, amount: let amount):
                 var negatedAmount = amount
                 negatedAmount.negate()
                 return negatedAmount
-            case .debit(amount: let amount):
+            case .debit(id: _, amount: let amount):
                 return amount
             }
         }
 
-        init(amount: Decimal) {
-            if amount.isSignMinus {
-                self = .credit(amount: -amount)
+        var isCredit: Bool {
+            if case .credit(_, _) = self {
+                return true
             } else {
-                self = .debit(amount: amount)
+                return false
             }
         }
 
+        var isDebit: Bool {
+            if case .debit(_, _) = self {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        init(
+            id: String = UUID().uuidString,
+            amount: Decimal
+        ) {
+            if amount.isSignMinus {
+                self = .credit(
+                    id: id,
+                    amount: -amount
+                )
+            } else {
+                self = .debit(
+                    id: id,
+                    amount: amount
+                )
+            }
+        }
+
+        static func credited(by amount: Decimal) -> Self {
+            return .init(amount: -amount)
+        }
+
+        static func debited(by amount: Decimal) -> Self {
+            return .init(amount: amount)
+        }
+
         static func decreasing(by amount: Decimal) -> Self {
-            return .credit(amount: amount)
+            return .init(amount: -amount)
         }
 
         static func increasing(by amount: Decimal) -> Self {
-            return .debit(amount: amount)
+            return .init(amount: amount)
         }
     }
 }
 
 extension Asset {
-    static func make(from transactions: [Transaction]) -> Self {
-        defer {
-            Self.autoincrementedID += 1
-        }
+    static func make(
+        from transactions: [Transaction],
+        id: String = UUID().uuidString
+    ) -> Self {
         return Self(
-            id: Self.autoincrementedID,
+            id: id,
             transactions: transactions
         )
     }
 
-    static func make(from balance: Decimal) -> Self {
-        defer {
-            Self.autoincrementedID += 1
-        }
+    static func make(
+        from balance: Decimal,
+        id: String = UUID().uuidString
+    ) -> Self {
         return Self(
-            id: Self.autoincrementedID,
+            id: id,
             balance: balance
         )
     }
@@ -102,15 +133,15 @@ extension Asset {
         )
     }
 
-    func credited(amount: Decimal) -> Self {
+    func credited(by amount: Decimal) -> Self {
         return transacted(
-            .credit(amount: amount)
+            Transaction.credited(by: amount)
         )
     }
 
-    func debited(amount: Decimal) -> Self {
+    func debited(by amount: Decimal) -> Self {
         return transacted(
-            .debit(amount: amount)
+            Transaction.debited(by: amount)
         )
     }
 
@@ -123,12 +154,6 @@ extension Asset {
 }
 
 extension Asset {
-    func adjusted(by percentageRate: Int) -> Self {
-        return self.transacted(
-            self.adjustmentTransaction(by: percentageRate)
-        )
-    }
-
     func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
         let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
         return Transaction(

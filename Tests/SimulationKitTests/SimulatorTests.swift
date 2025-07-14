@@ -8,14 +8,9 @@ import XCTest
 
 final class SimulatorTests: XCTestCase {
     func testSimulation() throws {
-        let model = Model(
-            rate: 5,
-            initialAssetBalance: 300,
-            initialLiabilityBalance: 100
-        )
+        let model = Model()
         let simulator = Simulator()
         let run = simulator.execute(model: model)
-        print(run)
     }
 
     func testClock() throws {
@@ -35,11 +30,53 @@ final class SimulatorTests: XCTestCase {
 
     func testSingleRun() throws {
         let ledgersCount = 2
+        let ledgerIDs = [
+            UUID().uuidString,
+            UUID().uuidString,
+        ]
         let model = Model(
-            rate: 5,
-            initialAssetBalance: 300,
-            initialLiabilityBalance: 100,
-            ledgersCount: ledgersCount
+            plannedEvents: [
+                Capture(
+                    entity: Simulation.Event.createEmptyLedger(
+                        ledgerID: ledgerIDs[0]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createEmptyLedger(
+                        ledgerID: ledgerIDs[1]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createAsset(
+                        balance: 200.0,
+                        ledgerID: ledgerIDs[0]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createLiability(
+                        balance: 100.0,
+                        ledgerID: ledgerIDs[0]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createAsset(
+                        balance: 200.0,
+                        ledgerID: ledgerIDs[1]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.createLiability(
+                        balance: 100.0,
+                        ledgerID: ledgerIDs[1]
+                    ),
+                    timestamp: 0
+                )
+            ]
         )
         let simulator = Simulator()
         let runs = simulator.execute(model: model)
@@ -58,7 +95,16 @@ final class SimulatorTests: XCTestCase {
 
     func testMultipleRuns() {
         let ledgersCount = 1
-        let model = Model.makeModel(ledgersCount: ledgersCount)
+        let model = Model.makeModel(
+            plannedEvents: [
+                Capture(
+                    entity: Simulation.Event.createEmptyLedger(
+                        ledgerID: UUID().uuidString
+                    ),
+                    timestamp: 0
+                )
+            ]
+        )
         let simulator = Simulator()
         let runs = simulator.execute(model: model, runsCount: 5)
         XCTAssertEqual(runs.count, 5)

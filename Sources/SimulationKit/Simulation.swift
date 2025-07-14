@@ -5,12 +5,6 @@
 
 import Foundation
 
-struct RiskFreeRate: Equatable {
-    static var `default` = 10
-
-    var rate: Int
-}
-
 class StateGenerator {
     static func generate(from model: ConceptualModel) -> Simulation.State {
         self.generate(
@@ -20,18 +14,19 @@ class StateGenerator {
 
     static func generate(from initialEvents: [Simulation.Event]) -> Simulation.State {
         let riskFreeRate = riskFreeRate(from: initialEvents)
+        let bank = Bank(eventCaptures: [], riskFreeRate: riskFreeRate)
         let ledgers = ledgers(from: initialEvents)
 
         return Simulation.State(
             ledgers: ledgers,
-            riskFreeRate: riskFreeRate
+            bank: bank
         )
     }
 
     static func ledgers(
         from initialEvents: [Simulation.Event]
     ) -> [Ledger] {
-        var ledgers = [UInt: Ledger]()
+        var ledgers = [String: Ledger]()
 
         for case let Simulation.Event.createEmptyLedger(ledgerID) in initialEvents {
             ledgers[ledgerID] = Ledger(id: ledgerID)
@@ -52,38 +47,41 @@ class StateGenerator {
 
     static func riskFreeRate(
         from initialEvents: [Simulation.Event]
-    ) -> RiskFreeRate {
-        var rate = RiskFreeRate.default
+    ) -> Int {
+        var rate = 10
         for case let Simulation.Event.changeRiskFreeRate(newRate) in initialEvents {
             rate = newRate
         }
-        return RiskFreeRate(rate: rate)
+        return rate
     }
 }
 
 class Simulation {
-    struct State: Equatable {
+    struct State {
         var ledgers: [Ledger]
-        var riskFreeRate: RiskFreeRate
+        var bank: Bank
 
         func apply(event: Event) -> Self {
             switch event {
             case .changeRiskFreeRate(newRate: let rate):
-                return State(ledgers: ledgers, riskFreeRate: RiskFreeRate(rate: rate))
+                return State(
+                    ledgers: ledgers,
+                    bank: bank.changeRiskFreeRate(to: rate)
+                )
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.evented(transactions) : $0 },
-                    riskFreeRate: self.riskFreeRate
+                    bank: bank
                 )
             case .createAsset(balance: let balance, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(from: balance)) : $0 },
-                    riskFreeRate: riskFreeRate
+                    bank: bank
                 )
             case .createLiability(balance: let balance, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance)) : $0 },
-                    riskFreeRate: riskFreeRate
+                    bank: bank
                 )
             case .createEmptyLedger(ledgerID: let ledgerID):
                 let ledger = Ledger(
@@ -93,7 +91,15 @@ class Simulation {
                 )
                 return State(
                     ledgers: ledgers + [ledger],
-                    riskFreeRate: riskFreeRate
+                    bank: bank
+                )
+            case .bankLedgerTransactions(transactions: _, period: _):
+                return State(
+                    ledgers: ledgers,
+                    bank: Bank(
+                        eventCaptures: bank.eventCaptures,
+                        riskFreeRate: bank.riskFreeRate
+                    )
                 )
             }
         }
@@ -175,7 +181,7 @@ class Simulation {
             .map {
                 Simulation.Event.ledgerTransactions(
                     transactions: $0.eventsAdjustingAllBalances(
-                        by: self.capture.entity.riskFreeRate.rate
+                        by: self.capture.entity.bank.riskFreeRate
                     ),
                     ledgerID: $0.id
                 )
@@ -196,22 +202,26 @@ class Simulation {
     }
 }
 
+extension Simulation.State: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.bank == rhs.bank &&
+        lhs.ledgers == rhs.ledgers
+    }
+}
+
 extension Simulation {
     enum Event: Equatable {
         case changeRiskFreeRate(newRate: Int)
-        case ledgerTransactions(transactions: [Ledger.Event], ledgerID: UInt)
-        case createAsset(balance: Decimal, ledgerID: UInt)
-        case createLiability(balance: Decimal, ledgerID: UInt)
-        case createEmptyLedger(ledgerID: UInt)
+        case ledgerTransactions(transactions: [Ledger.Event], ledgerID: String)
+        case createAsset(balance: Decimal, ledgerID: String)
+        case createLiability(balance: Decimal, ledgerID: String)
+        case createEmptyLedger(ledgerID: String)
+        case bankLedgerTransactions(transactions: [Ledger.Event], period: UInt32)
     }
 }
 
 extension Simulation {
     static func make(from model: Model) -> Simulation {
-        Asset.autoincrementedID = 0
-        Liability.autoincrementedID = 0
-        Ledger.autoincrementedID = 0
-
         let simulation = Simulation(
             model: model
         )

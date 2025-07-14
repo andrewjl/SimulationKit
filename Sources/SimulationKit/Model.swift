@@ -6,53 +6,22 @@
 import Foundation
 
 class ConceptualModel {
-    var initialAssetBalance: Decimal
-    var initialLiabilityBalance: Decimal
-
     var duration: UInt32 = 7
     var plannedEvents: [Capture<Simulation.Event>]
 
     init(
-        rate: UInt,
-        initialAssetBalance: Decimal,
-        initialLiabilityBalance: Decimal,
-        assetsCount: Int = 2,
-        liabilitiesCount: Int = 2,
-        ledgersCount: Int = 3,
         plannedEvents: [Capture<Simulation.Event>] = []
     ) {
-        self.initialAssetBalance = initialAssetBalance
-        self.initialLiabilityBalance = initialLiabilityBalance
-
-        let inferredCreationEvents = (1...ledgersCount)
-            .reduce(
-                [],
-                { (part:[Simulation.Event], ledgerID: Int) in
-
-                    let assetCreationEvents = (1...assetsCount).map { (_: Int) in
-                        Simulation.Event.createAsset(balance: initialAssetBalance, ledgerID: UInt(ledgerID-1))
-                    }
-
-                    let liabilityCreationEvents = (1...liabilitiesCount).map { (_: Int) in
-                        Simulation.Event.createLiability(balance: initialLiabilityBalance, ledgerID: UInt(ledgerID-1))
-                    }
-
-                    return part + assetCreationEvents + liabilityCreationEvents
-                }
-            )
-            .map { Capture(entity: $0, timestamp: Clock.startingTime) }
-
-        let inferredRiskFreeRateEvent = Capture(
-            entity: Simulation.Event.changeRiskFreeRate(newRate: Int(rate)),
-            timestamp: Clock.startingTime
-        )
-
-        self.plannedEvents = plannedEvents + inferredCreationEvents + [inferredRiskFreeRateEvent]
+        self.plannedEvents = plannedEvents
     }
 
     func initialEvents() -> [Simulation.Event] {
+        events(at: Clock.startingTime)
+    }
+
+    func events(at time: UInt32) -> [Simulation.Event] {
         return plannedEvents
-            .filter({ $0.timestamp == Clock.startingTime })
+            .filter({ $0.timestamp == time })
             .map { $0.entity }
     }
 }

@@ -5,56 +5,8 @@
 
 import Foundation
 
-extension Array where Array.Element == Asset {
-    func event(_ event: Ledger.Event) -> Self {
-        guard case Ledger.Event.asset(transaction: let transaction, id: let id) = event else {
-            return self
-        }
-
-        return self.map { $0.id == id ? $0.transacted(transaction) : $0 }
-    }
-
-    func currentBalance() -> Decimal {
-        self.map { $0.currentBalance() }.reduce(Decimal.zero, +)
-    }
-
-    func adjusted(by percentageRate: Int) -> Self {
-        self.map { $0.adjusted(by: percentageRate) }
-    }
-
-    func adjustmentTransactions(by percentageRate: Int) -> [Array.Element.Transaction] {
-        self.map { $0.adjustmentTransaction(by: percentageRate) }
-    }
-}
-
-extension Array where Array.Element == Liability {
-    func event(_ event: Ledger.Event) -> Self {
-        guard case Ledger.Event.liability(transaction: let transaction, id: let id) = event else {
-            return self
-        }
-
-        return self.map { $0.id == id ? $0.transacted(transaction) : $0 }
-    }
-
-    func currentBalance() -> Decimal {
-        self.map { $0.currentBalance() }.reduce(Decimal.zero, +)
-    }
-
-    func adjusted(
-        by percentageRate: Int
-    ) -> Self {
-        self.map { $0.adjusted(by: percentageRate) }
-    }
-
-    func adjustmentTransactions(
-        by percentageRate: Int
-    ) -> [Array.Element.Transaction] {
-        self.map { $0.adjustmentTransaction(by: percentageRate) }
-    }
-}
-
 extension Array where Array.Element == Ledger.Event {
-    func event(assetID: UInt) -> Ledger.Event? {
+    func event(assetID: String) -> Ledger.Event? {
         self.first(where: {
             guard case let Ledger.Event.asset(transaction: _, id: id) = $0 else {
                 return false
@@ -64,7 +16,7 @@ extension Array where Array.Element == Ledger.Event {
         })
     }
 
-    func event(liabilityID: UInt) -> Ledger.Event? {
+    func event(liabilityID: String) -> Ledger.Event? {
         self.first(where: {
             guard case let Ledger.Event.liability(transaction: _, id: id) = $0 else {
                 return false
@@ -82,9 +34,7 @@ extension Array where Array.Element == Ledger {
 }
 
 struct Ledger: Equatable {
-    static var autoincrementedID: UInt = 0
-
-    var id: UInt
+    var id: String
     var assets: [Asset] = []
     var liabilities: [Liability] = []
 
@@ -133,8 +83,8 @@ struct Ledger: Equatable {
     }
 
     enum Event: Equatable {
-        case asset(transaction: Asset.Transaction, id: UInt)
-        case liability(transaction: Liability.Transaction, id: UInt)
+        case asset(transaction: Asset.Transaction, id: String)
+        case liability(transaction: Liability.Transaction, id: String)
     }
 
     func eventsAdjustingAllAssetBalances(
@@ -214,14 +164,12 @@ extension Ledger {
 
 extension Ledger {
     static func make(
+        id: String = UUID().uuidString,
         assets: [Asset] = [],
         liabilities: [Liability] = []
     ) -> Self {
-        defer {
-            Self.autoincrementedID += 1
-        }
         return Self(
-            id: Self.autoincrementedID,
+            id: id,
             assets: assets,
             liabilities: liabilities
         )

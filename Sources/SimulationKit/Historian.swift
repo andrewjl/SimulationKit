@@ -6,70 +6,32 @@
 import Foundation
 
 extension Asset {
-    static func balanceTimeSeriesKey(id: UInt) -> String {
-        return "A-Balance-\(id)"
-    }
-
-    static func rateTimeSeriesKey(id: UInt) -> String {
-        return "A-Rate-\(id)"
-    }
-
     func balanceTimeSeriesKey() -> String {
-        Self.balanceTimeSeriesKey(id: id)
+        id
     }
 
     func rateTimeSeriesKey() -> String {
-        Self.rateTimeSeriesKey(id: id)
+        id
     }
 }
 
 extension Liability {
-    static func balanceTimeSeriesKey(id: UInt) -> String {
-        return "L-Balance-\(id)"
-    }
-
-    static func rateTimeSeriesKey(id: UInt) -> String {
-        return "L-Rate-\(id)"
-    }
-
     func balanceTimeSeriesKey() -> String {
-        Self.balanceTimeSeriesKey(id: id)
+        id
     }
 
     func rateTimeSeriesKey() -> String {
-        Self.rateTimeSeriesKey(id: id)
-    }
-}
-
-extension Asset.Transaction {
-    func tag(id: UInt) -> String {
-        switch self {
-        case .credit:
-            return "AssetCredit-\(id)"
-        case .debit:
-            return "AssetDebit=\(id)"
-        }
-    }
-}
-
-extension Liability.Transaction {
-    func tag(id: UInt) -> String {
-        switch self {
-        case .credit:
-            return "LiabilityCredit-\(id)"
-        case .debit:
-            return "LiabilityDebit-\(id)"
-        }
+        id
     }
 }
 
 extension Ledger.Event {
     func tag() -> String {
         switch self {
-        case .asset(transaction: let transaction, id: let id):
-            return transaction.tag(id: id)
-        case .liability(transaction: let transaction, id: let id):
-            return transaction.tag(id: id)
+        case .asset(transaction: _, id: let id):
+            return id
+        case .liability(transaction: _, id: let id):
+            return id
         }
     }
 }
@@ -133,6 +95,17 @@ struct Measurement {
 class Historian {
     var captures: [SimulationCapture] = []
     var records: [Record] = []
+
+    func prepare(
+        simulation: Simulation,
+        startingTick: Tick
+    ) {
+        process(
+            step: simulation.start(
+                tick: startingTick
+            )
+        )
+    }
 
     func process(
         step: Step

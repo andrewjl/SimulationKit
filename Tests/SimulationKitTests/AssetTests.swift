@@ -7,31 +7,69 @@ import XCTest
 @testable import SimulationKit
 
 final class AssetTests: XCTestCase {
-    func testCreation() throws {
+    func testPositiveStartingBalance() throws {
         let asset = Asset.make(from: 100.0)
 
         XCTAssertEqual(asset.transactions.count, 1)
-        XCTAssertEqual(asset.transactions.first, Asset.Transaction.debit(amount: 100.0))
+
+        guard let firstTransaction = try? XCTUnwrap(
+            asset.transactions.first,
+            "No transactions in asset"
+        ) else {
+            XCTFail("No transactions in asset")
+            return
+        }
+
+        XCTAssertTrue(
+            firstTransaction.isDebit
+        )
+
+        XCTAssertEqual(
+            firstTransaction.amount,
+            100.0
+        )
+
         XCTAssertEqual(asset.currentBalance(), 100.0)
     }
 
-    func testNegativeBalance() throws {
+    func testNegativeStartingBalance() throws {
         let asset = Asset.make(from: -100.0)
 
         XCTAssertEqual(asset.transactions.count, 1)
-        XCTAssertEqual(asset.transactions.first, Asset.Transaction.credit(amount: 100.0))
+
+        guard let firstTransaction = try? XCTUnwrap(
+            asset.transactions.first,
+            "No transactions in asset"
+        ) else {
+            XCTFail("No transactions in asset")
+            return
+        }
+
+        XCTAssertTrue(
+            firstTransaction.isCredit
+        )
+
+        XCTAssertEqual(
+            firstTransaction.amount,
+            -100.0
+        )
+
         XCTAssertEqual(asset.currentBalance(), -100.0)
     }
 
     func testCredit() throws {
-        let asset = Asset.make(from: [.credit(amount: 100.0)])
+        let asset = Asset.make(
+            from: [
+                Asset.Transaction.credited(by: 100.0)
+            ]
+        )
         XCTAssertEqual(
             asset.currentBalance(),
             -100.0,
             "Initial asset balance should be +100.00"
         )
 
-        let creditedAsset = asset.credited(amount: 20.0)
+        let creditedAsset = asset.credited(by: 20.0)
         XCTAssertEqual(
             creditedAsset.currentBalance(),
             -120.0,
@@ -40,21 +78,25 @@ final class AssetTests: XCTestCase {
     }
 
     func testDebit() throws {
-        let asset = Asset.make(from: [.debit(amount: 100.0)])
+        let asset = Asset.make(
+            from: [
+                Asset.Transaction.debited(by: 100.0)
+            ]
+        )
         XCTAssertEqual(
             asset.currentBalance(),
             100.0,
             "Initial asset balance should be -100.00"
         )
 
-        let creditedAsset = asset.credited(amount: 20.0)
+        let creditedAsset = asset.credited(by: 20.0)
         XCTAssertEqual(
             creditedAsset.currentBalance(),
             80.0,
             "Debited asset balance should be +80.00"
         )
 
-        let debitedAsset = asset.debited(amount: 20.0)
+        let debitedAsset = asset.debited(by: 20.0)
         XCTAssertEqual(
             debitedAsset.currentBalance(),
             120.0,
@@ -85,7 +127,10 @@ final class AssetTests: XCTestCase {
     func testTransactions() throws {
         let increase = Asset.Transaction.increasing(by: 50.0)
 
-        guard case Asset.Transaction.debit(amount: let debitedAmount) = increase else {
+        guard case Asset.Transaction.debit(
+            id: _,
+            amount: let debitedAmount
+        ) = increase else {
             fatalError()
         }
         XCTAssertEqual(
@@ -96,7 +141,10 @@ final class AssetTests: XCTestCase {
 
         let decrease = Asset.Transaction.decreasing(by: 50.0)
 
-        guard case Asset.Transaction.credit(amount: let creditedAmount) = decrease else {
+        guard case Asset.Transaction.credit(
+            id: _,
+            amount: let creditedAmount
+        ) = decrease else {
             fatalError()
         }
         XCTAssertEqual(
@@ -104,29 +152,5 @@ final class AssetTests: XCTestCase {
             50.0,
             "Decreased asset transaction should be a credit of +50.0"
         )
-    }
-
-    func testAutoIncrementedID() throws {
-        let zeroth = Asset.make(from: 100.0)
-        let first = Asset.make(from: 150.0)
-
-        XCTAssertNotEqual(
-            zeroth.id,
-            first.id
-        )
-    }
-
-    func testArray() throws {
-        var assets = [
-            Asset.make(from: 100.0),
-            Asset.make(from: 50.0)
-        ]
-        XCTAssertEqual(assets.currentBalance(), 150.0)
-
-        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 1))
-        XCTAssertEqual(assets.currentBalance(), 200.0)
-
-        assets = assets.event(.asset(transaction: .debit(amount: 50.0), id: 2))
-        XCTAssertEqual(assets.currentBalance(), 200.0)
     }
 }

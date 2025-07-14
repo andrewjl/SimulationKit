@@ -40,8 +40,9 @@ class Simulator {
 
         let tick = clock.next()
 
-        historian.process(
-            step: execModel.start(tick: tick)
+        historian.prepare(
+            simulation: execModel,
+            startingTick: tick
         )
 
         for _ in 0..<model.duration {
