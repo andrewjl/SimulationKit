@@ -243,3 +243,51 @@ struct Step {
         return currentPeriod == totalPeriods
     }
 }
+
+extension Simulation {
+    struct Plan {
+
+        var ledgerIDs: [String]
+
+        var ledgersCount: UInt32 {
+            UInt32(ledgerIDs.count)
+        }
+
+        var plannedEvents: [Capture<Simulation.Event>] {
+            return ledgerIDs.map { ledgerID in
+                Capture(
+                    entity: Event.createEmptyLedger(
+                        ledgerID: ledgerID
+                    ),
+                    timestamp: 0
+                )
+            }
+        }
+    }
+
+    static func makePlan(
+        ledgersCount: UInt32,
+        startingTime: UInt32 = Clock.startingTime
+    ) -> Plan {
+        let ledgerIDs = (0..<ledgersCount)
+            .map { _ in UUID().uuidString }
+
+        return Plan(
+            ledgerIDs: ledgerIDs
+        )
+    }
+
+    static func makePlan(
+        ledgersCount: UInt32 = 1,
+        assetsCountAtStart: UInt32 = 0,
+        liabilitiesCountAtStart: UInt32 = 0,
+        startingTime: UInt32 = Clock.startingTime
+    ) -> Plan {
+        let ledgerIDs = (0..<ledgersCount)
+            .map { _ in UUID().uuidString }
+
+        return Plan(
+            ledgerIDs: ledgerIDs
+        )
+    }
+}
