@@ -85,6 +85,36 @@ struct Ledger: Equatable {
     enum Event: Equatable {
         case asset(transaction: Asset.Transaction, id: String)
         case liability(transaction: Liability.Transaction, id: String)
+
+        var amount: Decimal {
+            switch self {
+            case .asset(
+                transaction: let transaction,
+                id: _
+            ):
+                return transaction.amount
+            case .liability(
+                transaction: let transaction,
+                id: _
+            ):
+                return transaction.amount
+            }
+        }
+
+        var id: String {
+            switch self {
+            case .asset(
+                transaction: _,
+                id: let id
+            ):
+                return id
+            case .liability(
+                transaction: _,
+                id: let id
+            ):
+                return id
+            }
+        }
     }
 
     func eventsAdjustingAllAssetBalances(

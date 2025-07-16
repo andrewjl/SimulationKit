@@ -34,7 +34,12 @@ class StateGenerator {
 
         for case let Simulation.Event.createAsset(balance, ledgerID) in initialEvents {
             ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID)]
-                .adding(Asset.make(from: balance))
+                .adding(
+                    Asset.make(
+                        from: balance,
+                        name: ""
+                    )
+                )
         }
 
         for case let Simulation.Event.createLiability(balance, ledgerID) in initialEvents {
@@ -66,7 +71,10 @@ class Simulation {
             case .changeRiskFreeRate(newRate: let rate):
                 return State(
                     ledgers: ledgers,
-                    bank: bank.changeRiskFreeRate(to: rate)
+                    bank: bank.changeRiskFreeRate(
+                        to: rate,
+                        period: 1
+                    )
                 )
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
@@ -75,7 +83,10 @@ class Simulation {
                 )
             case .createAsset(balance: let balance, ledgerID: let ledgerID):
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(from: balance)) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(
+                        from: balance,
+                        name: ""
+                    )) : $0 },
                     bank: bank
                 )
             case .createLiability(balance: let balance, ledgerID: let ledgerID):

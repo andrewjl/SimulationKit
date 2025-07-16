@@ -8,7 +8,10 @@ import XCTest
 
 final class AssetTests: XCTestCase {
     func testPositiveStartingBalance() throws {
-        let asset = Asset.make(from: 100.0)
+        let asset = Asset.make(
+            from: 100.0,
+            name: ""
+        )
 
         XCTAssertEqual(asset.transactions.count, 1)
 
@@ -33,7 +36,10 @@ final class AssetTests: XCTestCase {
     }
 
     func testNegativeStartingBalance() throws {
-        let asset = Asset.make(from: -100.0)
+        let asset = Asset.make(
+            from: -100.0,
+            name: ""
+        )
 
         XCTAssertEqual(asset.transactions.count, 1)
 
@@ -61,7 +67,8 @@ final class AssetTests: XCTestCase {
         let asset = Asset.make(
             from: [
                 Asset.Transaction.credited(by: 100.0)
-            ]
+            ],
+            name: ""
         )
         XCTAssertEqual(
             asset.currentBalance(),
@@ -81,7 +88,8 @@ final class AssetTests: XCTestCase {
         let asset = Asset.make(
             from: [
                 Asset.Transaction.debited(by: 100.0)
-            ]
+            ],
+            name: ""
         )
         XCTAssertEqual(
             asset.currentBalance(),
@@ -105,7 +113,10 @@ final class AssetTests: XCTestCase {
     }
 
     func testIncrease() throws {
-        let asset = Asset.make(from: 100.0)
+        let asset = Asset.make(
+            from: 100.0,
+            name: ""
+        )
         let increasedAsset = asset.increased(by: 20.0)
         XCTAssertEqual(
             increasedAsset.currentBalance(),
@@ -115,7 +126,10 @@ final class AssetTests: XCTestCase {
     }
 
     func testDecrease() throws {
-        let asset = Asset.make(from: 100.0)
+        let asset = Asset.make(
+            from: 100.0,
+            name: ""
+        )
         let decreasedAsset = asset.decreased(by: 20.0)
         XCTAssertEqual(
             decreasedAsset.currentBalance(),

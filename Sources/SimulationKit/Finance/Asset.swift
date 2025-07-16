@@ -9,21 +9,26 @@ import Foundation
 // Debit: Increase
 struct Asset: Equatable {
     let id: String
+    let name: String
     var transactions: [Self.Transaction] = []
 
     init(
         id: String,
+        name: String,
         balance: Decimal
-    ) {
+    ) { 
         self.id = id
+        self.name = name
         self.transactions = [Transaction(amount: balance)]
     }
 
     init(
         id: String,
+        name: String,
         transactions: [Self.Transaction]
     ) {
         self.id = id
+        self.name = name
         self.transactions = transactions
     }
 
@@ -101,20 +106,24 @@ struct Asset: Equatable {
 extension Asset {
     static func make(
         from transactions: [Transaction],
-        id: String = UUID().uuidString
+        id: String = UUID().uuidString,
+        name: String
     ) -> Self {
         return Self(
             id: id,
+            name: name,
             transactions: transactions
         )
     }
 
     static func make(
         from balance: Decimal,
-        id: String = UUID().uuidString
+        id: String = UUID().uuidString,
+        name: String
     ) -> Self {
         return Self(
             id: id,
+            name: name,
             balance: balance
         )
     }
@@ -148,6 +157,7 @@ extension Asset {
     func transacted(_ transaction: Transaction) -> Self {
         return Self(
             id: id,
+            name: name,
             transactions: transactions + [transaction]
         )
     }

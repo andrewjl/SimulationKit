@@ -9,21 +9,26 @@ import Foundation
 // Debit: Decrease
 struct Liability: Equatable {
     let id: String
+    let name: String
     var transactions: [Self.Transaction] = []
 
     init(
         id: String,
+        name: String,
         balance: Decimal
     ) {
         self.id = id
+        self.name = name
         self.transactions = [Transaction(amount: balance)]
     }
 
     init(
         id: String,
+        name: String,
         transactions: [Self.Transaction]
     ) {
         self.id = id
+        self.name = name
         self.transactions = transactions
     }
 
@@ -95,20 +100,24 @@ struct Liability: Equatable {
 extension Liability {
     static func make(
         from transactions: [Transaction],
+        name: String = "",
         id: String = UUID().uuidString
     ) -> Self {
         return Self(
             id: id,
+            name: name,
             transactions: transactions
         )
     }
 
     static func make(
         from balance: Decimal,
+        name: String = "",
         id: String = UUID().uuidString
     ) -> Self {
         return Self(
             id: id,
+            name: name,
             balance: balance
         )
     }
@@ -142,6 +151,7 @@ extension Liability {
     func transacted(_ transaction: Transaction) -> Self {
         return Self(
             id: id,
+            name: name,
             transactions: transactions + [transaction]
         )
     }

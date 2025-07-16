@@ -12,6 +12,7 @@ final class LedgerTests: XCTestCase {
             assets: [
                 Asset(
                     id: UUID().uuidString,
+                    name: "",
                     balance: 100.0
                 )
             ],
@@ -22,6 +23,7 @@ final class LedgerTests: XCTestCase {
         ledger.liabilities.append(
             Liability(
                 id: UUID().uuidString,
+                name: "",
                 balance: 100.0
             )
         )
@@ -33,6 +35,7 @@ final class LedgerTests: XCTestCase {
             assets: [
                 Asset(
                     id: "0",
+                    name: "",
                     balance: 100.0
                 )
             ],
@@ -67,6 +70,7 @@ final class LedgerTests: XCTestCase {
             liabilities: [
                 Liability(
                     id: "0",
+                    name: "",
                     balance: 100.0
                 )
             ]
@@ -110,16 +114,19 @@ final class LedgerTests: XCTestCase {
             assets: [
                 Asset(
                     id: "0",
+                    name: "",
                     balance: 100.0
                 ),
                 Asset(
                     id: "1",
+                    name: "",
                     balance: 150.0
                 ),
             ],
             liabilities: [
                 Liability(
                     id: "2",
+                    name: "",
                     balance: 50.0
                 )
             ]
