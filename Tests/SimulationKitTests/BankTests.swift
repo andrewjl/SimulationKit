@@ -75,6 +75,10 @@ final class BankTests: XCTestCase {
         XCTAssertNotNil(
             bank.equityCapital
         )
+
+        XCTAssertNotNil(
+            bank.interestIncome
+        )
     }
 
     func testBankAccountCreation() throws {
@@ -106,6 +110,10 @@ final class BankTests: XCTestCase {
 
         XCTAssertNotNil(
             account.interestExpenses
+        )
+
+        XCTAssertNotNil(
+            account.interestIncome
         )
     }
 
@@ -172,23 +180,32 @@ final class BankTests: XCTestCase {
     }
 
     func testProvideLoan() throws {
-        var bank = Bank(
+        let bank = Bank(
             riskFreeRate: 5
         )
-
-        let bank1 = bank.provideLoan(
+        .provideLoan(
             to: 2,
             amount: 100.0,
             at: 0
         )
 
         XCTAssertEqual(
-            bank1.eventCaptures.count,
+            bank.eventCaptures.count,
             1
         )
 
+        XCTAssertEqual(
+            bank.ledger.currentBalance(),
+            .zero
+        )
+
         let account = try XCTUnwrap(
-            bank1.accounts[2]
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.ledger.currentBalance(),
+            .zero
         )
 
         XCTAssertEqual(
@@ -199,6 +216,177 @@ final class BankTests: XCTestCase {
         XCTAssertEqual(
             account.loanReceivables.currentBalance(),
             100
+        )
+    }
+
+    func testLoanInterestAccrual() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        )
+        .provideLoan(
+            to: 2,
+            amount: 100.0,
+            at: 0
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            1
+        )
+
+        XCTAssertEqual(
+            bank.ledger.currentBalance(),
+            .zero
+        )
+
+        XCTAssertEqual(
+            bank.loanReceivables.currentBalance(),
+            100.0
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            100.0
+        )
+
+        var depositAccount = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            depositAccount.loanReceivables.currentBalance(),
+            100.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.deposits.currentBalance(),
+            100.0
+        )
+
+        bank = bank.accrueLoanInterestOnAllAccounts(
+            rate: bank.riskFreeRate,
+            period: 1
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            2
+        )
+
+        depositAccount = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            depositAccount.loanReceivables.currentBalance(),
+            105.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.deposits.currentBalance(),
+            100.0
+        )
+    }
+
+    func testLoanInterestAccrualMultipleAccounts() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        )
+        .provideLoan(
+            to: 1,
+            amount: 100.0,
+            at: 0
+        )
+        .provideLoan(
+            to: 2,
+            amount: 100.0,
+            at: 0
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            2
+        )
+
+        XCTAssertEqual(
+            bank.ledger.currentBalance(),
+            .zero
+        )
+
+        XCTAssertEqual(
+            bank.loanReceivables.currentBalance(),
+            200.0
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            200.0
+        )
+
+        var depositAccount = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            depositAccount.loanReceivables.currentBalance(),
+            100.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.deposits.currentBalance(),
+            100.0
+        )
+
+        depositAccount = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            depositAccount.loanReceivables.currentBalance(),
+            100.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.deposits.currentBalance(),
+            100.0
+        )
+
+        bank = bank.accrueLoanInterestOnAllAccounts(
+            rate: bank.riskFreeRate,
+            period: 1
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            4
+        )
+
+        depositAccount = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            depositAccount.loanReceivables.currentBalance(),
+            105.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.deposits.currentBalance(),
+            100.0
+        )
+
+        depositAccount = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            depositAccount.loanReceivables.currentBalance(),
+            105.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.deposits.currentBalance(),
+            100.0
         )
     }
 

@@ -33,6 +33,12 @@ struct Account: Equatable {
         })!
     }
 
+    var interestIncome: Liability {
+        ledger.liabilities.first(where: {
+            $0.name == "Interest Income"
+        })!
+    }
+
     init(
         accountHolderID: UInt
     ) {
@@ -64,6 +70,13 @@ struct Account: Equatable {
                 Asset(
                     id: UUID().uuidString,
                     name: "Interest Expenses",
+                    balance: .zero
+                )
+            )
+            .adding(
+                Liability(
+                    id: UUID().uuidString,
+                    name: "Interest Income",
                     balance: .zero
                 )
             )
@@ -108,11 +121,17 @@ struct Bank: Equatable {
         })!
     }
 
+    var interestIncome: Liability {
+        ledger.liabilities.first(where: {
+            $0.name == "Interest Income"
+        })!
+    }
+
     enum Event: Equatable {
         case cashDeposit(amount: Decimal, accountHolderID: UInt)
         case loanProvision(amount: Decimal, accountHolderID: UInt)
         case accrueDepositInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
-        case addLoanInterest(rate: Int, ledgerEvents: [Ledger.Event])
+        case accrueLoanInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
         case changeRiskFreeRate(rate: Int)
     }
 
@@ -360,6 +379,93 @@ struct Bank: Equatable {
             accounts: updatedAccounts
         )
     }
+    
+    func accrueLoanInterestOnAllAccounts(
+        rate: Int,
+        period: UInt32
+    ) -> Self {
+        var result = self
+
+        for (id, account) in accounts {
+            result = result.accrueLoanInterest(
+                rate: rate,
+                balance: account.loanReceivables.currentBalance(),
+                accountHolderID: id,
+                period: period
+            )
+        }
+
+        return result
+    }
+
+    func accrueLoanInterest(
+        rate: Int,
+        balance: Decimal,
+        accountHolderID: UInt,
+        period: UInt32
+    ) -> Self {
+        guard var account = accounts[accountHolderID] else {
+            return self
+        }
+
+        var updatedAccounts = accounts
+
+        let accruedInterestAmount = balance.decimalizedAdjustment(
+            percentage: rate
+        )
+
+        let updatedLedger = ledger.evented([
+            Ledger.Event.asset(
+                transaction: .debit(
+                    id: UUID().uuidString,
+                    amount: accruedInterestAmount
+                ),
+                id: loanReceivables.id
+            ),
+            Ledger.Event.liability(
+                transaction: .credit(
+                    id: UUID().uuidString,
+                    amount: accruedInterestAmount
+                ),
+                id: interestIncome.id
+            )
+        ])
+
+        account.ledger = account.ledger.evented([
+            Ledger.Event.asset(
+                transaction: .debit(
+                    id: UUID().uuidString,
+                    amount: accruedInterestAmount
+                ),
+                id: account.loanReceivables.id
+            ),
+            Ledger.Event.liability(
+                transaction: .credit(
+                    id: UUID().uuidString,
+                    amount: accruedInterestAmount
+                ),
+                id: account.interestIncome.id
+            )
+        ])
+
+        updatedAccounts[account.accountHolderID] = account
+
+        return Bank(
+            ledger: updatedLedger,
+            eventCaptures: eventCaptures + [
+                Capture(
+                    entity: .accrueLoanInterest(
+                        rate: rate,
+                        balance: balance,
+                        accountHolderID: accountHolderID
+                    ),
+                    timestamp: period
+                )
+            ],
+            riskFreeRate: riskFreeRate,
+            accounts: updatedAccounts
+        )
+    }
 }
 
 extension Bank {
@@ -404,6 +510,13 @@ extension Bank {
                 Asset(
                     id: UUID().uuidString,
                     name: "Interest Expenses",
+                    balance: .zero
+                )
+            )
+            .adding(
+                Liability(
+                    id: UUID().uuidString,
+                    name: "Interest Income",
                     balance: .zero
                 )
             )
