@@ -11,31 +11,31 @@ struct Account: Equatable {
 
     var reserves: Asset {
         ledger.assets.first(where: {
-            $0.name == "Reserves"
+            $0.name == Bank.reservesAccountName
         })!
     }
 
     var loanReceivables : Asset {
         ledger.assets.first(where: {
-            $0.name == "Loan Receivables"
+            $0.name == Bank.loanReceivablesAccountName
         })!
     }
 
     var deposits: Liability {
         ledger.liabilities.first(where: {
-            $0.name == "Deposits"
+            $0.name == Bank.depositsAccountName
         })!
     }
 
     var interestExpenses: Asset {
         ledger.assets.first(where: {
-            $0.name == "Interest Expenses"
+            $0.name == Bank.interestExpensesAccountName
         })!
     }
 
     var interestIncome: Liability {
         ledger.liabilities.first(where: {
-            $0.name == "Interest Income"
+            $0.name == Bank.interestIncomeAccountName
         })!
     }
 
@@ -48,35 +48,35 @@ struct Account: Equatable {
             .adding(
                 Asset(
                     id: UUID().uuidString,
-                    name: "Reserves",
+                    name: Bank.reservesAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
-                    name: "Loan Receivables",
+                    name: Bank.loanReceivablesAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
-                    name: "Deposits",
+                    name: Bank.depositsAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
-                    name: "Interest Expenses",
+                    name: Bank.interestExpensesAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
-                    name: "Interest Income",
+                    name: Bank.interestIncomeAccountName,
                     balance: .zero
                 )
             )
@@ -84,6 +84,13 @@ struct Account: Equatable {
 }
 
 struct Bank: Equatable {
+    static let depositsAccountName: String = "Deposits"
+    static let reservesAccountName: String = "Reserves"
+    static let loanReceivablesAccountName: String = "Loan Receivables"
+    static let equityCapitalAccountName: String = "Equity Capital"
+    static let interestExpensesAccountName: String = "Interest Expenses"
+    static let interestIncomeAccountName: String = "Interest Income"
+
     var ledger: Ledger = Ledger.make()
     var eventCaptures: [Capture<Event>] = []
 
@@ -93,37 +100,37 @@ struct Bank: Equatable {
 
     var reserves: Asset {
         ledger.assets.first(where: {
-            $0.name == "Reserves"
+            $0.name == Bank.reservesAccountName
         })!
     }
 
     var loanReceivables : Asset {
         ledger.assets.first(where: {
-            $0.name == "Loan Receivables"
+            $0.name == Bank.loanReceivablesAccountName
         })!
     }
 
     var deposits: Liability {
         ledger.liabilities.first(where: {
-            $0.name == "Deposits"
+            $0.name == Bank.depositsAccountName
         })!
     }
 
     var equityCapital: Liability {
         ledger.liabilities.first(where: {
-            $0.name == "Equity Capital"
+            $0.name == Bank.equityCapitalAccountName
         })!
     }
 
     var interestExpenses: Asset {
         ledger.assets.first(where: {
-            $0.name == "Interest Expenses"
+            $0.name == Bank.interestExpensesAccountName
         })!
     }
 
     var interestIncome: Liability {
         ledger.liabilities.first(where: {
-            $0.name == "Interest Income"
+            $0.name == Bank.interestIncomeAccountName
         })!
     }
 
@@ -481,42 +488,42 @@ extension Bank {
             .adding(
                 Asset(
                     id: UUID().uuidString,
-                    name: "Reserves",
+                    name: Bank.reservesAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
-                    name: "Loan Receivables",
+                    name: Bank.loanReceivablesAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
-                    name: "Deposits",
+                    name: Bank.depositsAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
-                    name: "Equity Capital",
+                    name: Bank.equityCapitalAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
-                    name: "Interest Expenses",
+                    name: Bank.interestExpensesAccountName,
                     balance: .zero
                 )
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
-                    name: "Interest Income",
+                    name: Bank.interestIncomeAccountName,
                     balance: .zero
                 )
             )
