@@ -174,11 +174,11 @@ struct Bank: Equatable {
             .evented([
                 .asset(
                     transaction: reservesTransaction,
-                    id: reserves.id
+                    accountID: reserves.id
                 ),
                 .liability(
                     transaction: depositsTransaction,
-                    id: deposits.id
+                    accountID: deposits.id
                 )
             ])
 
@@ -194,11 +194,11 @@ struct Bank: Equatable {
             .evented([
                 .asset(
                     transaction: reservesTransaction,
-                    id: account.reserves.id
+                    accountID: account.reserves.id
                 ),
                 .liability(
                     transaction: depositsTransaction,
-                    id: account.deposits.id
+                    accountID: account.deposits.id
                 )
             ])
 
@@ -240,11 +240,11 @@ struct Bank: Equatable {
             .evented([
                 .asset(
                     transaction: loanReceivablesTransaction,
-                    id: loanReceivables.id
+                    accountID: loanReceivables.id
                 ),
                 .liability(
                     transaction: depositsTransaction,
-                    id: deposits.id
+                    accountID: deposits.id
                 )
             ])
 
@@ -260,11 +260,11 @@ struct Bank: Equatable {
             .evented([
                 .asset(
                     transaction: loanReceivablesTransaction,
-                    id: account.loanReceivables.id
+                    accountID: account.loanReceivables.id
                 ),
                 .liability(
                     transaction: depositsTransaction,
-                    id: account.deposits.id
+                    accountID: account.deposits.id
                 )
             ])
 
@@ -340,14 +340,14 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: deposits.id
+                accountID: deposits.id
             ),
             Ledger.Event.asset(
                 transaction: .debit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: interestExpenses.id
+                accountID: interestExpenses.id
             )
         ])
 
@@ -357,14 +357,14 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: account.deposits.id
+                accountID: account.deposits.id
             ),
             Ledger.Event.asset(
                 transaction: .debit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: account.interestExpenses.id
+                accountID: account.interestExpenses.id
             )
         ])
 
@@ -427,14 +427,14 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: loanReceivables.id
+                accountID: loanReceivables.id
             ),
             Ledger.Event.liability(
                 transaction: .credit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: interestIncome.id
+                accountID: interestIncome.id
             )
         ])
 
@@ -444,14 +444,14 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: account.loanReceivables.id
+                accountID: account.loanReceivables.id
             ),
             Ledger.Event.liability(
                 transaction: .credit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                id: account.interestIncome.id
+                accountID: account.interestIncome.id
             )
         ])
 

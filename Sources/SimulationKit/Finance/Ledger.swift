@@ -8,7 +8,7 @@ import Foundation
 extension Array where Array.Element == Ledger.Event {
     func event(assetID: String) -> Ledger.Event? {
         self.first(where: {
-            guard case let Ledger.Event.asset(transaction: _, id: id) = $0 else {
+            guard case let Ledger.Event.asset(transaction: _, accountID: id) = $0 else {
                 return false
             }
 
@@ -18,7 +18,7 @@ extension Array where Array.Element == Ledger.Event {
 
     func event(liabilityID: String) -> Ledger.Event? {
         self.first(where: {
-            guard case let Ledger.Event.liability(transaction: _, id: id) = $0 else {
+            guard case let Ledger.Event.liability(transaction: _, accountID: id) = $0 else {
                 return false
             }
 
@@ -47,17 +47,17 @@ struct Ledger: Equatable {
 
     func tick(event: Event) -> Self {
         switch event {
-        case .asset(let transaction, let id):
+        case .asset(let transaction, let accountID):
             return Ledger(
                 id: id,
-                assets: assets.map { $0.id == id ? $0.transacted(transaction) : $0 },
+                assets: assets.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
                 liabilities: liabilities
             )
-        case .liability(let transaction, let id):
+        case .liability(let transaction, let accountID):
             return Ledger(
                 id: id,
                 assets: assets,
-                liabilities: liabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                liabilities: liabilities.map { $0.id == accountID ? $0.transacted(transaction) : $0 }
             )
         }
     }
@@ -83,19 +83,19 @@ struct Ledger: Equatable {
     }
 
     enum Event: Equatable {
-        case asset(transaction: Asset.Transaction, id: String)
-        case liability(transaction: Liability.Transaction, id: String)
+        case asset(transaction: Asset.Transaction, accountID: String)
+        case liability(transaction: Liability.Transaction, accountID: String)
 
         var amount: Decimal {
             switch self {
             case .asset(
                 transaction: let transaction,
-                id: _
+                accountID: _
             ):
                 return transaction.amount
             case .liability(
                 transaction: let transaction,
-                id: _
+                accountID: _
             ):
                 return transaction.amount
             }
@@ -105,12 +105,12 @@ struct Ledger: Equatable {
             switch self {
             case .asset(
                 transaction: _,
-                id: let id
+                accountID: let id
             ):
                 return id
             case .liability(
                 transaction: _,
-                id: let id
+                accountID: let id
             ):
                 return id
             }
@@ -127,7 +127,7 @@ struct Ledger: Equatable {
                 ),
             assets.map { $0.id }
         ).map {
-            Event.asset(transaction: $0.0, id: $0.1)
+            Event.asset(transaction: $0.0, accountID: $0.1)
         }
     }
 
@@ -141,7 +141,7 @@ struct Ledger: Equatable {
                 ),
             liabilities.map { $0.id }
         ).map {
-            Event.liability(transaction: $0.0, id: $0.1)
+            Event.liability(transaction: $0.0, accountID: $0.1)
         }
     }
 
