@@ -14,7 +14,12 @@ class StateGenerator {
 
     static func generate(from initialEvents: [Simulation.Event]) -> Simulation.State {
         let riskFreeRate = riskFreeRate(from: initialEvents)
-        let bank = Bank(eventCaptures: [], riskFreeRate: riskFreeRate)
+        let bank = Bank(
+            ledger: .make(),
+            eventCaptures: [],
+            riskFreeRate: riskFreeRate,
+            accounts: [:]
+        )
         let ledgers = ledgers(from: initialEvents)
 
         return Simulation.State(
@@ -104,12 +109,14 @@ class Simulation {
                     ledgers: ledgers + [ledger],
                     bank: bank
                 )
-            case .bankLedgerTransactions(transactions: _, period: _):
+            case .bankLedgerTransactions(transactions: let transactions, period: _):
                 return State(
                     ledgers: ledgers,
                     bank: Bank(
+                        ledger: bank.ledger.evented(transactions),
                         eventCaptures: bank.eventCaptures,
-                        riskFreeRate: bank.riskFreeRate
+                        riskFreeRate: bank.riskFreeRate,
+                        accounts: bank.accounts
                     )
                 )
             }

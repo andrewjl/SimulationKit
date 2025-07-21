@@ -473,23 +473,22 @@ struct Bank: Equatable {
             accounts: updatedAccounts
         )
     }
-}
 
-extension Bank {
     init() {
         self.init(riskFreeRate: 0)
     }
 
     init(
-        riskFreeRate: Int
+        riskFreeRate: Int,
+        startingCapital: Decimal = .zero
     ) {
-        self.ledger = Ledger
+        let ledger = Ledger
             .make()
             .adding(
                 Asset(
                     id: UUID().uuidString,
                     name: Bank.reservesAccountName,
-                    balance: .zero
+                    balance: startingCapital
                 )
             )
             .adding(
@@ -510,7 +509,7 @@ extension Bank {
                 Liability(
                     id: UUID().uuidString,
                     name: Bank.equityCapitalAccountName,
-                    balance: .zero
+                    balance: startingCapital
                 )
             )
             .adding(
@@ -528,8 +527,23 @@ extension Bank {
                 )
             )
 
-        self.eventCaptures = []
+        self.init(
+            ledger: ledger,
+            eventCaptures: [],
+            riskFreeRate: riskFreeRate,
+            accounts: [:]
+        )
+    }
+
+    init(
+        ledger: Ledger,
+        eventCaptures: [Capture<Event>],
+        riskFreeRate: Int,
+        accounts: [UInt: Account]
+    ) {
+        self.ledger = ledger
+        self.eventCaptures = eventCaptures
         self.riskFreeRate = riskFreeRate
-        self.accounts = [:]
+        self.accounts = accounts
     }
 }
