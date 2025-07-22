@@ -18,6 +18,7 @@ class StateGenerator {
             ledger: .make(),
             eventCaptures: [],
             riskFreeRate: riskFreeRate,
+            loanRate: riskFreeRate,
             accounts: [:]
         )
         let ledgers = ledgers(from: initialEvents)
@@ -116,6 +117,7 @@ class Simulation {
                         ledger: bank.ledger.evented(transactions),
                         eventCaptures: bank.eventCaptures,
                         riskFreeRate: bank.riskFreeRate,
+                        loanRate: bank.loanRate,
                         accounts: bank.accounts
                     )
                 )

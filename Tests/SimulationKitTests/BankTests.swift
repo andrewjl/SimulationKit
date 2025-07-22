@@ -232,7 +232,6 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueLoanInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
             period: 1
         )
 
@@ -320,7 +319,6 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueLoanInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
             period: 1
         )
 
@@ -566,7 +564,8 @@ final class BankTests: XCTestCase {
 
     func testDepositAccountAndLoanCombinedInterestAccrual() throws {
         var bank = Bank(
-            riskFreeRate: 5
+            riskFreeRate: 5,
+            loanRate: 7
         )
         .depositCash(
             from: 2,
@@ -600,7 +599,6 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueLoanInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
             period: 2,
         )
         .accrueDepositInterestOnAllAccounts(
@@ -625,7 +623,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.loanReceivables.currentBalance(),
-            105.0
+            107.0
         )
 
         XCTAssertEqual(
@@ -635,7 +633,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.interestIncome.currentBalance(),
-            5.0
+            7.0
         )
     }
 }

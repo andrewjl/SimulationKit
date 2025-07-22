@@ -95,6 +95,7 @@ struct Bank: Equatable {
     var eventCaptures: [Capture<Event>] = []
 
     var riskFreeRate: Int
+    var loanRate: Int
 
     var accounts: [UInt: Account] = [:]
 
@@ -209,6 +210,7 @@ struct Bank: Equatable {
             ledger: ledger,
             eventCaptures: eventCaptures + [Capture(entity: event, timestamp: period)],
             riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
             accounts: accounts
         )
 
@@ -275,6 +277,7 @@ struct Bank: Equatable {
             ledger: ledger,
             eventCaptures: eventCaptures + [Capture(entity: event, timestamp: period)],
             riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
             accounts: accounts
         )
 
@@ -296,6 +299,7 @@ struct Bank: Equatable {
                 )
             ],
             riskFreeRate: rate,
+            loanRate: loanRate,
             accounts: accounts
         )
     }
@@ -383,19 +387,19 @@ struct Bank: Equatable {
                 )
             ],
             riskFreeRate: rate,
+            loanRate: loanRate,
             accounts: updatedAccounts
         )
     }
     
     func accrueLoanInterestOnAllAccounts(
-        rate: Int,
         period: UInt32
     ) -> Self {
         var result = self
 
         for (id, account) in accounts {
             result = result.accrueLoanInterest(
-                rate: rate,
+                rate: loanRate,
                 balance: account.loanReceivables.currentBalance(),
                 accountHolderID: id,
                 period: period
@@ -470,16 +474,30 @@ struct Bank: Equatable {
                 )
             ],
             riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
             accounts: updatedAccounts
         )
     }
 
     init() {
-        self.init(riskFreeRate: 0)
+        self.init(
+            riskFreeRate: 0,
+            loanRate: 0
+        )
+    }
+
+    init(
+        riskFreeRate: Int
+    ) {
+        self.init(
+            riskFreeRate: riskFreeRate,
+            loanRate: riskFreeRate
+        )
     }
 
     init(
         riskFreeRate: Int,
+        loanRate: Int,
         startingCapital: Decimal = .zero
     ) {
         let ledger = Ledger
@@ -531,6 +549,7 @@ struct Bank: Equatable {
             ledger: ledger,
             eventCaptures: [],
             riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
             accounts: [:]
         )
     }
@@ -539,11 +558,13 @@ struct Bank: Equatable {
         ledger: Ledger,
         eventCaptures: [Capture<Event>],
         riskFreeRate: Int,
+        loanRate: Int,
         accounts: [UInt: Account]
     ) {
         self.ledger = ledger
         self.eventCaptures = eventCaptures
         self.riskFreeRate = riskFreeRate
+        self.loanRate = loanRate
         self.accounts = accounts
     }
 }
