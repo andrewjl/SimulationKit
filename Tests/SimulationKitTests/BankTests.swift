@@ -11,7 +11,9 @@ import XCTest
 final class BankTests: XCTestCase {
     func testBankCreation() throws {
         let bank = Bank(
-            riskFreeRate: 5
+            riskFreeRate: 5,
+            loanRate: 7,
+            startingCapital: 10_000
         )
 
         XCTAssertEqual(
@@ -46,6 +48,16 @@ final class BankTests: XCTestCase {
 
         XCTAssertNotNil(
             bank.interestIncome
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            10_000
+        )
+
+        XCTAssertEqual(
+            bank.equityCapital.currentBalance(),
+            10_000
         )
     }
 
