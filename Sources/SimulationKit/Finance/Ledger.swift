@@ -37,12 +37,14 @@ struct Ledger: Equatable {
     var id: String
     var assets: [Asset] = []
     var liabilities: [Liability] = []
+    var equities: [Equity] = []
 
     func currentBalance() -> Decimal {
         let assetSum = assets.map { $0.currentBalance() }.reduce(Decimal.zero, +)
         let liabilitySum = liabilities.map { $0.currentBalance() }.reduce(Decimal.zero, +)
+        let equitySum = equities.map { $0.currentBalance() }.reduce(Decimal.zero, +)
 
-        return assetSum - liabilitySum
+        return assetSum - liabilitySum - equitySum
     }
 
     func tick(event: Event) -> Self {
@@ -51,13 +53,22 @@ struct Ledger: Equatable {
             return Ledger(
                 id: id,
                 assets: assets.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
-                liabilities: liabilities
+                liabilities: liabilities,
+                equities: equities
             )
         case .liability(let transaction, let accountID):
             return Ledger(
                 id: id,
                 assets: assets,
-                liabilities: liabilities.map { $0.id == accountID ? $0.transacted(transaction) : $0 }
+                liabilities: liabilities.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
+                equities: equities
+            )
+        case .equity(transaction: let transaction, accountID: let accountID):
+            return Ledger(
+                id: id,
+                assets: assets,
+                liabilities: liabilities,
+                equities: equities.map { $0.id == accountID ? $0.transacted(transaction) : $0 }
             )
         }
     }
@@ -65,6 +76,7 @@ struct Ledger: Equatable {
     func evented(_ events: [Event]) -> Self {
         var eventedAssets = assets
         var eventedLiabilities = liabilities
+        var eventedEquities = equities
 
         for event in events {
             switch event {
@@ -72,19 +84,23 @@ struct Ledger: Equatable {
                 eventedAssets = eventedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .liability(let transaction, let id):
                 eventedLiabilities = eventedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
+            case .equity(transaction: let transaction, accountID: let id):
+                eventedEquities = eventedEquities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             }
         }
         
         return Self(
             id: id,
             assets: eventedAssets,
-            liabilities: eventedLiabilities
+            liabilities: eventedLiabilities,
+            equities: eventedEquities
         )
     }
 
     enum Event: Equatable {
         case asset(transaction: Asset.Transaction, accountID: String)
         case liability(transaction: Liability.Transaction, accountID: String)
+        case equity(transaction: Equity.Transaction, accountID: String)
 
         var amount: Decimal {
             switch self {
@@ -94,6 +110,11 @@ struct Ledger: Equatable {
             ):
                 return transaction.amount
             case .liability(
+                transaction: let transaction,
+                accountID: _
+            ):
+                return transaction.amount
+            case .equity(
                 transaction: let transaction,
                 accountID: _
             ):
@@ -109,6 +130,11 @@ struct Ledger: Equatable {
             ):
                 return id
             case .liability(
+                transaction: _,
+                accountID: let id
+            ):
+                return id
+            case .equity(
                 transaction: _,
                 accountID: let id
             ):
@@ -179,7 +205,8 @@ extension Ledger {
         return Self(
             id: id,
             assets: assets + [asset],
-            liabilities: liabilities
+            liabilities: liabilities,
+            equities: equities
         )
     }
 
@@ -187,7 +214,17 @@ extension Ledger {
         return Self(
             id: id,
             assets: assets,
-            liabilities: liabilities + [liability]
+            liabilities: liabilities + [liability],
+            equities: equities
+        )
+    }
+
+    func adding(_ equity: Equity) -> Self {
+        return Self(
+            id: id,
+            assets: assets,
+            liabilities: liabilities,
+            equities: equities + [equity]
         )
     }
 }
@@ -196,12 +233,14 @@ extension Ledger {
     static func make(
         id: String = UUID().uuidString,
         assets: [Asset] = [],
-        liabilities: [Liability] = []
+        liabilities: [Liability] = [],
+        equities: [Equity] = []
     ) -> Self {
         return Self(
             id: id,
             assets: assets,
-            liabilities: liabilities
+            liabilities: liabilities,
+            equities: equities
         )
     }
 }

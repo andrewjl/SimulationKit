@@ -104,7 +104,8 @@ class Simulation {
                 let ledger = Ledger(
                     id: ledgerID,
                     assets: [],
-                    liabilities: []
+                    liabilities: [],
+                    equities: []
                 )
                 return State(
                     ledgers: ledgers + [ledger],

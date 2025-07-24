@@ -113,6 +113,11 @@ final class BankTests: XCTestCase {
         )
 
         XCTAssertEqual(
+            bank.loanRate,
+            5
+        )
+
+        XCTAssertEqual(
             bank.eventCaptures.count,
             1
         )

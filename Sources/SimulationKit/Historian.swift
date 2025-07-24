@@ -27,12 +27,7 @@ extension Liability {
 
 extension Ledger.Event {
     func tag() -> String {
-        switch self {
-        case .asset(transaction: _, accountID: let accountID):
-            return accountID
-        case .liability(transaction: _, accountID: let accountID):
-            return accountID
-        }
+        return id
     }
 }
 

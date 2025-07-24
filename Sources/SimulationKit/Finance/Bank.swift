@@ -117,8 +117,8 @@ struct Bank: Equatable {
         })!
     }
 
-    var equityCapital: Liability {
-        ledger.liabilities.first(where: {
+    var equityCapital: Equity {
+        ledger.equities.first(where: {
             $0.name == Bank.equityCapitalAccountName
         })!
     }
@@ -524,7 +524,7 @@ struct Bank: Equatable {
                 )
             )
             .adding(
-                Liability(
+                Equity(
                     id: UUID().uuidString,
                     name: Bank.equityCapitalAccountName,
                     balance: startingCapital
