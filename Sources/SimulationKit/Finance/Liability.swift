@@ -165,3 +165,74 @@ extension Liability {
         )
     }
 }
+
+extension Liability: CustomDebugStringConvertible {
+    static let formatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currencyAccounting
+        formatter.currencyCode = "USD"
+        return formatter
+    }()
+
+    public var debugDescription: String {
+        var result = "|---------\(name)---------|\n"
+
+        let footerCount = result.count - 1
+
+        for transaction in self.transactions {
+            let formattedAmount = Self.formatter.string(
+                for: transaction.amount
+            )!
+
+            let totalPadding = footerCount - 2 - formattedAmount.count
+            let trailingPadding = transaction.amount.isSignMinus ? 7 : 8
+
+            if totalPadding.isMultiple(of: 2) {
+                let trailingPaddingString = String(
+                    repeating: " ",
+                    count: trailingPadding
+                )
+                let paddingString = String(
+                    repeating: " ",
+                    count: totalPadding - trailingPadding
+                )
+
+                result.append(
+                    "|\(paddingString)\(formattedAmount)\(trailingPaddingString)|\n"
+                )
+            } else {
+                let trailingPaddingString = String(
+                    repeating: " ",
+                    count: trailingPadding
+                )
+                let leadingPadding = totalPadding - trailingPadding
+                let leadingPaddingString = String(
+                    repeating: " ",
+                    count: leadingPadding
+                )
+                result.append(
+                    "|\(leadingPaddingString)\(formattedAmount)\(trailingPaddingString)|\n"
+                )
+            }
+        }
+
+        result.append(
+            String(
+                "|"
+            )
+        )
+        result.append(
+            String(
+                repeating: "-",
+                count: footerCount-2
+            )
+        )
+        result.append(
+            String(
+                "|"
+            )
+        )
+
+        return result
+    }
+}

@@ -121,4 +121,36 @@ final class LiabilityTests: XCTestCase {
             "Decreased liability transaction should be a debit of +50.0"
         )
     }
+
+    func testDebugDescription() throws {
+        var liability = Liability.make(
+            from: 1.0,
+            name: "Liability",
+            id: "1"
+        )
+
+        liability = liability.increased(by: 17)
+        liability = liability.decreased(by: 11.5)
+        liability = liability.increased(by: 101.75)
+        liability = liability.increased(by: 1_101.0)
+        liability = liability.increased(by: 11_101.0)
+        liability = liability.increased(by: 111_101.0)
+        liability = liability.decreased(by: 1_111_101.0)
+
+        XCTAssertEqual(
+            liability.debugDescription,
+            """
+|---------Liability---------|
+|              $1.00        |
+|             $17.00        |
+|            ($11.50)       |
+|            $101.75        |
+|          $1,101.00        |
+|         $11,101.00        |
+|        $111,101.00        |
+|     ($1,111,101.00)       |
+|---------------------------|
+"""
+        )
+    }
 }

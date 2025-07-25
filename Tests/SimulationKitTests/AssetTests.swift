@@ -167,4 +167,36 @@ final class AssetTests: XCTestCase {
             "Decreased asset transaction should be a credit of +50.0"
         )
     }
+
+    func testDebugDescription() throws {
+        var asset = Asset.make(
+            from: 1.0,
+            id: "1",
+            name: "Asset"
+        )
+
+        asset = asset.increased(by: 17)
+        asset = asset.decreased(by: 11.5)
+        asset = asset.increased(by: 101.75)
+        asset = asset.increased(by: 1_101.0)
+        asset = asset.increased(by: 11_101.0)
+        asset = asset.increased(by: 111_101.0)
+        asset = asset.decreased(by: 1_111_101.0)
+
+        XCTAssertEqual(
+            asset.debugDescription,
+            """
+|---------Asset---------|
+|          $1.00        |
+|         $17.00        |
+|        ($11.50)       |
+|        $101.75        |
+|      $1,101.00        |
+|     $11,101.00        |
+|    $111,101.00        |
+| ($1,111,101.00)       |
+|-----------------------|
+"""
+        )
+    }
 }
