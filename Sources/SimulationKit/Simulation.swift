@@ -105,7 +105,9 @@ class Simulation {
                     id: ledgerID,
                     assets: [],
                     liabilities: [],
-                    equities: []
+                    equities: [],
+                    revenues: [],
+                    expenses: []
                 )
                 return State(
                     ledgers: ledgers + [ledger],

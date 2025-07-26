@@ -27,14 +27,14 @@ struct Account: Equatable {
         })!
     }
 
-    var interestExpenses: Asset {
-        ledger.assets.first(where: {
+    var interestExpenses: Expense {
+        ledger.expenses.first(where: {
             $0.name == Bank.interestExpensesAccountName
         })!
     }
 
-    var interestIncome: Liability {
-        ledger.liabilities.first(where: {
+    var interestIncome: Revenue {
+        ledger.revenues.first(where: {
             $0.name == Bank.interestIncomeAccountName
         })!
     }
@@ -67,14 +67,14 @@ struct Account: Equatable {
                 )
             )
             .adding(
-                Asset(
+                Expense(
                     id: UUID().uuidString,
                     name: Bank.interestExpensesAccountName,
                     balance: .zero
                 )
             )
             .adding(
-                Liability(
+                Revenue(
                     id: UUID().uuidString,
                     name: Bank.interestIncomeAccountName,
                     balance: .zero
@@ -123,14 +123,14 @@ struct Bank: Equatable {
         })!
     }
 
-    var interestExpenses: Asset {
-        ledger.assets.first(where: {
+    var interestExpenses: Expense {
+        ledger.expenses.first(where: {
             $0.name == Bank.interestExpensesAccountName
         })!
     }
 
-    var interestIncome: Liability {
-        ledger.liabilities.first(where: {
+    var interestIncome: Revenue {
+        ledger.revenues.first(where: {
             $0.name == Bank.interestIncomeAccountName
         })!
     }
@@ -346,7 +346,7 @@ struct Bank: Equatable {
                 ),
                 accountID: deposits.id
             ),
-            Ledger.Event.asset(
+            Ledger.Event.expense(
                 transaction: .debit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
@@ -363,7 +363,7 @@ struct Bank: Equatable {
                 ),
                 accountID: account.deposits.id
             ),
-            Ledger.Event.asset(
+            Ledger.Event.expense(
                 transaction: .debit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
@@ -433,7 +433,7 @@ struct Bank: Equatable {
                 ),
                 accountID: loanReceivables.id
             ),
-            Ledger.Event.liability(
+            Ledger.Event.revenue(
                 transaction: .credit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
@@ -450,7 +450,7 @@ struct Bank: Equatable {
                 ),
                 accountID: account.loanReceivables.id
             ),
-            Ledger.Event.liability(
+            Ledger.Event.revenue(
                 transaction: .credit(
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
@@ -531,14 +531,14 @@ struct Bank: Equatable {
                 )
             )
             .adding(
-                Asset(
+                Expense(
                     id: UUID().uuidString,
                     name: Bank.interestExpensesAccountName,
                     balance: .zero
                 )
             )
             .adding(
-                Liability(
+                Revenue(
                     id: UUID().uuidString,
                     name: Bank.interestIncomeAccountName,
                     balance: .zero
