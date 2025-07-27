@@ -39,6 +39,12 @@ struct Account: Equatable {
         })!
     }
 
+    var interestReceivables: Asset {
+        ledger.assets.first(where: {
+            $0.name == Bank.interestReceivablesAccount
+        })!
+    }
+
     init(
         accountHolderID: UInt
     ) {
@@ -80,6 +86,13 @@ struct Account: Equatable {
                     balance: .zero
                 )
             )
+            .adding(
+                Asset(
+                    id: UUID().uuidString,
+                    name: Bank.interestReceivablesAccount,
+                    balance: .zero
+                )
+            )
     }
 }
 
@@ -88,6 +101,7 @@ struct Bank: Equatable {
     static let reservesAccountName: String = "Reserves"
     static let loanReceivablesAccountName: String = "Loan Receivables"
     static let equityCapitalAccountName: String = "Equity Capital"
+    static let interestReceivablesAccount = "Interest Receivables"
     static let interestExpensesAccountName: String = "Interest Expenses"
     static let interestIncomeAccountName: String = "Interest Income"
 
@@ -132,6 +146,12 @@ struct Bank: Equatable {
     var interestIncome: Revenue {
         ledger.revenues.first(where: {
             $0.name == Bank.interestIncomeAccountName
+        })!
+    }
+
+    var interestReceivables: Asset {
+        ledger.assets.first(where: {
+            $0.name == Bank.interestReceivablesAccount
         })!
     }
 
@@ -431,7 +451,7 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                accountID: loanReceivables.id
+                accountID: interestReceivables.id
             ),
             Ledger.Event.revenue(
                 transaction: .credit(
@@ -448,7 +468,7 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     amount: accruedInterestAmount
                 ),
-                accountID: account.loanReceivables.id
+                accountID: account.interestReceivables.id
             ),
             Ledger.Event.revenue(
                 transaction: .credit(
@@ -541,6 +561,13 @@ struct Bank: Equatable {
                 Revenue(
                     id: UUID().uuidString,
                     name: Bank.interestIncomeAccountName,
+                    balance: .zero
+                )
+            )
+            .adding(
+                Asset(
+                    id: UUID().uuidString,
+                    name: Bank.interestReceivablesAccount,
                     balance: .zero
                 )
             )

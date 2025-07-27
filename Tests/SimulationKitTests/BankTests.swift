@@ -50,6 +50,10 @@ final class BankTests: XCTestCase {
             bank.interestIncome
         )
 
+        XCTAssertNotNil(
+            bank.interestReceivables
+        )
+
         XCTAssertEqual(
             bank.reserves.currentBalance(),
             10_000
@@ -94,6 +98,10 @@ final class BankTests: XCTestCase {
 
         XCTAssertNotNil(
             account.interestIncome
+        )
+
+        XCTAssertNotNil(
+            bank.interestReceivables
         )
     }
 
@@ -263,7 +271,12 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             depositAccount.loanReceivables.currentBalance(),
-            105.00
+            100.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.interestReceivables.currentBalance(),
+            5.00
         )
 
         XCTAssertEqual(
@@ -350,7 +363,12 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             depositAccount.loanReceivables.currentBalance(),
-            105.00
+            100.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.interestReceivables.currentBalance(),
+            5.00
         )
 
         XCTAssertEqual(
@@ -364,7 +382,12 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             depositAccount.loanReceivables.currentBalance(),
-            105.00
+            100.00
+        )
+
+        XCTAssertEqual(
+            depositAccount.interestReceivables.currentBalance(),
+            5.00
         )
 
         XCTAssertEqual(
@@ -640,12 +663,17 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.loanReceivables.currentBalance(),
-            107.0
+            100.0
         )
 
         XCTAssertEqual(
             bank.interestExpenses.currentBalance(),
             10.0
+        )
+
+        XCTAssertEqual(
+            bank.interestReceivables.currentBalance(),
+            7.0
         )
 
         XCTAssertEqual(
