@@ -358,36 +358,29 @@ struct Bank: Equatable {
             percentage: rate
         )
 
+        let depositsTransaction = Liability.Transaction
+            .credited(by: accruedInterestAmount)
+        let interestExpensesTransaction = Expense.Transaction
+            .debited(by: accruedInterestAmount)
+
         let updatedLedger = ledger.evented([
             Ledger.Event.liability(
-                transaction: .credit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
+                transaction: depositsTransaction,
                 accountID: deposits.id
             ),
             Ledger.Event.expense(
-                transaction: .debit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
+                transaction: interestExpensesTransaction,
                 accountID: interestExpenses.id
             )
         ])
 
         account.ledger = account.ledger.evented([
             Ledger.Event.liability(
-                transaction: .credit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
+                transaction: depositsTransaction,
                 accountID: account.deposits.id
             ),
             Ledger.Event.expense(
-                transaction: .debit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
+                transaction: interestExpensesTransaction,
                 accountID: account.interestExpenses.id
             )
         ])
