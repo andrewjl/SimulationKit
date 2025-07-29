@@ -161,6 +161,7 @@ struct Bank: Equatable {
         case accrueDepositInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
         case accrueLoanInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
         case changeRiskFreeRate(rate: Int)
+        case receiveLoanPayment(amount: Decimal, accountHolderID: UInt)
     }
 
     func createAccount(accountHolderID: UInt) -> Account {
@@ -481,6 +482,102 @@ struct Bank: Equatable {
                     entity: .accrueLoanInterest(
                         rate: rate,
                         balance: balance,
+                        accountHolderID: accountHolderID
+                    ),
+                    timestamp: period
+                )
+            ],
+            riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
+            accounts: updatedAccounts
+        )
+    }
+
+    func receivePayment(
+        amount: Decimal,
+        from accountHolderID: UInt,
+        period: UInt32
+    ) -> Self {
+        guard var account = accounts[accountHolderID] else {
+            return self
+        }
+
+        var updatedAccounts = accounts
+        var updatedLedger = ledger
+
+        let interestDue = account.interestReceivables.currentBalance()
+
+        let principalPaymentAmount: Decimal
+        let interestPaymentAmount: Decimal
+
+        if amount > interestDue {
+            principalPaymentAmount = amount - interestDue
+            interestPaymentAmount = interestDue
+        } else {
+            principalPaymentAmount = 0
+            interestPaymentAmount = amount
+        }
+
+        let reservesTransaction = Asset.Transaction
+            .debited(
+                by: amount
+            )
+        let interestReceivablesTransaction = Asset.Transaction
+            .credited(
+                by: interestPaymentAmount
+            )
+
+        if principalPaymentAmount > 0 {
+            let loanReceivablesTransaction = Asset.Transaction
+                .credited(
+                    by: principalPaymentAmount
+                )
+
+            account.ledger = account.ledger.evented([
+                .asset(
+                    transaction: loanReceivablesTransaction,
+                    accountID: account.loanReceivables.id
+                )
+            ])
+
+            updatedLedger = updatedLedger.evented([
+                .asset(
+                    transaction: loanReceivablesTransaction,
+                    accountID: loanReceivables.id
+                )
+            ])
+        }
+
+        account.ledger = account.ledger.evented([
+            .asset(
+                transaction: reservesTransaction,
+                accountID: account.reserves.id
+            ),
+            .asset(
+                transaction: interestReceivablesTransaction,
+                accountID: account.interestReceivables.id
+            )
+        ])
+
+        updatedLedger = updatedLedger.evented([
+            .asset(
+                transaction: reservesTransaction,
+                accountID: reserves.id
+            ),
+            .asset(
+                transaction: interestReceivablesTransaction,
+                accountID: interestReceivables.id
+            )
+        ])
+
+        updatedAccounts[accountHolderID] = account
+
+        return Bank(
+            ledger: updatedLedger,
+            eventCaptures: eventCaptures + [
+                Capture(
+                    entity: .receiveLoanPayment(
+                        amount: amount,
                         accountHolderID: accountHolderID
                     ),
                     timestamp: period

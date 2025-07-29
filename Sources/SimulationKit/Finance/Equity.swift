@@ -83,26 +83,6 @@ struct Equity: Equatable {
         static func increasing(by amount: Decimal) -> Self {
             return .init(amount: amount)
         }
-
-        static func decreasing(
-            by amount: Decimal,
-            id: String = UUID().uuidString
-        ) -> Self {
-            return .debit(
-                id: id,
-                amount: amount
-            )
-        }
-
-        static func increasing(
-            by amount: Decimal,
-            id: String = UUID().uuidString
-        ) -> Self {
-            return .credit(
-                id: id,
-                amount: amount
-            )
-        }
     }
 }
 
