@@ -944,4 +944,242 @@ final class BankTests: XCTestCase {
             105.0
         )
     }
+
+    func testWithdrawCash() throws {
+        var bank = Bank(
+            riskFreeRate: 5,
+            loanRate: 7,
+            startingCapital: 1_000.0
+        )
+        .depositCash(
+            from: 2,
+            amount: 100.0,
+            at: 1
+        )
+        .accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 2
+        )
+        .withdrawCash(
+            amount: 20.0,
+            from: 2,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            85.0
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            5.0
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            1_080.0
+        )
+
+        var account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            85.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            5.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            80.0
+        )
+
+        bank = bank.accrueDepositInterestOnAllAccounts(
+            rate: bank.riskFreeRate,
+            period: 3
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            89.25
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            1_080.0
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            9.25
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            89.25
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            9.25
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            80.0
+        )
+    }
+
+    func testWithdrawCashMultipleAccounts() throws {
+        var bank = Bank(
+            riskFreeRate: 5,
+            loanRate: 7,
+            startingCapital: 1_000.0
+        )
+        .depositCash(
+            from: 2,
+            amount: 100.0,
+            at: 1
+        )
+        .depositCash(
+            from: 3,
+            amount: 250.0,
+            at: 1
+        )
+        .accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 2
+        )
+        .withdrawCash(
+            amount: 20.0,
+            from: 2,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            5
+        )
+
+        XCTAssertEqual(
+            bank.accounts.count,
+            2
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            347.5
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            17.5
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            1_330.0
+        )
+
+        var account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            85.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            5.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            80.0
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[3]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            262.5
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            12.5
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            250.0
+        )
+
+        bank = bank.accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 3
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            7
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            364.875
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            89.25
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            9.25
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            80.0
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[3]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            275.625
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            25.625
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            250.0
+        )
+    }
 }

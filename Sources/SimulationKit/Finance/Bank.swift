@@ -162,6 +162,7 @@ struct Bank: Equatable {
         case accrueLoanInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
         case changeRiskFreeRate(rate: Int)
         case receiveLoanPayment(amount: Decimal, accountHolderID: UInt)
+        case withdrawCash(amount: Decimal, accountHolderID: UInt)
     }
 
     func createAccount(accountHolderID: UInt) -> Account {
@@ -577,6 +578,72 @@ struct Bank: Equatable {
             eventCaptures: eventCaptures + [
                 Capture(
                     entity: .receiveLoanPayment(
+                        amount: amount,
+                        accountHolderID: accountHolderID
+                    ),
+                    timestamp: period
+                )
+            ],
+            riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
+            accounts: updatedAccounts
+        )
+    }
+
+    func withdrawCash(
+        amount: Decimal,
+        from accountHolderID: UInt,
+        period: UInt32
+    ) -> Self {
+        guard var account = accounts[accountHolderID] else {
+            return self
+        }
+
+        guard amount < account.deposits.currentBalance() else {
+            return self
+        }
+
+        var updatedAccounts = accounts
+        var updatedLedger = ledger
+
+        let reservesTransaction = Asset.Transaction
+            .credited(
+                by: amount
+            )
+        let depositsTransaction = Liability.Transaction
+            .debited(
+                by: amount
+            )
+
+        account.ledger = account.ledger.evented([
+            .asset(
+                transaction: reservesTransaction,
+                accountID: account.reserves.id
+            ),
+            .liability(
+                transaction: depositsTransaction,
+                accountID: account.deposits.id
+            )
+        ])
+
+        updatedLedger = updatedLedger.evented([
+            .asset(
+                transaction: reservesTransaction,
+                accountID: reserves.id
+            ),
+            .liability(
+                transaction: depositsTransaction,
+                accountID: deposits.id
+            )
+        ])
+
+        updatedAccounts[accountHolderID] = account
+
+        return Bank(
+            ledger: updatedLedger,
+            eventCaptures: eventCaptures + [
+                Capture(
+                    entity: .withdrawCash(
                         amount: amount,
                         accountHolderID: accountHolderID
                     ),
