@@ -1182,4 +1182,338 @@ final class BankTests: XCTestCase {
             250.0
         )
     }
+
+    func testTransfer() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        )
+        .depositCash(
+            from: 1,
+            amount: 500.0,
+            at: 1
+        )
+        .depositCash(
+            from: 2,
+            amount: 100.0,
+            at: 1
+        )
+        .accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 2
+        )
+        .transfer(
+            amount: 200.0,
+            from: 1,
+            to: 2,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            5
+        )
+
+        XCTAssertEqual(
+            bank.accounts.count,
+            2
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            600.0
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            630.0
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            30.0
+        )
+
+        var account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            325.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            300.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            25.0
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            305.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            300.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            5.0
+        )
+
+        bank = bank.accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 3
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            7
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            661.5
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            600.0
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            61.5
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            341.25
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            300.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            41.25
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            320.25
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            300.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            20.25
+        )
+    }
+
+    func testTransferInsufficientBalance() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .depositCash(
+            from: 1,
+            amount: 500.0,
+            at: 1
+        )
+        .depositCash(
+            from: 2,
+            amount: 100.0,
+            at: 1
+        )
+        .accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 2
+        )
+        .transfer(
+            amount: 800.0,
+            from: 1,
+            to: 2,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            4
+        )
+
+        XCTAssertEqual(
+            bank.accounts.count,
+            2
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            600.0
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            630.0
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            30.0
+        )
+
+        var account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            525.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            500.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            25.0
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            105.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            100.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            5.0
+        )
+    }
+
+    func testTransferMissingDestinationAccount() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .depositCash(
+            from: 1,
+            amount: 500.0,
+            at: 1
+        )
+        .depositCash(
+            from: 3,
+            amount: 100.0,
+            at: 1
+        )
+        .accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 2
+        )
+        .transfer(
+            amount: 800.0,
+            from: 1,
+            to: 2,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            4
+        )
+
+        XCTAssertEqual(
+            bank.accounts.count,
+            2
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            600.0
+        )
+
+        XCTAssertEqual(
+            bank.deposits.currentBalance(),
+            630.0
+        )
+
+        XCTAssertEqual(
+            bank.interestExpenses.currentBalance(),
+            30.0
+        )
+
+        var account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            525.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            500.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            25.0
+        )
+
+        XCTAssertNil(
+            bank.accounts[2]
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[3]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            105.0
+        )
+
+        XCTAssertEqual(
+            account.reserves.currentBalance(),
+            100.0
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            5.0
+        )
+    }
 }

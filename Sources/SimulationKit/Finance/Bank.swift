@@ -163,6 +163,7 @@ struct Bank: Equatable {
         case changeRiskFreeRate(rate: Int)
         case receiveLoanPayment(amount: Decimal, accountHolderID: UInt)
         case withdrawCash(amount: Decimal, accountHolderID: UInt)
+        case transfer(amount: Decimal, originAccountHolderID: UInt, destinationAccountHolderID: UInt)
     }
 
     func createAccount(accountHolderID: UInt) -> Account {
@@ -646,6 +647,107 @@ struct Bank: Equatable {
                     entity: .withdrawCash(
                         amount: amount,
                         accountHolderID: accountHolderID
+                    ),
+                    timestamp: period
+                )
+            ],
+            riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
+            accounts: updatedAccounts
+        )
+    }
+
+    func transfer(
+        amount: Decimal,
+        from originAccountHolderID: UInt,
+        to destinationAccountHolderID: UInt,
+        period: UInt32
+    ) -> Self {
+        guard var originAccount = accounts[originAccountHolderID],
+        var destinationAccount = accounts[destinationAccountHolderID] else {
+            return self
+        }
+
+        guard originAccount.deposits.currentBalance() >= amount else {
+            return self
+        }
+
+        var updatedAccounts = accounts
+        var updatedLedger = ledger
+
+        let originReservesTransaction = Asset.Transaction
+            .credited(
+                by: amount
+            )
+        let originDepositsTransaction = Liability.Transaction
+            .debited(
+                by: amount
+            )
+
+        originAccount.ledger = originAccount.ledger.evented([
+            .asset(
+                transaction: originReservesTransaction,
+                accountID: originAccount.reserves.id
+            ),
+            .liability(
+                transaction: originDepositsTransaction,
+                accountID: originAccount.deposits.id
+            )
+        ])
+
+        updatedLedger = updatedLedger.evented([
+            .asset(
+                transaction: originReservesTransaction,
+                accountID: reserves.id
+            ),
+            .liability(
+                transaction: originDepositsTransaction,
+                accountID: deposits.id
+            )
+        ])
+
+        let destinationReservesTransaction = Asset.Transaction
+            .debited(
+                by: amount
+            )
+        let destinationDepositsTransaction = Liability.Transaction
+            .credited(
+                by: amount
+            )
+
+        destinationAccount.ledger = destinationAccount.ledger.evented([
+            .asset(
+                transaction: destinationReservesTransaction,
+                accountID: destinationAccount.reserves.id
+            ),
+            .liability(
+                transaction: destinationDepositsTransaction,
+                accountID: destinationAccount.deposits.id
+            )
+        ])
+
+        updatedLedger = updatedLedger.evented([
+            .asset(
+                transaction: destinationReservesTransaction,
+                accountID: reserves.id
+            ),
+            .liability(
+                transaction: destinationDepositsTransaction,
+                accountID: deposits.id
+            )
+        ])
+
+        updatedAccounts[originAccountHolderID] = originAccount
+        updatedAccounts[destinationAccountHolderID] = destinationAccount
+
+        return Bank(
+            ledger: updatedLedger,
+            eventCaptures: eventCaptures + [
+                Capture(
+                    entity: .transfer(
+                        amount: amount,
+                        originAccountHolderID: originAccountHolderID,
+                        destinationAccountHolderID: destinationAccountHolderID
                     ),
                     timestamp: period
                 )
