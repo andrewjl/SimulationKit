@@ -9,6 +9,8 @@ struct Account: Equatable {
     var accountHolderID: UInt
     var ledger: Ledger
 
+    var isClosed: Bool = false
+
     var reserves: Asset {
         ledger.assets.first(where: {
             $0.name == Bank.reservesAccountName
@@ -94,6 +96,14 @@ struct Account: Equatable {
                 )
             )
     }
+
+    mutating func close() {
+        isClosed = true
+    }
+
+    mutating func reopen() {
+        isClosed = false
+    }
 }
 
 struct Bank: Equatable {
@@ -156,6 +166,8 @@ struct Bank: Equatable {
     }
 
     enum Event: Equatable {
+        case openAccount(accountHolderID: UInt)
+        case closeAccount(accountHolderID: UInt)
         case cashDeposit(amount: Decimal, accountHolderID: UInt)
         case loanProvision(amount: Decimal, accountHolderID: UInt)
         case accrueDepositInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
@@ -172,15 +184,100 @@ struct Bank: Equatable {
         )
     }
 
+    func openAccount(
+        accountHolderID: UInt,
+        period: UInt32
+    ) -> Self {
+
+        if let account = accounts[accountHolderID], !account.isClosed {
+            return self
+        } else if var account = accounts[accountHolderID], account.isClosed {
+            account.reopen()
+
+            var updatedAccounts = accounts
+            updatedAccounts[accountHolderID] = account
+
+            return Bank(
+                ledger: ledger,
+                eventCaptures: eventCaptures + [
+                    Capture(
+                        entity: .openAccount(
+                            accountHolderID: accountHolderID
+                        ),
+                        timestamp: period
+                    )
+                ],
+                riskFreeRate: riskFreeRate,
+                loanRate: loanRate,
+                accounts: updatedAccounts
+            )
+        } else {
+            var updatedAccounts = accounts
+            updatedAccounts[accountHolderID] = createAccount(
+                accountHolderID: accountHolderID
+            )
+
+            return Bank(
+                ledger: ledger,
+                eventCaptures: eventCaptures + [
+                    Capture(
+                        entity: .openAccount(
+                            accountHolderID: accountHolderID
+                        ),
+                        timestamp: period
+                    )
+                ],
+                riskFreeRate: riskFreeRate,
+                loanRate: loanRate,
+                accounts: updatedAccounts
+            )
+        }
+    }
+
+    func closeAccount(
+        accountHolderID: UInt,
+        period: UInt32
+    ) -> Self {
+        guard var account = accounts[accountHolderID] else {
+            return self
+        }
+
+        guard account.deposits.currentBalance() == .zero else {
+            return self
+        }
+
+        account.close()
+
+        var updatedAccounts = accounts
+        updatedAccounts[accountHolderID] = account
+
+        return Bank(
+            ledger: ledger,
+            eventCaptures: eventCaptures + [
+                Capture(
+                    entity: .closeAccount(
+                        accountHolderID: accountHolderID
+                    ),
+                    timestamp: period
+                )
+            ],
+            riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
+            accounts: updatedAccounts
+        )
+    }
+
     func depositCash(
         from ledgerID: UInt,
         amount: Decimal,
         at period: UInt32
     ) -> Bank {
-        let event = Event.cashDeposit(
-            amount: amount,
-            accountHolderID: ledgerID
-        )
+        var newlyRecordedEvents = [
+            Event.cashDeposit(
+                amount: amount,
+                accountHolderID: ledgerID
+            )
+        ]
 
         let reservesTransaction = Asset.Transaction
             .debit(
@@ -209,7 +306,15 @@ struct Bank: Equatable {
         var accounts = self.accounts
 
         if accounts[ledgerID] == nil {
-            accounts[ledgerID] = createAccount(accountHolderID: ledgerID)
+            accounts[ledgerID] = createAccount(
+                accountHolderID: ledgerID
+            )
+
+            newlyRecordedEvents.append(
+                .openAccount(
+                    accountHolderID: ledgerID
+                )
+            )
         }
 
         var account = accounts[ledgerID]!
@@ -231,7 +336,9 @@ struct Bank: Equatable {
 
         let bank = Bank(
             ledger: ledger,
-            eventCaptures: eventCaptures + [Capture(entity: event, timestamp: period)],
+            eventCaptures: eventCaptures + newlyRecordedEvents.map {
+                Capture(entity: $0, timestamp: period)
+            },
             riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: accounts
@@ -245,10 +352,12 @@ struct Bank: Equatable {
         amount: Decimal,
         at period: UInt32
     ) -> Bank {
-        let event = Event.loanProvision(
-            amount: amount,
-            accountHolderID: ledgerID
-        )
+        var newlyRecordedEvents = [
+            Event.loanProvision(
+                amount: amount,
+                accountHolderID: ledgerID
+            )
+        ]
 
         let loanReceivablesTransaction = Asset.Transaction
             .debit(
@@ -276,7 +385,15 @@ struct Bank: Equatable {
         var accounts = self.accounts
 
         if accounts[ledgerID] == nil {
-            accounts[ledgerID] = createAccount(accountHolderID: ledgerID)
+            accounts[ledgerID] = createAccount(
+                accountHolderID: ledgerID
+            )
+
+            newlyRecordedEvents.append(
+                .openAccount(
+                    accountHolderID: ledgerID
+                )
+            )
         }
 
         var account = accounts[ledgerID]!
@@ -298,7 +415,9 @@ struct Bank: Equatable {
 
         let bank = Bank(
             ledger: ledger,
-            eventCaptures: eventCaptures + [Capture(entity: event, timestamp: period)],
+            eventCaptures: eventCaptures + newlyRecordedEvents.map {
+                Capture(entity: $0, timestamp: period)
+            },
             riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: accounts

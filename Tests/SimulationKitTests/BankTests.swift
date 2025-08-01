@@ -105,6 +105,160 @@ final class BankTests: XCTestCase {
         )
     }
 
+    func testOpenAccount() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .openAccount(
+            accountHolderID: 1,
+            period: 1
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            1
+        )
+
+        let account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            account.ledger.currentBalance(),
+            .zero
+        )
+    }
+
+    func testCloseAccount() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .openAccount(
+            accountHolderID: 1,
+            period: 1
+        )
+        .closeAccount(
+            accountHolderID: 1,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            2
+        )
+
+        let account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertTrue(
+            account.isClosed
+        )
+
+        XCTAssertEqual(
+            account.ledger.currentBalance(),
+            .zero
+        )
+    }
+
+    func testCloseAccountWithNonZeroBalance() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        )
+        .openAccount(
+            accountHolderID: 1,
+            period: 1
+        )
+        .depositCash(
+            from: 1,
+            amount: 100.0,
+            at: 1
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            2
+        )
+
+        var account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertEqual(
+            account.ledger.currentBalance(),
+            .zero
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            100.0
+        )
+
+        bank = bank.accrueDepositInterestOnAllAccounts(
+            rate: bank.riskFreeRate,
+            period: 2
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            3
+        )
+
+        bank = bank.closeAccount(
+            accountHolderID: 1,
+            period: 3
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            3
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertFalse(
+            account.isClosed
+        )
+    }
+
+    func testReopenAccount() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .openAccount(
+            accountHolderID: 1,
+            period: 1
+        )
+        .closeAccount(
+            accountHolderID: 1,
+            period: 2
+        )
+        .openAccount(
+            accountHolderID: 1,
+            period: 3
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            3
+        )
+
+        let account = try XCTUnwrap(
+            bank.accounts[1]
+        )
+
+        XCTAssertFalse(
+            account.isClosed
+        )
+
+        XCTAssertEqual(
+            account.ledger.currentBalance(),
+            .zero
+        )
+    }
+
     func testRiskFreeRateChange() throws {
         var bank = Bank(
             riskFreeRate: 5
@@ -144,7 +298,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            1
+            2
         )
 
         XCTAssertEqual(
@@ -184,7 +338,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            1
+            2
         )
 
         XCTAssertEqual(
@@ -224,7 +378,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            1
+            2
         )
 
         XCTAssertEqual(
@@ -262,7 +416,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            2
+            3
         )
 
         depositAccount = try XCTUnwrap(
@@ -302,7 +456,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            2
+            4
         )
 
         XCTAssertEqual(
@@ -354,7 +508,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            6
         )
 
         depositAccount = try XCTUnwrap(
@@ -471,7 +625,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            1
+            2
         )
 
         bank = bank.accrueDepositInterestOnAllAccounts(
@@ -491,7 +645,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            2
+            3
         )
     }
 
@@ -512,7 +666,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            2
+            4
         )
 
         XCTAssertEqual(
@@ -560,7 +714,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            6
         )
 
         XCTAssertEqual(
@@ -620,7 +774,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            2
+            3
         )
 
         XCTAssertEqual(
@@ -648,7 +802,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            5
         )
 
         XCTAssertEqual(
@@ -707,7 +861,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            5
         )
 
         XCTAssertEqual(
@@ -785,7 +939,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            5
         )
 
         XCTAssertEqual(
@@ -868,7 +1022,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            7
+            9
         )
 
         XCTAssertEqual(
@@ -1068,7 +1222,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            5
+            7
         )
 
         XCTAssertEqual(
@@ -1136,7 +1290,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            7
+            9
         )
 
         XCTAssertEqual(
@@ -1210,7 +1364,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            5
+            7
         )
 
         XCTAssertEqual(
@@ -1278,7 +1432,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            7
+            9
         )
 
         XCTAssertEqual(
@@ -1362,7 +1516,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            6
         )
 
         XCTAssertEqual(
@@ -1451,7 +1605,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            4
+            6
         )
 
         XCTAssertEqual(
