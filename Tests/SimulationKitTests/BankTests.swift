@@ -13,7 +13,8 @@ final class BankTests: XCTestCase {
         let bank = Bank(
             riskFreeRate: 5,
             loanRate: 7,
-            startingCapital: 10_000
+            startingCapital: 10_000,
+            startingPeriod: 1
         )
 
         XCTAssertEqual(
@@ -24,6 +25,32 @@ final class BankTests: XCTestCase {
         XCTAssertEqual(
             bank.riskFreeRate,
             5
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            1
+        )
+
+        let capture = try XCTUnwrap(
+            bank.eventCaptures.first
+        )
+
+        XCTAssertEqual(
+            capture.timestamp,
+            1
+        )
+
+        guard case Bank.Event.receiveEquityCapital(
+            amount: let amount
+        ) = capture.entity else {
+            XCTFail()
+            return
+        }
+
+        XCTAssertEqual(
+            amount,
+            10_000
         )
 
         XCTAssertNotNil(
@@ -1222,7 +1249,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            7
+            8
         )
 
         XCTAssertEqual(
@@ -1290,7 +1317,7 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             bank.eventCaptures.count,
-            9
+            10
         )
 
         XCTAssertEqual(

@@ -166,6 +166,7 @@ struct Bank: Equatable {
     }
 
     enum Event: Equatable {
+        case receiveEquityCapital(amount: Decimal)
         case openAccount(accountHolderID: UInt)
         case closeAccount(accountHolderID: UInt)
         case cashDeposit(amount: Decimal, accountHolderID: UInt)
@@ -896,7 +897,8 @@ struct Bank: Equatable {
     init(
         riskFreeRate: Int,
         loanRate: Int,
-        startingCapital: Decimal = .zero
+        startingCapital: Decimal = .zero,
+        startingPeriod: UInt32 = 0
     ) {
         let ledger = Ledger
             .make()
@@ -950,9 +952,18 @@ struct Bank: Equatable {
                 )
             )
 
+        let eventCaptures = startingCapital == .zero ? [] : [
+            Capture(
+                entity: Event.receiveEquityCapital(
+                    amount: startingCapital
+                ),
+                timestamp: startingPeriod
+            )
+        ]
+
         self.init(
             ledger: ledger,
-            eventCaptures: [],
+            eventCaptures: eventCaptures,
             riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: [:]
