@@ -5,6 +5,55 @@
 
 import Foundation
 
+struct BankIncomeStatement: Equatable {
+    let totalRevenue: Decimal
+    let totalExpenses: Decimal
+
+    init(
+        previousLedger: Ledger,
+        currentLedger: Ledger
+    ) {
+        guard let previousInterestIncomeAccount = previousLedger
+            .revenues
+            .first(where: { $0.name == Bank.interestIncomeAccountName }) else {
+            precondition(
+                false,
+                "No interest income account in previous ledger"
+            )
+        }
+
+        guard let currentInterestIncomeAccount = currentLedger
+            .revenues
+            .first(where: { $0.name == Bank.interestIncomeAccountName }) else {
+            precondition(
+                false,
+                "No interest income account in current ledger"
+            )
+        }
+
+        guard let previousInterestExpensesAccount = previousLedger
+            .revenues
+            .first(where: { $0.name == Bank.interestExpensesAccountName }) else {
+            precondition(
+                false,
+                "No interest expense account in previous ledger"
+            )
+        }
+
+        guard let currentInterestExpensesAccount = currentLedger
+            .revenues
+            .first(where: { $0.name == Bank.interestExpensesAccountName }) else {
+            precondition(
+                false,
+                "No interest expense account in current ledger"
+            )
+        }
+
+        self.totalRevenue = currentInterestIncomeAccount.currentBalance() - previousInterestIncomeAccount.currentBalance()
+        self.totalExpenses = currentInterestExpensesAccount.currentBalance() - previousInterestExpensesAccount.currentBalance()
+    }
+}
+
 struct Account: Equatable {
     var accountHolderID: UInt
     var ledger: Ledger
