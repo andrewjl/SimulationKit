@@ -502,7 +502,9 @@ struct Bank: Equatable {
     ) -> Self {
         var result = self
 
-        for (id, account) in accounts {
+        for (id, account) in accounts.filter({
+            $0.value.isClosed == false
+        }) {
             result = result.accrueDepositInterest(
                 rate: rate,
                 balance: account.deposits.currentBalance(),
@@ -582,7 +584,10 @@ struct Bank: Equatable {
     ) -> Self {
         var result = self
 
-        for (id, account) in accounts {
+        for (id, account) in accounts.filter({
+            $0.value.isClosed == false &&
+            $0.value.loanReceivables.currentBalance() > 0
+        }) {
             result = result.accrueLoanInterest(
                 rate: loanRate,
                 balance: account.loanReceivables.currentBalance(),
