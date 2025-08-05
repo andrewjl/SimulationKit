@@ -15,12 +15,6 @@ final class SimulationTests: XCTestCase {
         let model = Model.makeModel(
             plannedEvents: [
                 Capture(
-                    entity: Simulation.Event.changeRiskFreeRate(
-                        newRate: 5
-                    ),
-                    timestamp: 0
-                ),
-                Capture(
                     entity: Simulation.Event.createEmptyLedger(
                         ledgerID: ledgerID
                     ),
@@ -59,7 +53,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(
             step1.capture.entity.state.ledgers.first?.currentBalance(),
-            420.0
+            400.0
         )
 
         XCTAssertEqual(clock.time, 2)
@@ -72,7 +66,7 @@ final class SimulationTests: XCTestCase {
 
         XCTAssertEqual(
             step2.capture.entity.state.ledgers.first?.currentBalance(),
-            441.0
+            400.0
         )
 
         XCTAssertEqual(clock.time, 3)
@@ -104,10 +98,6 @@ final class SimulationTests: XCTestCase {
     }
 
     func testPlannedEvents() throws {
-        let riskFreeRatePlannedEvent = Simulation.Event.changeRiskFreeRate(
-            newRate: 7
-        )
-        
         let ledgerIDs = [
             UUID().uuidString
         ]
@@ -121,10 +111,6 @@ final class SimulationTests: XCTestCase {
 
         let model = Model.makeModel(
             plannedEvents: [
-                Capture(
-                    entity: riskFreeRatePlannedEvent,
-                    timestamp: 2
-                ),
                 Capture(
                     entity: Simulation.Event.createEmptyLedger(ledgerID: ledgerIDs[0]),
                     timestamp: 0
@@ -154,10 +140,6 @@ final class SimulationTests: XCTestCase {
         XCTAssertEqual(
             clock.time,
             3
-        )
-
-        XCTAssertTrue(
-            elapsedSecondPeriod.capture.entity.events.contains(riskFreeRatePlannedEvent)
         )
 
         let elapsedThirdPeriod = simulation.tick(clock.next())
@@ -191,17 +173,12 @@ final class SimulationTests: XCTestCase {
 
     func testStateGenerator() throws {
         let initialEvents: [Simulation.Event] = [
-            Simulation.Event.changeRiskFreeRate(newRate: 7),
             Simulation.Event.createAsset(balance: 100.0, ledgerID: "0"),
             Simulation.Event.createLiability(balance: 100.0, ledgerID: "0")
         ]
 
         let state = StateGenerator.generate(from: initialEvents)
 
-        XCTAssertEqual(
-            state.bank.riskFreeRate,
-            7
-        )
         XCTAssertEqual(
             state.ledgers.count,
             1
@@ -220,10 +197,6 @@ final class SimulationTests: XCTestCase {
     func testModel() throws {
 
         let plannedEvents = [
-            Capture(
-                entity: Simulation.Event.changeRiskFreeRate(newRate: 5),
-                timestamp: 0
-            ),
             Capture(
                 entity: Simulation.Event.createEmptyLedger(ledgerID: "1"),
                 timestamp: 0
@@ -339,17 +312,6 @@ final class SimulationTests: XCTestCase {
         )
 
         let initialEvents = model.initialEvents()
-
-        let _: Simulation.Event = try XCTUnwrap(
-            initialEvents.compactMap {
-                guard case Simulation.Event.changeRiskFreeRate = $0 else {
-                    return nil
-                }
-
-                return $0
-            }
-            .first
-        )
 
         let assetEvents: [Simulation.Event] = try XCTUnwrap(
             initialEvents.compactMap {

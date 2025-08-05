@@ -13,12 +13,11 @@ class StateGenerator {
     }
 
     static func generate(from initialEvents: [Simulation.Event]) -> Simulation.State {
-        let riskFreeRate = riskFreeRate(from: initialEvents)
         let bank = Bank(
             ledger: .make(),
             eventCaptures: [],
-            riskFreeRate: riskFreeRate,
-            loanRate: riskFreeRate,
+            riskFreeRate: 0,
+            loanRate: 0,
             accounts: [:]
         )
         let ledgers = ledgers(from: initialEvents)
@@ -55,16 +54,6 @@ class StateGenerator {
 
         return Array<Ledger>(ledgers.values)
     }
-
-    static func riskFreeRate(
-        from initialEvents: [Simulation.Event]
-    ) -> Int {
-        var rate = 10
-        for case let Simulation.Event.changeRiskFreeRate(newRate) in initialEvents {
-            rate = newRate
-        }
-        return rate
-    }
 }
 
 class Simulation {
@@ -74,14 +63,6 @@ class Simulation {
 
         func apply(event: Event) -> Self {
             switch event {
-            case .changeRiskFreeRate(newRate: let rate):
-                return State(
-                    ledgers: ledgers,
-                    bank: bank.changeRiskFreeRate(
-                        to: rate,
-                        period: 1
-                    )
-                )
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.evented(transactions) : $0 },
@@ -234,7 +215,6 @@ extension Simulation.State: Equatable {
 
 extension Simulation {
     enum Event: Equatable {
-        case changeRiskFreeRate(newRate: Int)
         case ledgerTransactions(transactions: [Ledger.Event], ledgerID: String)
         case createAsset(balance: Decimal, ledgerID: String)
         case createLiability(balance: Decimal, ledgerID: String)
