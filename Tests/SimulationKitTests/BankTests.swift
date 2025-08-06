@@ -92,6 +92,26 @@ final class BankTests: XCTestCase {
         )
     }
 
+    func testReceiveEquityCapital() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        )
+        .receiveEquityCapital(
+            amount: 10_000.0,
+            period: 0
+        )
+
+        XCTAssertEqual(
+            bank.equityCapital.currentBalance(),
+            10_000.0
+        )
+
+        XCTAssertEqual(
+            bank.reserves.currentBalance(),
+            10_000.0
+        )
+    }
+
     func testBankAccountCreation() throws {
         var bank = Bank(
             riskFreeRate: 5

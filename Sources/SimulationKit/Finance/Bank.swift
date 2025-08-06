@@ -234,6 +234,44 @@ struct Bank: Equatable {
         )
     }
 
+    func receiveEquityCapital(
+        amount: Decimal,
+        period: UInt32
+    ) -> Self {
+        let reservesTransaction = Asset.Transaction.debited(
+            by: amount
+        )
+        let equityCapitalTransaction = Equity.Transaction.credited(
+            by: amount
+        )
+
+        let updatedLedger = ledger.evented([
+            .asset(
+                transaction: reservesTransaction,
+                accountID: reserves.id
+            ),
+            .equity(
+                transaction: equityCapitalTransaction,
+                accountID: equityCapital.id
+            )
+        ])
+
+        return Bank(
+            ledger: updatedLedger,
+            eventCaptures: eventCaptures + [
+                Capture(
+                    entity: .receiveEquityCapital(
+                        amount: amount
+                    ),
+                    timestamp: period
+                )
+            ],
+            riskFreeRate: riskFreeRate,
+            loanRate: loanRate,
+            accounts: accounts
+        )
+    }
+
     func openAccount(
         accountHolderID: UInt,
         period: UInt32
