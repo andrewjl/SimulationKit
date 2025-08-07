@@ -970,6 +970,79 @@ struct Bank: Equatable {
         )
     }
 
+    func applyingEvent(
+        event: Bank.Event,
+        period: UInt32
+    ) -> Self {
+        switch event {
+        case .receiveEquityCapital(amount: let amount):
+            return receiveEquityCapital(
+                amount: amount,
+                period: period
+            )
+        case .openAccount(accountHolderID: let accountHolderID):
+            return openAccount(
+                accountHolderID: accountHolderID,
+                period: period
+            )
+        case .closeAccount(accountHolderID: let accountHolderID):
+            return closeAccount(
+                accountHolderID: accountHolderID,
+                period: period
+            )
+        case .cashDeposit(amount: let amount, accountHolderID: let accountHolderID):
+            return depositCash(
+                from: accountHolderID,
+                amount: amount,
+                at: period
+            )
+        case .loanProvision(amount: let amount, accountHolderID: let accountHolderID):
+            return provideLoan(
+                to: accountHolderID,
+                amount: amount,
+                at: period
+            )
+        case .accrueDepositInterest(rate: let rate, balance: let balance, accountHolderID: let accountHolderID):
+            return accrueDepositInterest(
+                rate: rate,
+                balance: balance,
+                accountHolderID: accountHolderID,
+                period: period
+            )
+        case .accrueLoanInterest(rate: let rate, balance: let balance, accountHolderID: let accountHolderID):
+            return accrueLoanInterest(
+                rate: rate,
+                balance: balance,
+                accountHolderID: accountHolderID,
+                period: period
+            )
+        case .changeRiskFreeRate(rate: let rate):
+            return changeRiskFreeRate(
+                to: rate,
+                period: period
+            )
+        case .receiveLoanPayment(amount: let amount, accountHolderID: let accountHolderID):
+            return receivePayment(
+                amount: amount,
+                from: accountHolderID,
+                period: period
+            )
+        case .withdrawCash(amount: let amount, accountHolderID: let accountHolderID):
+            return withdrawCash(
+                amount: amount,
+                from: accountHolderID,
+                period: period
+            )
+        case .transfer(amount: let amount, originAccountHolderID: let originAccountHolderID, destinationAccountHolderID: let destinationAccountHolderID):
+            return transfer(
+                amount: amount,
+                from: originAccountHolderID,
+                to: destinationAccountHolderID,
+                period: period
+            )
+        }
+    }
+
     init() {
         self.init(
             riskFreeRate: 0,

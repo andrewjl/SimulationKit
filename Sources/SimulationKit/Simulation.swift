@@ -94,15 +94,12 @@ class Simulation {
                     ledgers: ledgers + [ledger],
                     bank: bank
                 )
-            case .bankLedgerTransactions(transactions: let transactions, period: _):
+            case .bankEvent(event: let event, period: let period):
                 return State(
                     ledgers: ledgers,
-                    bank: Bank(
-                        ledger: bank.ledger.evented(transactions),
-                        eventCaptures: bank.eventCaptures,
-                        riskFreeRate: bank.riskFreeRate,
-                        loanRate: bank.loanRate,
-                        accounts: bank.accounts
+                    bank: bank.applyingEvent(
+                        event: event,
+                        period: period
                     )
                 )
             }
@@ -219,7 +216,7 @@ extension Simulation {
         case createAsset(balance: Decimal, ledgerID: String)
         case createLiability(balance: Decimal, ledgerID: String)
         case createEmptyLedger(ledgerID: String)
-        case bankLedgerTransactions(transactions: [Ledger.Event], period: UInt32)
+        case bankEvent(event: Bank.Event, period: UInt32)
     }
 }
 
