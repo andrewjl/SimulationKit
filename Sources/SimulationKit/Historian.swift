@@ -167,7 +167,7 @@ class Historian {
 
         for eventsCapture in relevantEvents {
             for event in eventsCapture.entity {
-                state = state.apply(event: event)
+                state = state.applying(event: event)
             }
         }
 

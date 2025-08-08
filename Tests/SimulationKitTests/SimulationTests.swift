@@ -356,7 +356,7 @@ final class SimulationTests: XCTestCase {
 
         let ledgerID = UUID().uuidString
 
-        let firstSuccessorState = state.apply(
+        let firstSuccessorState = state.applying(
             event: .createEmptyLedger(
                 ledgerID: ledgerID
             )
@@ -372,7 +372,7 @@ final class SimulationTests: XCTestCase {
             "Expected no assets in empty ledger"
         )
 
-        let secondSuccessorState = firstSuccessorState.apply(
+        let secondSuccessorState = firstSuccessorState.applying(
             event: .createAsset(
                 balance: 100.0,
                 ledgerID: ledgerID
