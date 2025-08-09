@@ -82,16 +82,12 @@ class Simulation {
                     bank: bank
                 )
             case .createEmptyLedger(ledgerID: let ledgerID):
-                let ledger = Ledger(
-                    id: ledgerID,
-                    assets: [],
-                    liabilities: [],
-                    equities: [],
-                    revenues: [],
-                    expenses: []
-                )
                 return State(
-                    ledgers: ledgers + [ledger],
+                    ledgers: ledgers + [
+                        Ledger.make(
+                            id: ledgerID
+                        )
+                    ],
                     bank: bank
                 )
             case .bankEvent(event: let event, period: let period):
