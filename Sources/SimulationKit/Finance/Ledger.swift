@@ -5,28 +5,6 @@
 
 import Foundation
 
-extension Array where Array.Element == Ledger.Event {
-    func event(assetID: String) -> Ledger.Event? {
-        self.first(where: {
-            guard case let Ledger.Event.asset(transaction: _, accountID: id) = $0 else {
-                return false
-            }
-
-            return assetID == id
-        })
-    }
-
-    func event(liabilityID: String) -> Ledger.Event? {
-        self.first(where: {
-            guard case let Ledger.Event.liability(transaction: _, accountID: id) = $0 else {
-                return false
-            }
-
-            return liabilityID == id
-        })
-    }
-}
-
 extension Array where Array.Element == Ledger {
     func currentBalances() -> [Decimal] {
         return self.map { $0.currentBalance() }
