@@ -245,7 +245,7 @@ struct Bank: Equatable {
             by: amount
         )
 
-        let updatedLedger = ledger.evented([
+        let updatedLedger = ledger.applyingEvents([
             .asset(
                 transaction: reservesTransaction,
                 accountID: reserves.id
@@ -380,7 +380,7 @@ struct Bank: Equatable {
             )
 
         let ledger = ledger
-            .evented([
+            .applyingEvents([
                 .asset(
                     transaction: reservesTransaction,
                     accountID: reserves.id
@@ -408,7 +408,7 @@ struct Bank: Equatable {
         var account = accounts[ledgerID]!
         let updatedLedger = account
             .ledger
-            .evented([
+            .applyingEvents([
                 .asset(
                     transaction: reservesTransaction,
                     accountID: account.reserves.id
@@ -459,7 +459,7 @@ struct Bank: Equatable {
             )
 
         let ledger = ledger
-            .evented([
+            .applyingEvents([
                 .asset(
                     transaction: loanReceivablesTransaction,
                     accountID: loanReceivables.id
@@ -487,7 +487,7 @@ struct Bank: Equatable {
         var account = accounts[ledgerID]!
         let updatedLedger = account
             .ledger
-            .evented([
+            .applyingEvents([
                 .asset(
                     transaction: loanReceivablesTransaction,
                     accountID: account.loanReceivables.id
@@ -575,7 +575,7 @@ struct Bank: Equatable {
         let interestExpensesTransaction = Expense.Transaction
             .debited(by: accruedInterestAmount)
 
-        let updatedLedger = ledger.evented([
+        let updatedLedger = ledger.applyingEvents([
             Ledger.Event.liability(
                 transaction: depositsTransaction,
                 accountID: deposits.id
@@ -586,7 +586,7 @@ struct Bank: Equatable {
             )
         ])
 
-        account.ledger = account.ledger.evented([
+        account.ledger = account.ledger.applyingEvents([
             Ledger.Event.liability(
                 transaction: depositsTransaction,
                 accountID: account.deposits.id
@@ -653,7 +653,7 @@ struct Bank: Equatable {
             percentage: rate
         )
 
-        let updatedLedger = ledger.evented([
+        let updatedLedger = ledger.applyingEvents([
             Ledger.Event.asset(
                 transaction: .debit(
                     id: UUID().uuidString,
@@ -670,7 +670,7 @@ struct Bank: Equatable {
             )
         ])
 
-        account.ledger = account.ledger.evented([
+        account.ledger = account.ledger.applyingEvents([
             Ledger.Event.asset(
                 transaction: .debit(
                     id: UUID().uuidString,
@@ -747,14 +747,14 @@ struct Bank: Equatable {
                     by: principalPaymentAmount
                 )
 
-            account.ledger = account.ledger.evented([
+            account.ledger = account.ledger.applyingEvents([
                 .asset(
                     transaction: loanReceivablesTransaction,
                     accountID: account.loanReceivables.id
                 )
             ])
 
-            updatedLedger = updatedLedger.evented([
+            updatedLedger = updatedLedger.applyingEvents([
                 .asset(
                     transaction: loanReceivablesTransaction,
                     accountID: loanReceivables.id
@@ -762,7 +762,7 @@ struct Bank: Equatable {
             ])
         }
 
-        account.ledger = account.ledger.evented([
+        account.ledger = account.ledger.applyingEvents([
             .asset(
                 transaction: reservesTransaction,
                 accountID: account.reserves.id
@@ -773,7 +773,7 @@ struct Bank: Equatable {
             )
         ])
 
-        updatedLedger = updatedLedger.evented([
+        updatedLedger = updatedLedger.applyingEvents([
             .asset(
                 transaction: reservesTransaction,
                 accountID: reserves.id
@@ -828,7 +828,7 @@ struct Bank: Equatable {
                 by: amount
             )
 
-        account.ledger = account.ledger.evented([
+        account.ledger = account.ledger.applyingEvents([
             .asset(
                 transaction: reservesTransaction,
                 accountID: account.reserves.id
@@ -839,7 +839,7 @@ struct Bank: Equatable {
             )
         ])
 
-        updatedLedger = updatedLedger.evented([
+        updatedLedger = updatedLedger.applyingEvents([
             .asset(
                 transaction: reservesTransaction,
                 accountID: reserves.id
@@ -896,7 +896,7 @@ struct Bank: Equatable {
                 by: amount
             )
 
-        originAccount.ledger = originAccount.ledger.evented([
+        originAccount.ledger = originAccount.ledger.applyingEvents([
             .asset(
                 transaction: originReservesTransaction,
                 accountID: originAccount.reserves.id
@@ -907,7 +907,7 @@ struct Bank: Equatable {
             )
         ])
 
-        updatedLedger = updatedLedger.evented([
+        updatedLedger = updatedLedger.applyingEvents([
             .asset(
                 transaction: originReservesTransaction,
                 accountID: reserves.id
@@ -927,7 +927,7 @@ struct Bank: Equatable {
                 by: amount
             )
 
-        destinationAccount.ledger = destinationAccount.ledger.evented([
+        destinationAccount.ledger = destinationAccount.ledger.applyingEvents([
             .asset(
                 transaction: destinationReservesTransaction,
                 accountID: destinationAccount.reserves.id
@@ -938,7 +938,7 @@ struct Bank: Equatable {
             )
         ])
 
-        updatedLedger = updatedLedger.evented([
+        updatedLedger = updatedLedger.applyingEvents([
             .asset(
                 transaction: destinationReservesTransaction,
                 accountID: reserves.id

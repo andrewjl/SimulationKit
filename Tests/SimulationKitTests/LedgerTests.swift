@@ -133,7 +133,7 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(ledger.currentBalance(), 200.0)
         ledger = ledger
-            .evented([
+            .applyingEvents([
                 .asset(transaction: .debited(by: 5.0), accountID: "0"),
                 .asset(transaction: .debited(by: 5.0), accountID: "1"),
                 .liability(transaction: .decreasing(by: 35.0), accountID: "2")
