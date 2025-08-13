@@ -359,7 +359,8 @@ final class SimulationTests: XCTestCase {
         let firstSuccessorState = state.applying(
             event: .createEmptyLedger(
                 ledgerID: ledgerID
-            )
+            ),
+            period: 0
         )
 
         let firstSuccessorStateLedger = try XCTUnwrap(
@@ -376,7 +377,8 @@ final class SimulationTests: XCTestCase {
             event: .createAsset(
                 balance: 100.0,
                 ledgerID: ledgerID
-            )
+            ),
+            period: 1
         )
 
         let secondSuccessorStateLedger = try XCTUnwrap(

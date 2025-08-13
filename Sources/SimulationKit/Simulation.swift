@@ -61,7 +61,10 @@ class Simulation {
         var ledgers: [Ledger]
         var bank: Bank
 
-        func applying(event: Event) -> Self {
+        func applying(
+            event: Event,
+            period: UInt32
+        ) -> Self {
             switch event {
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
@@ -90,11 +93,11 @@ class Simulation {
                     ],
                     bank: bank
                 )
-            case .bankEvent(event: let event, period: let period):
+            case .bankEvent(event: let bankEvent):
                 return State(
                     ledgers: ledgers,
                     bank: bank.applyingEvent(
-                        event: event,
+                        event: bankEvent,
                         period: period
                     )
                 )
@@ -152,7 +155,7 @@ class Simulation {
 
     func successiveStep(tick: Tick) -> Step {
         let events = upcomingEvents(state: state, tick: tick)
-        let successiveState = events.reduce(state, { $0.applying(event: $1) })
+        let successiveState = events.reduce(state, { $0.applying(event: $1, period: tick.time) })
 
         capture = Capture(
             entity: successiveState,
@@ -212,7 +215,7 @@ extension Simulation {
         case createAsset(balance: Decimal, ledgerID: String)
         case createLiability(balance: Decimal, ledgerID: String)
         case createEmptyLedger(ledgerID: String)
-        case bankEvent(event: Bank.Event, period: UInt32)
+        case bankEvent(event: Bank.Event)
     }
 }
 
