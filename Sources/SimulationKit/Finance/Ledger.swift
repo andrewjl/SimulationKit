@@ -29,7 +29,7 @@ struct Ledger: Equatable {
         return assetSum - liabilitySum - (equitySum + revenueSum - expensesSum)
     }
 
-    func applyingEvent(event: Event) -> Self {
+    func applying(event: Event) -> Self {
         switch event {
         case .asset(let transaction, let accountID):
             return Ledger(
