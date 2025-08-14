@@ -78,7 +78,7 @@ struct Ledger: Equatable {
         }
     }
 
-    func applyingEvents(_ events: [Event]) -> Self {
+    func applying(events: [Event]) -> Self {
         var eventedAssets = assets
         var eventedLiabilities = liabilities
         var eventedEquities = equities
@@ -222,16 +222,16 @@ extension Ledger {
     func adjustAllAssetBalances(
         by rate: Int
     ) -> Self {
-        self.applyingEvents(
-            self.eventsAdjustingAllAssetBalances(by: rate)
+        self.applying(
+            events: self.eventsAdjustingAllAssetBalances(by: rate)
         )
     }
 
     func adjustAllLiabilityBalances(
         by rate: Int
     ) -> Self {
-        self.applyingEvents(
-            self.eventsAdjustingAllLiabilityBalances(by: rate)
+        self.applying(
+            events: self.eventsAdjustingAllLiabilityBalances(by: rate)
         )
     }
 }

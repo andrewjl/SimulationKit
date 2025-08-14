@@ -68,7 +68,7 @@ class Simulation {
             switch event {
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applyingEvents(transactions) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(events: transactions) : $0 },
                     bank: bank
                 )
             case .createAsset(balance: let balance, ledgerID: let ledgerID):
