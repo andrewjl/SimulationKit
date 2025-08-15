@@ -34,22 +34,23 @@ class StateGenerator {
         var ledgers = [String: Ledger]()
 
         for case let Simulation.Event.createEmptyLedger(ledgerID) in initialEvents {
-            ledgers[ledgerID] = Ledger(id: ledgerID)
+            ledgers[ledgerID] = Ledger(id: ledgerID, generalJournal: [])
         }
 
         for case let Simulation.Event.createAsset(balance, ledgerID) in initialEvents {
-            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID)]
+            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
                 .adding(
                     Asset.make(
                         from: balance,
                         name: ""
-                    )
+                    ),
+                    at: 0
                 )
         }
 
         for case let Simulation.Event.createLiability(balance, ledgerID) in initialEvents {
-            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID)]
-                .adding(Liability.make(from: balance))
+            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
+                .adding(Liability.make(from: balance), at: 0)
         }
 
         return Array<Ledger>(ledgers.values)
@@ -68,7 +69,7 @@ class Simulation {
             switch event {
             case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(events: transactions) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(events: transactions, at: period) : $0 },
                     bank: bank
                 )
             case .createAsset(balance: let balance, ledgerID: let ledgerID):
@@ -76,12 +77,12 @@ class Simulation {
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(
                         from: balance,
                         name: ""
-                    )) : $0 },
+                    ), at: period) : $0 },
                     bank: bank
                 )
             case .createLiability(balance: let balance, ledgerID: let ledgerID):
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance)) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance), at: period) : $0 },
                     bank: bank
                 )
             case .createEmptyLedger(ledgerID: let ledgerID):

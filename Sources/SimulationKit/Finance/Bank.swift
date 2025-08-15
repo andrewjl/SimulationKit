@@ -97,7 +97,8 @@ struct Account: Equatable {
     }
 
     init(
-        accountHolderID: UInt
+        accountHolderID: UInt,
+        period: UInt32
     ) {
         self.accountHolderID = accountHolderID
         self.ledger = Ledger
@@ -107,42 +108,48 @@ struct Account: Equatable {
                     id: UUID().uuidString,
                     name: Bank.reservesAccountName,
                     balance: .zero
-                )
+                ),
+                at: period
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
                     name: Bank.loanReceivablesAccountName,
                     balance: .zero
-                )
+                ),
+                at: period
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
                     name: Bank.depositsAccountName,
                     balance: .zero
-                )
+                ),
+                at: period
             )
             .adding(
                 Expense(
                     id: UUID().uuidString,
                     name: Bank.interestExpensesAccountName,
                     balance: .zero
-                )
+                ),
+                at: period
             )
             .adding(
                 Revenue(
                     id: UUID().uuidString,
                     name: Bank.interestIncomeAccountName,
                     balance: .zero
-                )
+                ),
+                at: period
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
                     name: Bank.interestReceivablesAccount,
                     balance: .zero
-                )
+                ),
+                at: period
             )
     }
 
@@ -228,9 +235,13 @@ struct Bank: Equatable {
         case transfer(amount: Decimal, originAccountHolderID: UInt, destinationAccountHolderID: UInt)
     }
 
-    func createAccount(accountHolderID: UInt) -> Account {
+    func createAccount(
+        accountHolderID: UInt,
+        at period: UInt32
+    ) -> Account {
         return Account(
-            accountHolderID: accountHolderID
+            accountHolderID: accountHolderID,
+            period: period
         )
     }
 
@@ -245,19 +256,21 @@ struct Bank: Equatable {
             by: amount
         )
 
-        let updatedLedger = ledger.applying(events: [
-            .asset(
-                transaction: reservesTransaction,
-                accountID: reserves.id
-            ),
-            .equity(
-                transaction: equityCapitalTransaction,
-                accountID: equityCapital.id
-            )
-        ])
-
         return Bank(
-            ledger: updatedLedger,
+            ledger: ledger
+                .applying(
+                    events: [
+                        .asset(
+                            transaction: reservesTransaction,
+                            accountID: reserves.id
+                        ),
+                        .equity(
+                            transaction: equityCapitalTransaction,
+                            accountID: equityCapital.id
+                        )
+                    ],
+                    at: period
+                ),
             eventCaptures: eventCaptures + [
                 Capture(
                     entity: .receiveEquityCapital(
@@ -302,7 +315,8 @@ struct Bank: Equatable {
         } else {
             var updatedAccounts = accounts
             updatedAccounts[accountHolderID] = createAccount(
-                accountHolderID: accountHolderID
+                accountHolderID: accountHolderID,
+                at: period
             )
 
             return Bank(
@@ -372,30 +386,19 @@ struct Bank: Equatable {
                 id: UUID().uuidString,
                 amount: amount
             )
-        
+
         let depositsTransaction = Liability.Transaction
             .credit(
                 id: UUID().uuidString,
                 amount: amount
             )
 
-        let ledger = ledger
-            .applying(events: [
-                .asset(
-                    transaction: reservesTransaction,
-                    accountID: reserves.id
-                ),
-                .liability(
-                    transaction: depositsTransaction,
-                    accountID: deposits.id
-                )
-            ])
-
         var accounts = self.accounts
 
         if accounts[ledgerID] == nil {
             accounts[ledgerID] = createAccount(
-                accountHolderID: ledgerID
+                accountHolderID: ledgerID,
+                at: period
             )
 
             newlyRecordedEvents.append(
@@ -408,22 +411,38 @@ struct Bank: Equatable {
         var account = accounts[ledgerID]!
         let updatedLedger = account
             .ledger
-            .applying(events: [
-                .asset(
-                    transaction: reservesTransaction,
-                    accountID: account.reserves.id
-                ),
-                .liability(
-                    transaction: depositsTransaction,
-                    accountID: account.deposits.id
-                )
-            ])
+            .applying(
+                events: [
+                    .asset(
+                        transaction: reservesTransaction,
+                        accountID: account.reserves.id
+                    ),
+                    .liability(
+                        transaction: depositsTransaction,
+                        accountID: account.deposits.id
+                    )
+                ],
+                at: period
+            )
 
         account.ledger = updatedLedger
         accounts[ledgerID] = account
 
         let bank = Bank(
-            ledger: ledger,
+            ledger: ledger
+                .applying(
+                    events: [
+                        .asset(
+                            transaction: reservesTransaction,
+                            accountID: reserves.id
+                        ),
+                        .liability(
+                            transaction: depositsTransaction,
+                            accountID: deposits.id
+                        )
+                    ],
+                    at: period
+                ),
             eventCaptures: eventCaptures + newlyRecordedEvents.map {
                 Capture(entity: $0, timestamp: period)
             },
@@ -458,23 +477,12 @@ struct Bank: Equatable {
                 amount: amount
             )
 
-        let ledger = ledger
-            .applying(events: [
-                .asset(
-                    transaction: loanReceivablesTransaction,
-                    accountID: loanReceivables.id
-                ),
-                .liability(
-                    transaction: depositsTransaction,
-                    accountID: deposits.id
-                )
-            ])
-
         var accounts = self.accounts
 
         if accounts[ledgerID] == nil {
             accounts[ledgerID] = createAccount(
-                accountHolderID: ledgerID
+                accountHolderID: ledgerID,
+                at: period
             )
 
             newlyRecordedEvents.append(
@@ -487,22 +495,38 @@ struct Bank: Equatable {
         var account = accounts[ledgerID]!
         let updatedLedger = account
             .ledger
-            .applying(events: [
-                .asset(
-                    transaction: loanReceivablesTransaction,
-                    accountID: account.loanReceivables.id
-                ),
-                .liability(
-                    transaction: depositsTransaction,
-                    accountID: account.deposits.id
-                )
-            ])
+            .applying(
+                events: [
+                    .asset(
+                        transaction: loanReceivablesTransaction,
+                        accountID: account.loanReceivables.id
+                    ),
+                    .liability(
+                        transaction: depositsTransaction,
+                        accountID: account.deposits.id
+                    )
+                ],
+                at: period
+            )
 
         account.ledger = updatedLedger
         accounts[ledgerID] = account
 
         let bank = Bank(
-            ledger: ledger,
+            ledger: ledger
+                .applying(
+                    events: [
+                        .asset(
+                            transaction: loanReceivablesTransaction,
+                            accountID: loanReceivables.id
+                        ),
+                        .liability(
+                            transaction: depositsTransaction,
+                            accountID: deposits.id
+                        )
+                    ],
+                    at: period
+            ),
             eventCaptures: eventCaptures + newlyRecordedEvents.map {
                 Capture(entity: $0, timestamp: period)
             },
@@ -575,27 +599,33 @@ struct Bank: Equatable {
         let interestExpensesTransaction = Expense.Transaction
             .debited(by: accruedInterestAmount)
 
-        let updatedLedger = ledger.applying(events: [
-            Ledger.Event.liability(
-                transaction: depositsTransaction,
-                accountID: deposits.id
-            ),
-            Ledger.Event.expense(
-                transaction: interestExpensesTransaction,
-                accountID: interestExpenses.id
-            )
-        ])
+        let updatedLedger = ledger.applying(
+            events: [
+                Ledger.Event.liability(
+                    transaction: depositsTransaction,
+                    accountID: deposits.id
+                ),
+                Ledger.Event.expense(
+                    transaction: interestExpensesTransaction,
+                    accountID: interestExpenses.id
+                )
+            ],
+            at: period
+        )
 
-        account.ledger = account.ledger.applying(events: [
-            Ledger.Event.liability(
-                transaction: depositsTransaction,
-                accountID: account.deposits.id
-            ),
-            Ledger.Event.expense(
-                transaction: interestExpensesTransaction,
-                accountID: account.interestExpenses.id
-            )
-        ])
+        account.ledger = account.ledger.applying(
+            events: [
+                Ledger.Event.liability(
+                    transaction: depositsTransaction,
+                    accountID: account.deposits.id
+                ),
+                Ledger.Event.expense(
+                    transaction: interestExpensesTransaction,
+                    accountID: account.interestExpenses.id
+                )
+            ],
+            at: period
+        )
 
         updatedAccounts[accountHolderID] = account
 
@@ -616,7 +646,7 @@ struct Bank: Equatable {
             accounts: updatedAccounts
         )
     }
-    
+
     func accrueLoanInterestOnAllAccounts(
         period: UInt32
     ) -> Self {
@@ -653,44 +683,48 @@ struct Bank: Equatable {
             percentage: rate
         )
 
-        let updatedLedger = ledger.applying(events: [
-            Ledger.Event.asset(
-                transaction: .debit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
+        account.ledger = account.ledger.applying(
+            events: [
+                Ledger.Event.asset(
+                    transaction: .debit(
+                        id: UUID().uuidString,
+                        amount: accruedInterestAmount
+                    ),
+                    accountID: account.interestReceivables.id
                 ),
-                accountID: interestReceivables.id
-            ),
-            Ledger.Event.revenue(
-                transaction: .credit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
-                accountID: interestIncome.id
-            )
-        ])
-
-        account.ledger = account.ledger.applying(events: [
-            Ledger.Event.asset(
-                transaction: .debit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
-                accountID: account.interestReceivables.id
-            ),
-            Ledger.Event.revenue(
-                transaction: .credit(
-                    id: UUID().uuidString,
-                    amount: accruedInterestAmount
-                ),
-                accountID: account.interestIncome.id
-            )
-        ])
+                Ledger.Event.revenue(
+                    transaction: .credit(
+                        id: UUID().uuidString,
+                        amount: accruedInterestAmount
+                    ),
+                    accountID: account.interestIncome.id
+                )
+            ],
+            at: period
+        )
 
         updatedAccounts[account.accountHolderID] = account
 
         return Bank(
-            ledger: updatedLedger,
+            ledger: ledger.applying(
+                events: [
+                    Ledger.Event.asset(
+                        transaction: .debit(
+                            id: UUID().uuidString,
+                            amount: accruedInterestAmount
+                        ),
+                        accountID: interestReceivables.id
+                    ),
+                    Ledger.Event.revenue(
+                        transaction: .credit(
+                            id: UUID().uuidString,
+                            amount: accruedInterestAmount
+                        ),
+                        accountID: interestIncome.id
+                    )
+                ],
+                at: period
+            ),
             eventCaptures: eventCaptures + [
                 Capture(
                     entity: .accrueLoanInterest(
@@ -747,42 +781,54 @@ struct Bank: Equatable {
                     by: principalPaymentAmount
                 )
 
-            account.ledger = account.ledger.applying(events: [
-                .asset(
-                    transaction: loanReceivablesTransaction,
-                    accountID: account.loanReceivables.id
-                )
-            ])
+            account.ledger = account.ledger.applying(
+                events: [
+                    .asset(
+                        transaction: loanReceivablesTransaction,
+                        accountID: account.loanReceivables.id
+                    )
+                ],
+                at: period
+            )
 
-            updatedLedger = updatedLedger.applying(events: [
-                .asset(
-                    transaction: loanReceivablesTransaction,
-                    accountID: loanReceivables.id
-                )
-            ])
+            updatedLedger = updatedLedger.applying(
+                events: [
+                    .asset(
+                        transaction: loanReceivablesTransaction,
+                        accountID: loanReceivables.id
+                    )
+                ],
+                at: period
+            )
         }
 
-        account.ledger = account.ledger.applying(events: [
-            .asset(
-                transaction: reservesTransaction,
-                accountID: account.reserves.id
-            ),
-            .asset(
-                transaction: interestReceivablesTransaction,
-                accountID: account.interestReceivables.id
-            )
-        ])
+        account.ledger = account.ledger.applying(
+            events: [
+                .asset(
+                    transaction: reservesTransaction,
+                    accountID: account.reserves.id
+                ),
+                .asset(
+                    transaction: interestReceivablesTransaction,
+                    accountID: account.interestReceivables.id
+                )
+            ],
+            at: period
+        )
 
-        updatedLedger = updatedLedger.applying(events: [
-            .asset(
-                transaction: reservesTransaction,
-                accountID: reserves.id
-            ),
-            .asset(
-                transaction: interestReceivablesTransaction,
-                accountID: interestReceivables.id
-            )
-        ])
+        updatedLedger = updatedLedger.applying(
+            events: [
+                .asset(
+                    transaction: reservesTransaction,
+                    accountID: reserves.id
+                ),
+                .asset(
+                    transaction: interestReceivablesTransaction,
+                    accountID: interestReceivables.id
+                )
+            ],
+            at: period
+        )
 
         updatedAccounts[accountHolderID] = account
 
@@ -828,27 +874,33 @@ struct Bank: Equatable {
                 by: amount
             )
 
-        account.ledger = account.ledger.applying(events: [
-            .asset(
-                transaction: reservesTransaction,
-                accountID: account.reserves.id
-            ),
-            .liability(
-                transaction: depositsTransaction,
-                accountID: account.deposits.id
-            )
-        ])
+        account.ledger = account.ledger.applying(
+            events: [
+                .asset(
+                    transaction: reservesTransaction,
+                    accountID: account.reserves.id
+                ),
+                .liability(
+                    transaction: depositsTransaction,
+                    accountID: account.deposits.id
+                )
+            ],
+            at: period
+        )
 
-        updatedLedger = updatedLedger.applying(events: [
-            .asset(
-                transaction: reservesTransaction,
-                accountID: reserves.id
-            ),
-            .liability(
-                transaction: depositsTransaction,
-                accountID: deposits.id
-            )
-        ])
+        updatedLedger = updatedLedger.applying(
+            events: [
+                .asset(
+                    transaction: reservesTransaction,
+                    accountID: reserves.id
+                ),
+                .liability(
+                    transaction: depositsTransaction,
+                    accountID: deposits.id
+                )
+            ],
+            at: period
+        )
 
         updatedAccounts[accountHolderID] = account
 
@@ -876,7 +928,7 @@ struct Bank: Equatable {
         period: UInt32
     ) -> Self {
         guard var originAccount = accounts[originAccountHolderID],
-        var destinationAccount = accounts[destinationAccountHolderID] else {
+              var destinationAccount = accounts[destinationAccountHolderID] else {
             return self
         }
 
@@ -896,27 +948,33 @@ struct Bank: Equatable {
                 by: amount
             )
 
-        originAccount.ledger = originAccount.ledger.applying(events: [
-            .asset(
-                transaction: originReservesTransaction,
-                accountID: originAccount.reserves.id
-            ),
-            .liability(
-                transaction: originDepositsTransaction,
-                accountID: originAccount.deposits.id
-            )
-        ])
+        originAccount.ledger = originAccount.ledger.applying(
+            events: [
+                .asset(
+                    transaction: originReservesTransaction,
+                    accountID: originAccount.reserves.id
+                ),
+                .liability(
+                    transaction: originDepositsTransaction,
+                    accountID: originAccount.deposits.id
+                )
+            ],
+            at: period
+        )
 
-        updatedLedger = updatedLedger.applying(events: [
-            .asset(
-                transaction: originReservesTransaction,
-                accountID: reserves.id
-            ),
-            .liability(
-                transaction: originDepositsTransaction,
-                accountID: deposits.id
-            )
-        ])
+        updatedLedger = updatedLedger.applying(
+            events: [
+                .asset(
+                    transaction: originReservesTransaction,
+                    accountID: reserves.id
+                ),
+                .liability(
+                    transaction: originDepositsTransaction,
+                    accountID: deposits.id
+                )
+            ],
+            at: period
+        )
 
         let destinationReservesTransaction = Asset.Transaction
             .debited(
@@ -927,27 +985,33 @@ struct Bank: Equatable {
                 by: amount
             )
 
-        destinationAccount.ledger = destinationAccount.ledger.applying(events: [
-            .asset(
-                transaction: destinationReservesTransaction,
-                accountID: destinationAccount.reserves.id
-            ),
-            .liability(
-                transaction: destinationDepositsTransaction,
-                accountID: destinationAccount.deposits.id
-            )
-        ])
+        destinationAccount.ledger = destinationAccount.ledger.applying(
+            events: [
+                .asset(
+                    transaction: destinationReservesTransaction,
+                    accountID: destinationAccount.reserves.id
+                ),
+                .liability(
+                    transaction: destinationDepositsTransaction,
+                    accountID: destinationAccount.deposits.id
+                )
+            ],
+            at: period
+        )
 
-        updatedLedger = updatedLedger.applying(events: [
-            .asset(
-                transaction: destinationReservesTransaction,
-                accountID: reserves.id
-            ),
-            .liability(
-                transaction: destinationDepositsTransaction,
-                accountID: deposits.id
-            )
-        ])
+        updatedLedger = updatedLedger.applying(
+            events: [
+                .asset(
+                    transaction: destinationReservesTransaction,
+                    accountID: reserves.id
+                ),
+                .liability(
+                    transaction: destinationDepositsTransaction,
+                    accountID: deposits.id
+                )
+            ],
+            at: period
+        )
 
         updatedAccounts[originAccountHolderID] = originAccount
         updatedAccounts[destinationAccountHolderID] = destinationAccount
@@ -1072,49 +1136,56 @@ struct Bank: Equatable {
                     id: UUID().uuidString,
                     name: Bank.reservesAccountName,
                     balance: startingCapital
-                )
+                ),
+                at: startingPeriod
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
                     name: Bank.loanReceivablesAccountName,
                     balance: .zero
-                )
+                ),
+                at: startingPeriod
             )
             .adding(
                 Liability(
                     id: UUID().uuidString,
                     name: Bank.depositsAccountName,
                     balance: .zero
-                )
+                ),
+                at: startingPeriod
             )
             .adding(
                 Equity(
                     id: UUID().uuidString,
                     name: Bank.equityCapitalAccountName,
                     balance: startingCapital
-                )
+                ),
+                at: startingPeriod
             )
             .adding(
                 Expense(
                     id: UUID().uuidString,
                     name: Bank.interestExpensesAccountName,
                     balance: .zero
-                )
+                ),
+                at: startingPeriod
             )
             .adding(
                 Revenue(
                     id: UUID().uuidString,
                     name: Bank.interestIncomeAccountName,
                     balance: .zero
-                )
+                ),
+                at: startingPeriod
             )
             .adding(
                 Asset(
                     id: UUID().uuidString,
                     name: Bank.interestReceivablesAccount,
                     balance: .zero
-                )
+                ),
+                at: startingPeriod
             )
 
         let eventCaptures = startingCapital == .zero ? [] : [

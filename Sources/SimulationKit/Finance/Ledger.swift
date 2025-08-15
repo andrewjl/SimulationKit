@@ -19,6 +19,8 @@ struct Ledger: Equatable {
     var revenues: [Revenue] = []
     var expenses: [Expense] = []
 
+    var generalJournal: [Capture<Event>]
+
     func currentBalance() -> Decimal {
         let assetSum = assets.map { $0.currentBalance() }.reduce(Decimal.zero, +)
         let liabilitySum = liabilities.map { $0.currentBalance() }.reduce(Decimal.zero, +)
@@ -29,7 +31,17 @@ struct Ledger: Equatable {
         return assetSum - liabilitySum - (equitySum + revenueSum - expensesSum)
     }
 
-    func applying(event: Event) -> Self {
+    func applying(
+        event: Event,
+        at period: UInt32
+    ) -> Self {
+        let updatedGeneralJournal = generalJournal + [
+            Capture(
+                entity: event,
+                timestamp: period
+            )
+        ]
+
         switch event {
         case .asset(let transaction, let accountID):
             return Ledger(
@@ -38,7 +50,8 @@ struct Ledger: Equatable {
                 liabilities: liabilities,
                 equities: equities,
                 revenues: revenues,
-                expenses: expenses
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
             )
         case .liability(let transaction, let accountID):
             return Ledger(
@@ -47,7 +60,8 @@ struct Ledger: Equatable {
                 liabilities: liabilities.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
                 equities: equities,
                 revenues: revenues,
-                expenses: expenses
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
             )
         case .equity(transaction: let transaction, accountID: let accountID):
             return Ledger(
@@ -56,7 +70,8 @@ struct Ledger: Equatable {
                 liabilities: liabilities,
                 equities: equities.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
                 revenues: revenues,
-                expenses: expenses
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
             )
         case .revenue(transaction: let transaction, accountID: let accountID):
             return Ledger(
@@ -64,7 +79,8 @@ struct Ledger: Equatable {
                 assets: assets,
                 liabilities: liabilities,
                 revenues: revenues.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
-                expenses: expenses
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
             )
         case .expense(transaction: let transaction, accountID: let accountID):
             return Ledger(
@@ -73,40 +89,54 @@ struct Ledger: Equatable {
                 liabilities: liabilities,
                 equities: equities,
                 revenues: revenues,
-                expenses: expenses.map { $0.id == accountID ? $0.transacted(transaction) : $0 }
+                expenses: expenses.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
+                generalJournal: updatedGeneralJournal
             )
         }
     }
 
-    func applying(events: [Event]) -> Self {
-        var eventedAssets = assets
-        var eventedLiabilities = liabilities
-        var eventedEquities = equities
-        var eventedRevenues = revenues
-        var eventedExpenses = expenses
+    func applying(
+        events: [Event],
+        at period: UInt32
+    ) -> Self {
+        var updatedAssets = assets
+        var uodatedLiabilities = liabilities
+        var updatedEquities = equities
+        var updatedRevenues = revenues
+        var updatedExpenses = expenses
+
+        var updatedGeneralJournal = generalJournal
 
         for event in events {
+            updatedGeneralJournal.append(
+                Capture(
+                    entity: event,
+                    timestamp: period
+                )
+            )
+
             switch event {
             case .asset(let transaction, let id):
-                eventedAssets = eventedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                updatedAssets = updatedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .liability(let transaction, let id):
-                eventedLiabilities = eventedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                uodatedLiabilities = uodatedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .equity(transaction: let transaction, accountID: let id):
-                eventedEquities = eventedEquities.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                updatedEquities = updatedEquities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .revenue(transaction: let transaction, accountID: let id):
-                eventedRevenues = eventedRevenues.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                updatedRevenues = updatedRevenues.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .expense(transaction: let transaction, accountID: let id):
-                eventedExpenses = eventedExpenses.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                updatedExpenses = updatedExpenses.map { $0.id == id ? $0.transacted(transaction) : $0 }
             }
         }
         
         return Self(
             id: id,
-            assets: eventedAssets,
-            liabilities: eventedLiabilities,
-            equities: eventedEquities,
-            revenues: eventedRevenues,
-            expenses: eventedExpenses
+            assets: updatedAssets,
+            liabilities: uodatedLiabilities,
+            equities: updatedEquities,
+            revenues: updatedRevenues,
+            expenses: updatedExpenses,
+            generalJournal: generalJournal
         )
     }
 
@@ -220,75 +250,139 @@ struct Ledger: Equatable {
 
 extension Ledger {
     func adjustAllAssetBalances(
-        by rate: Int
+        by rate: Int,
+        at period: UInt32
     ) -> Self {
         self.applying(
-            events: self.eventsAdjustingAllAssetBalances(by: rate)
+            events: self.eventsAdjustingAllAssetBalances(by: rate),
+            at: period
         )
     }
 
     func adjustAllLiabilityBalances(
-        by rate: Int
+        by rate: Int,
+        at period: UInt32
     ) -> Self {
         self.applying(
-            events: self.eventsAdjustingAllLiabilityBalances(by: rate)
+            events: self.eventsAdjustingAllLiabilityBalances(by: rate),
+            at: period
         )
     }
 }
 
 extension Ledger {
-    func adding(_ asset: Asset) -> Self {
+    func adding(
+        _ asset: Asset,
+        at period: UInt32
+    ) -> Self {
         return Self(
             id: id,
             assets: assets + [asset],
             liabilities: liabilities,
             equities: equities,
             revenues: revenues,
-            expenses: expenses
+            expenses: expenses,
+            generalJournal: generalJournal + asset.transactions.map {
+                Capture(
+                    entity: .asset(
+                        transaction: $0,
+                        accountID: asset.id
+                    ),
+                    timestamp: period
+                )
+            }
         )
     }
 
-    func adding(_ liability: Liability) -> Self {
+    func adding(
+        _ liability: Liability,
+        at period: UInt32
+    ) -> Self {
         return Self(
             id: id,
             assets: assets,
             liabilities: liabilities + [liability],
             equities: equities,
             revenues: revenues,
-            expenses: expenses
+            expenses: expenses,
+            generalJournal: generalJournal + liability.transactions.map {
+                Capture(
+                    entity: .liability(
+                        transaction: $0,
+                        accountID: liability.id
+                    ),
+                    timestamp: period
+                )
+            }
         )
     }
 
-    func adding(_ equity: Equity) -> Self {
+    func adding(
+        _ equity: Equity,
+        at period: UInt32
+    ) -> Self {
         return Self(
             id: id,
             assets: assets,
             liabilities: liabilities,
             equities: equities + [equity],
             revenues: revenues,
-            expenses: expenses
+            expenses: expenses,
+            generalJournal: generalJournal + equity.transactions.map {
+                Capture(
+                    entity: .equity(
+                        transaction: $0,
+                        accountID: equity.id
+                    ),
+                    timestamp: period
+                )
+            }
         )
     }
 
-    func adding(_ revenue: Revenue) -> Self {
+    func adding(
+        _ revenue: Revenue,
+        at period: UInt32
+    ) -> Self {
         return Self(
             id: id,
             assets: assets,
             liabilities: liabilities,
             equities: equities,
             revenues: revenues + [revenue],
-            expenses: expenses
+            expenses: expenses,
+            generalJournal: generalJournal + revenue.transactions.map {
+                Capture(
+                    entity: .revenue(
+                        transaction: $0,
+                        accountID: revenue.id
+                    ),
+                    timestamp: period
+                )
+            }
         )
     }
 
-    func adding(_ expense: Expense) -> Self {
+    func adding(
+        _ expense: Expense,
+        at period: UInt32
+    ) -> Self {
         return Self(
             id: id,
             assets: assets,
             liabilities: liabilities,
             equities: equities,
             revenues: revenues,
-            expenses: expenses + [expense]
+            expenses: expenses + [expense],
+            generalJournal: generalJournal + expense.transactions.map {
+                Capture(
+                    entity: .expense(
+                        transaction: $0,
+                        accountID: expense.id
+                    ),
+                    timestamp: period
+                )
+            }
         )
     }
 }
@@ -302,13 +396,76 @@ extension Ledger {
         revenues: [Revenue] = [],
         expenses: [Expense] = []
     ) -> Self {
+        let assetEvents = assets.reduce(into: []) { partialResult, asset in
+            partialResult += asset.transactions.map {
+                Capture(
+                    entity: Event.asset(
+                        transaction: $0,
+                        accountID: asset.id
+                    ),
+                    timestamp: 0
+                )
+            }
+        }
+        let liabilityEvents = liabilities.reduce(into: []) { partialResult, liability in
+            partialResult += liability.transactions.map {
+                Capture(
+                    entity: Event.liability(
+                        transaction: $0,
+                        accountID: liability.id
+                    ),
+                    timestamp: 0
+                )
+            }
+        }
+        let equityEvents = equities.reduce(into: []) { partialResult, equity in
+            partialResult += equity.transactions.map {
+                Capture(
+                    entity: Event.equity(
+                        transaction: $0,
+                        accountID: equity.id
+                    ),
+                    timestamp: 0
+                )
+            }
+        }
+
+        let revenueEvents = revenues.reduce(into: []) { partialResult, revenue in
+            partialResult += revenue.transactions.map {
+                Capture(
+                    entity: Event.revenue(
+                        transaction: $0,
+                        accountID: revenue.id
+                    ),
+                    timestamp: 0
+                )
+            }
+        }
+
+        let expenseEvents = expenses.reduce(into: []) { partialResult, expense in
+            partialResult += expense.transactions.map {
+                Capture(
+                    entity: Event.expense(
+                        transaction: $0,
+                        accountID: expense.id
+                    ),
+                    timestamp: 0
+                )
+            }
+        }
+
+        let generalJournal = assetEvents + liabilityEvents + equityEvents +
+        revenueEvents + expenseEvents
+
         return Self(
             id: id,
             assets: assets,
             liabilities: liabilities,
             equities: equities,
             revenues: revenues,
-            expenses: expenses
+            expenses: expenses,
+            generalJournal: generalJournal
         )
     }
 }
+
