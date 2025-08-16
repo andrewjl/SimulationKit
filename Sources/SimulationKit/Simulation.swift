@@ -67,9 +67,9 @@ class Simulation {
             period: UInt32
         ) -> Self {
             switch event {
-            case .ledgerTransactions(transactions: let transactions, ledgerID: let ledgerID):
+            case .ledgerEvent(event: let event, ledgerID: let ledgerID):
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(events: transactions, at: period) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(event: event, at: period) : $0 },
                     bank: bank
                 )
             case .createAsset(balance: let balance, ledgerID: let ledgerID):
@@ -212,7 +212,7 @@ extension Simulation.State: Equatable {
 
 extension Simulation {
     enum Event: Equatable {
-        case ledgerTransactions(transactions: [Ledger.Event], ledgerID: String)
+        case ledgerEvent(event: Ledger.Event, ledgerID: String)
         case createAsset(balance: Decimal, ledgerID: String)
         case createLiability(balance: Decimal, ledgerID: String)
         case createEmptyLedger(ledgerID: String)
