@@ -208,66 +208,6 @@ struct Ledger: Equatable {
             }
         }
     }
-
-    func eventsAdjustingAllAssetBalances(
-        by rate: Int
-    ) -> [Event] {
-        return zip(
-            assets
-                .adjustmentTransactions(
-                    by: rate
-                ),
-            assets.map { $0.id }
-        ).map {
-            Event.asset(transaction: $0.0, accountID: $0.1)
-        }
-    }
-
-    func eventsAdjustingAllLiabilityBalances(
-        by rate: Int
-    ) -> [Event] {
-        return zip(
-            liabilities
-                .adjustmentTransactions(
-                    by: rate
-                ),
-            liabilities.map { $0.id }
-        ).map {
-            Event.liability(transaction: $0.0, accountID: $0.1)
-        }
-    }
-
-    func eventsAdjustingAllBalances(
-        by rate: Int
-    ) -> [Event] {
-        self.eventsAdjustingAllAssetBalances(
-            by: rate
-        ) + self.eventsAdjustingAllLiabilityBalances(
-            by: rate
-        )
-    }
-}
-
-extension Ledger {
-    func adjustAllAssetBalances(
-        by rate: Int,
-        at period: UInt32
-    ) -> Self {
-        self.applying(
-            events: self.eventsAdjustingAllAssetBalances(by: rate),
-            at: period
-        )
-    }
-
-    func adjustAllLiabilityBalances(
-        by rate: Int,
-        at period: UInt32
-    ) -> Self {
-        self.applying(
-            events: self.eventsAdjustingAllLiabilityBalances(by: rate),
-            at: period
-        )
-    }
 }
 
 extension Ledger {

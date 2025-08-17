@@ -177,18 +177,6 @@ class Simulation {
         )
     }
 
-    func computedEvents(state: State) -> [Simulation.Event] {
-        return self.state.ledgers
-            .map {
-                Simulation.Event.ledgerTransactions(
-                    transactions: $0.eventsAdjustingAllBalances(
-                        by: self.capture.entity.bank.riskFreeRate
-                    ),
-                    ledgerID: $0.id
-                )
-            }
-    }
-
     func preplannedEvents(tick: Tick) -> [Simulation.Event] {
         return plannedEvents
             .filter({ $0.timestamp == tick.time })
@@ -199,7 +187,7 @@ class Simulation {
         state: State,
         tick: Tick
     ) -> [Simulation.Event] {
-        return computedEvents(state: state) + preplannedEvents(tick: tick)
+        return preplannedEvents(tick: tick)
     }
 }
 
