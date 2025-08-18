@@ -23,6 +23,7 @@ final class SimulationTests: XCTestCase {
                 Capture(
                     entity: Simulation.Event.createAsset(
                         balance: 400.0,
+                        name: "",
                         ledgerID: ledgerID
                     ),
                     timestamp: 0
@@ -106,6 +107,7 @@ final class SimulationTests: XCTestCase {
 
         let createAssetEvent = Simulation.Event.createAsset(
             balance: 150.0,
+            name: "",
             ledgerID: ledgerIDs[0]
         )
 
@@ -173,8 +175,8 @@ final class SimulationTests: XCTestCase {
 
     func testStateGenerator() throws {
         let initialEvents: [Simulation.Event] = [
-            Simulation.Event.createAsset(balance: 100.0, ledgerID: "0"),
-            Simulation.Event.createLiability(balance: 100.0, ledgerID: "0")
+            Simulation.Event.createAsset(balance: 100.0, name: "", ledgerID: "0"),
+            Simulation.Event.createLiability(balance: 100.0, name: "", ledgerID: "0")
         ]
 
         let state = StateGenerator.generate(from: initialEvents)
@@ -224,6 +226,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createAsset(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "1"
                 ),
                 timestamp: 0
@@ -231,6 +234,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createAsset(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "2"
                 ),
                 timestamp: 0
@@ -238,6 +242,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createAsset(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "3"
                 ),
                 timestamp: 0
@@ -245,6 +250,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createAsset(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "4"
                 ),
                 timestamp: 0
@@ -252,6 +258,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createAsset(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "5"
                 ),
                 timestamp: 0
@@ -259,6 +266,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createAsset(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "6"
                 ),
                 timestamp: 0
@@ -266,6 +274,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createLiability(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "1"
                 ),
                 timestamp: 0
@@ -273,6 +282,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createLiability(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "2"
                 ),
                 timestamp: 0
@@ -280,6 +290,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createLiability(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "3"
                 ),
                 timestamp: 0
@@ -287,6 +298,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createLiability(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "4"
                 ),
                 timestamp: 0
@@ -294,6 +306,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createLiability(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "5"
                 ),
                 timestamp: 0
@@ -301,6 +314,7 @@ final class SimulationTests: XCTestCase {
             Capture(
                 entity: Simulation.Event.createLiability(
                     balance: 100.0,
+                    name: "",
                     ledgerID: "6"
                 ),
                 timestamp: 0
@@ -376,6 +390,7 @@ final class SimulationTests: XCTestCase {
         let secondSuccessorState = firstSuccessorState.applying(
             event: .createAsset(
                 balance: 100.0,
+                name: "",
                 ledgerID: ledgerID
             ),
             period: 1

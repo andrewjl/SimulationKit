@@ -51,6 +51,7 @@ final class SimulatorTests: XCTestCase {
                 Capture(
                     entity: Simulation.Event.createAsset(
                         balance: 200.0,
+                        name: "",
                         ledgerID: ledgerIDs[0]
                     ),
                     timestamp: 0
@@ -58,6 +59,7 @@ final class SimulatorTests: XCTestCase {
                 Capture(
                     entity: Simulation.Event.createLiability(
                         balance: 100.0,
+                        name: "",
                         ledgerID: ledgerIDs[0]
                     ),
                     timestamp: 0
@@ -65,6 +67,7 @@ final class SimulatorTests: XCTestCase {
                 Capture(
                     entity: Simulation.Event.createAsset(
                         balance: 200.0,
+                        name: "",
                         ledgerID: ledgerIDs[1]
                     ),
                     timestamp: 0
@@ -72,6 +75,7 @@ final class SimulatorTests: XCTestCase {
                 Capture(
                     entity: Simulation.Event.createLiability(
                         balance: 100.0,
+                        name: "",
                         ledgerID: ledgerIDs[1]
                     ),
                     timestamp: 0

@@ -37,20 +37,26 @@ class StateGenerator {
             ledgers[ledgerID] = Ledger(id: ledgerID, generalJournal: [])
         }
 
-        for case let Simulation.Event.createAsset(balance, ledgerID) in initialEvents {
+        for case let Simulation.Event.createAsset(balance, name, ledgerID) in initialEvents {
             ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
                 .adding(
                     Asset.make(
                         from: balance,
-                        name: ""
+                        name: name
                     ),
                     at: 0
                 )
         }
 
-        for case let Simulation.Event.createLiability(balance, ledgerID) in initialEvents {
+        for case let Simulation.Event.createLiability(balance, name, ledgerID) in initialEvents {
             ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
-                .adding(Liability.make(from: balance), at: 0)
+                .adding(
+                    Liability.make(
+                        from: balance,
+                        name: name
+                    ),
+                    at: 0
+                )
         }
 
         return Array<Ledger>(ledgers.values)
@@ -72,7 +78,7 @@ class Simulation {
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(event: event, at: period) : $0 },
                     bank: bank
                 )
-            case .createAsset(balance: let balance, ledgerID: let ledgerID):
+            case .createAsset(balance: let balance, name: let name, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(
                         from: balance,
@@ -80,7 +86,7 @@ class Simulation {
                     ), at: period) : $0 },
                     bank: bank
                 )
-            case .createLiability(balance: let balance, ledgerID: let ledgerID):
+            case .createLiability(balance: let balance, name: let name, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance), at: period) : $0 },
                     bank: bank
@@ -201,8 +207,8 @@ extension Simulation.State: Equatable {
 extension Simulation {
     enum Event: Equatable {
         case ledgerEvent(event: Ledger.Event, ledgerID: String)
-        case createAsset(balance: Decimal, ledgerID: String)
-        case createLiability(balance: Decimal, ledgerID: String)
+        case createAsset(balance: Decimal, name: String, ledgerID: String)
+        case createLiability(balance: Decimal, name: String, ledgerID: String)
         case createEmptyLedger(ledgerID: String)
         case bankEvent(event: Bank.Event)
     }
