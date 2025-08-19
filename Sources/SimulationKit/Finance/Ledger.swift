@@ -43,7 +43,7 @@ struct Ledger: Equatable {
         ]
 
         switch event {
-        case .asset(let transaction, let accountID):
+        case .postAsset(let transaction, let accountID):
             return Ledger(
                 id: id,
                 assets: assets.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
@@ -53,7 +53,7 @@ struct Ledger: Equatable {
                 expenses: expenses,
                 generalJournal: updatedGeneralJournal
             )
-        case .liability(let transaction, let accountID):
+        case .postLiability(let transaction, let accountID):
             return Ledger(
                 id: id,
                 assets: assets,
@@ -63,7 +63,7 @@ struct Ledger: Equatable {
                 expenses: expenses,
                 generalJournal: updatedGeneralJournal
             )
-        case .equity(transaction: let transaction, accountID: let accountID):
+        case .postEquity(transaction: let transaction, accountID: let accountID):
             return Ledger(
                 id: id,
                 assets: assets,
@@ -73,7 +73,7 @@ struct Ledger: Equatable {
                 expenses: expenses,
                 generalJournal: updatedGeneralJournal
             )
-        case .revenue(transaction: let transaction, accountID: let accountID):
+        case .postRevenue(transaction: let transaction, accountID: let accountID):
             return Ledger(
                 id: id,
                 assets: assets,
@@ -82,7 +82,7 @@ struct Ledger: Equatable {
                 expenses: expenses,
                 generalJournal: updatedGeneralJournal
             )
-        case .expense(transaction: let transaction, accountID: let accountID):
+        case .postExpense(transaction: let transaction, accountID: let accountID):
             return Ledger(
                 id: id,
                 assets: assets,
@@ -116,15 +116,15 @@ struct Ledger: Equatable {
             )
 
             switch event {
-            case .asset(let transaction, let id):
+            case .postAsset(let transaction, let id):
                 updatedAssets = updatedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .liability(let transaction, let id):
+            case .postLiability(let transaction, let id):
                 uodatedLiabilities = uodatedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .equity(transaction: let transaction, accountID: let id):
+            case .postEquity(transaction: let transaction, accountID: let id):
                 updatedEquities = updatedEquities.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .revenue(transaction: let transaction, accountID: let id):
+            case .postRevenue(transaction: let transaction, accountID: let id):
                 updatedRevenues = updatedRevenues.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .expense(transaction: let transaction, accountID: let id):
+            case .postExpense(transaction: let transaction, accountID: let id):
                 updatedExpenses = updatedExpenses.map { $0.id == id ? $0.transacted(transaction) : $0 }
             }
         }
@@ -141,36 +141,36 @@ struct Ledger: Equatable {
     }
 
     enum Event: Equatable {
-        case asset(transaction: Asset.Transaction, accountID: String)
-        case liability(transaction: Liability.Transaction, accountID: String)
-        case equity(transaction: Equity.Transaction, accountID: String)
-        case revenue(transaction: Revenue.Transaction, accountID: String)
-        case expense(transaction: Expense.Transaction, accountID: String)
+        case postAsset(transaction: Asset.Transaction, accountID: String)
+        case postLiability(transaction: Liability.Transaction, accountID: String)
+        case postEquity(transaction: Equity.Transaction, accountID: String)
+        case postRevenue(transaction: Revenue.Transaction, accountID: String)
+        case postExpense(transaction: Expense.Transaction, accountID: String)
 
         var amount: Decimal {
             switch self {
-            case .asset(
+            case .postAsset(
                 transaction: let transaction,
                 accountID: _
             ):
                 return transaction.amount
-            case .liability(
+            case .postLiability(
                 transaction: let transaction,
                 accountID: _
             ):
                 return transaction.amount
-            case .equity(
+            case .postEquity(
                 transaction: let transaction,
                 accountID: _
             ):
                 return transaction.amount
-            case .revenue(
+            case .postRevenue(
                 transaction: let transaction,
                 accountID: _
             ):
                 return transaction.amount
 
-            case .expense(
+            case .postExpense(
                 transaction: let transaction,
                 accountID: _
             ):
@@ -180,27 +180,27 @@ struct Ledger: Equatable {
 
         var id: String {
             switch self {
-            case .asset(
+            case .postAsset(
                 transaction: _,
                 accountID: let id
             ):
                 return id
-            case .liability(
+            case .postLiability(
                 transaction: _,
                 accountID: let id
             ):
                 return id
-            case .equity(
+            case .postEquity(
                 transaction: _,
                 accountID: let id
             ):
                 return id
-            case .revenue(
+            case .postRevenue(
                 transaction: _,
                 accountID: let id
             ):
                 return id
-            case .expense(
+            case .postExpense(
                 transaction: _,
                 accountID: let id
             ):
@@ -224,7 +224,7 @@ extension Ledger {
             expenses: expenses,
             generalJournal: generalJournal + asset.transactions.map {
                 Capture(
-                    entity: .asset(
+                    entity: .postAsset(
                         transaction: $0,
                         accountID: asset.id
                     ),
@@ -247,7 +247,7 @@ extension Ledger {
             expenses: expenses,
             generalJournal: generalJournal + liability.transactions.map {
                 Capture(
-                    entity: .liability(
+                    entity: .postLiability(
                         transaction: $0,
                         accountID: liability.id
                     ),
@@ -270,7 +270,7 @@ extension Ledger {
             expenses: expenses,
             generalJournal: generalJournal + equity.transactions.map {
                 Capture(
-                    entity: .equity(
+                    entity: .postEquity(
                         transaction: $0,
                         accountID: equity.id
                     ),
@@ -293,7 +293,7 @@ extension Ledger {
             expenses: expenses,
             generalJournal: generalJournal + revenue.transactions.map {
                 Capture(
-                    entity: .revenue(
+                    entity: .postRevenue(
                         transaction: $0,
                         accountID: revenue.id
                     ),
@@ -316,7 +316,7 @@ extension Ledger {
             expenses: expenses + [expense],
             generalJournal: generalJournal + expense.transactions.map {
                 Capture(
-                    entity: .expense(
+                    entity: .postExpense(
                         transaction: $0,
                         accountID: expense.id
                     ),
@@ -339,7 +339,7 @@ extension Ledger {
         let assetEvents = assets.reduce(into: []) { partialResult, asset in
             partialResult += asset.transactions.map {
                 Capture(
-                    entity: Event.asset(
+                    entity: Event.postAsset(
                         transaction: $0,
                         accountID: asset.id
                     ),
@@ -350,7 +350,7 @@ extension Ledger {
         let liabilityEvents = liabilities.reduce(into: []) { partialResult, liability in
             partialResult += liability.transactions.map {
                 Capture(
-                    entity: Event.liability(
+                    entity: Event.postLiability(
                         transaction: $0,
                         accountID: liability.id
                     ),
@@ -361,7 +361,7 @@ extension Ledger {
         let equityEvents = equities.reduce(into: []) { partialResult, equity in
             partialResult += equity.transactions.map {
                 Capture(
-                    entity: Event.equity(
+                    entity: Event.postEquity(
                         transaction: $0,
                         accountID: equity.id
                     ),
@@ -373,7 +373,7 @@ extension Ledger {
         let revenueEvents = revenues.reduce(into: []) { partialResult, revenue in
             partialResult += revenue.transactions.map {
                 Capture(
-                    entity: Event.revenue(
+                    entity: Event.postRevenue(
                         transaction: $0,
                         accountID: revenue.id
                     ),
@@ -385,7 +385,7 @@ extension Ledger {
         let expenseEvents = expenses.reduce(into: []) { partialResult, expense in
             partialResult += expense.transactions.map {
                 Capture(
-                    entity: Event.expense(
+                    entity: Event.postExpense(
                         transaction: $0,
                         accountID: expense.id
                     ),

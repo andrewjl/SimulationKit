@@ -260,11 +260,11 @@ struct Bank: Equatable {
             ledger: ledger
                 .applying(
                     events: [
-                        .asset(
+                        .postAsset(
                             transaction: reservesTransaction,
                             accountID: reserves.id
                         ),
-                        .equity(
+                        .postEquity(
                             transaction: equityCapitalTransaction,
                             accountID: equityCapital.id
                         )
@@ -413,11 +413,11 @@ struct Bank: Equatable {
             .ledger
             .applying(
                 events: [
-                    .asset(
+                    .postAsset(
                         transaction: reservesTransaction,
                         accountID: account.reserves.id
                     ),
-                    .liability(
+                    .postLiability(
                         transaction: depositsTransaction,
                         accountID: account.deposits.id
                     )
@@ -432,11 +432,11 @@ struct Bank: Equatable {
             ledger: ledger
                 .applying(
                     events: [
-                        .asset(
+                        .postAsset(
                             transaction: reservesTransaction,
                             accountID: reserves.id
                         ),
-                        .liability(
+                        .postLiability(
                             transaction: depositsTransaction,
                             accountID: deposits.id
                         )
@@ -497,11 +497,11 @@ struct Bank: Equatable {
             .ledger
             .applying(
                 events: [
-                    .asset(
+                    .postAsset(
                         transaction: loanReceivablesTransaction,
                         accountID: account.loanReceivables.id
                     ),
-                    .liability(
+                    .postLiability(
                         transaction: depositsTransaction,
                         accountID: account.deposits.id
                     )
@@ -516,11 +516,11 @@ struct Bank: Equatable {
             ledger: ledger
                 .applying(
                     events: [
-                        .asset(
+                        .postAsset(
                             transaction: loanReceivablesTransaction,
                             accountID: loanReceivables.id
                         ),
-                        .liability(
+                        .postLiability(
                             transaction: depositsTransaction,
                             accountID: deposits.id
                         )
@@ -601,11 +601,11 @@ struct Bank: Equatable {
 
         let updatedLedger = ledger.applying(
             events: [
-                Ledger.Event.liability(
+                Ledger.Event.postLiability(
                     transaction: depositsTransaction,
                     accountID: deposits.id
                 ),
-                Ledger.Event.expense(
+                Ledger.Event.postExpense(
                     transaction: interestExpensesTransaction,
                     accountID: interestExpenses.id
                 )
@@ -615,11 +615,11 @@ struct Bank: Equatable {
 
         account.ledger = account.ledger.applying(
             events: [
-                Ledger.Event.liability(
+                Ledger.Event.postLiability(
                     transaction: depositsTransaction,
                     accountID: account.deposits.id
                 ),
-                Ledger.Event.expense(
+                Ledger.Event.postExpense(
                     transaction: interestExpensesTransaction,
                     accountID: account.interestExpenses.id
                 )
@@ -685,14 +685,14 @@ struct Bank: Equatable {
 
         account.ledger = account.ledger.applying(
             events: [
-                Ledger.Event.asset(
+                Ledger.Event.postAsset(
                     transaction: .debit(
                         id: UUID().uuidString,
                         amount: accruedInterestAmount
                     ),
                     accountID: account.interestReceivables.id
                 ),
-                Ledger.Event.revenue(
+                Ledger.Event.postRevenue(
                     transaction: .credit(
                         id: UUID().uuidString,
                         amount: accruedInterestAmount
@@ -708,14 +708,14 @@ struct Bank: Equatable {
         return Bank(
             ledger: ledger.applying(
                 events: [
-                    Ledger.Event.asset(
+                    Ledger.Event.postAsset(
                         transaction: .debit(
                             id: UUID().uuidString,
                             amount: accruedInterestAmount
                         ),
                         accountID: interestReceivables.id
                     ),
-                    Ledger.Event.revenue(
+                    Ledger.Event.postRevenue(
                         transaction: .credit(
                             id: UUID().uuidString,
                             amount: accruedInterestAmount
@@ -783,7 +783,7 @@ struct Bank: Equatable {
 
             account.ledger = account.ledger.applying(
                 events: [
-                    .asset(
+                    .postAsset(
                         transaction: loanReceivablesTransaction,
                         accountID: account.loanReceivables.id
                     )
@@ -793,7 +793,7 @@ struct Bank: Equatable {
 
             updatedLedger = updatedLedger.applying(
                 events: [
-                    .asset(
+                    .postAsset(
                         transaction: loanReceivablesTransaction,
                         accountID: loanReceivables.id
                     )
@@ -804,11 +804,11 @@ struct Bank: Equatable {
 
         account.ledger = account.ledger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: reservesTransaction,
                     accountID: account.reserves.id
                 ),
-                .asset(
+                .postAsset(
                     transaction: interestReceivablesTransaction,
                     accountID: account.interestReceivables.id
                 )
@@ -818,11 +818,11 @@ struct Bank: Equatable {
 
         updatedLedger = updatedLedger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: reservesTransaction,
                     accountID: reserves.id
                 ),
-                .asset(
+                .postAsset(
                     transaction: interestReceivablesTransaction,
                     accountID: interestReceivables.id
                 )
@@ -876,11 +876,11 @@ struct Bank: Equatable {
 
         account.ledger = account.ledger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: reservesTransaction,
                     accountID: account.reserves.id
                 ),
-                .liability(
+                .postLiability(
                     transaction: depositsTransaction,
                     accountID: account.deposits.id
                 )
@@ -890,11 +890,11 @@ struct Bank: Equatable {
 
         updatedLedger = updatedLedger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: reservesTransaction,
                     accountID: reserves.id
                 ),
-                .liability(
+                .postLiability(
                     transaction: depositsTransaction,
                     accountID: deposits.id
                 )
@@ -950,11 +950,11 @@ struct Bank: Equatable {
 
         originAccount.ledger = originAccount.ledger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: originReservesTransaction,
                     accountID: originAccount.reserves.id
                 ),
-                .liability(
+                .postLiability(
                     transaction: originDepositsTransaction,
                     accountID: originAccount.deposits.id
                 )
@@ -964,11 +964,11 @@ struct Bank: Equatable {
 
         updatedLedger = updatedLedger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: originReservesTransaction,
                     accountID: reserves.id
                 ),
-                .liability(
+                .postLiability(
                     transaction: originDepositsTransaction,
                     accountID: deposits.id
                 )
@@ -987,11 +987,11 @@ struct Bank: Equatable {
 
         destinationAccount.ledger = destinationAccount.ledger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: destinationReservesTransaction,
                     accountID: destinationAccount.reserves.id
                 ),
-                .liability(
+                .postLiability(
                     transaction: destinationDepositsTransaction,
                     accountID: destinationAccount.deposits.id
                 )
@@ -1001,11 +1001,11 @@ struct Bank: Equatable {
 
         updatedLedger = updatedLedger.applying(
             events: [
-                .asset(
+                .postAsset(
                     transaction: destinationReservesTransaction,
                     accountID: reserves.id
                 ),
-                .liability(
+                .postLiability(
                     transaction: destinationDepositsTransaction,
                     accountID: deposits.id
                 )
