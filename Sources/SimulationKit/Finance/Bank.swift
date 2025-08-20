@@ -103,51 +103,45 @@ struct Account: Equatable {
         self.accountHolderID = accountHolderID
         self.ledger = Ledger
             .make()
-            .adding(
-                Asset(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createAsset(
                     name: Bank.reservesAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: period
             )
-            .adding(
-                Asset(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createAsset(
                     name: Bank.loanReceivablesAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: period
             )
-            .adding(
-                Liability(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createLiability(
                     name: Bank.depositsAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: period
             )
-            .adding(
-                Expense(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createExpense(
                     name: Bank.interestExpensesAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: period
             )
-            .adding(
-                Revenue(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createRevenue(
                     name: Bank.interestIncomeAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: period
             )
-            .adding(
-                Asset(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createAsset(
                     name: Bank.interestReceivablesAccount,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: period
             )
@@ -1129,73 +1123,93 @@ struct Bank: Equatable {
         startingCapital: Decimal = .zero,
         startingPeriod: UInt32 = 0
     ) {
-        let ledger = Ledger
+        let equityCapitalAccountID = UUID().uuidString
+        let reservesAccountID = UUID().uuidString
+
+        var ledger = Ledger
             .make()
-            .adding(
-                Asset(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createAsset(
                     name: Bank.reservesAccountName,
-                    balance: startingCapital
+                    accountID: reservesAccountID
                 ),
                 at: startingPeriod
             )
-            .adding(
-                Asset(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createAsset(
                     name: Bank.loanReceivablesAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: startingPeriod
             )
-            .adding(
-                Liability(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createLiability(
                     name: Bank.depositsAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: startingPeriod
             )
-            .adding(
-                Equity(
-                    id: UUID().uuidString,
-                    name: Bank.equityCapitalAccountName,
-                    balance: startingCapital
-                ),
-                at: startingPeriod
-            )
-            .adding(
-                Expense(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createExpense(
                     name: Bank.interestExpensesAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: startingPeriod
             )
-            .adding(
-                Revenue(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createRevenue(
                     name: Bank.interestIncomeAccountName,
-                    balance: .zero
+                    accountID: UUID().uuidString
                 ),
                 at: startingPeriod
             )
-            .adding(
-                Asset(
-                    id: UUID().uuidString,
+            .applying(
+                event: .createAsset(
                     name: Bank.interestReceivablesAccount,
-                    balance: .zero
+                    accountID: UUID().uuidString
+                ),
+                at: startingPeriod
+            )
+            .applying(
+                event: .createEquity(
+                    name: Bank.equityCapitalAccountName,
+                    accountID: equityCapitalAccountID
                 ),
                 at: startingPeriod
             )
 
-        let eventCaptures = startingCapital == .zero ? [] : [
-            Capture(
-                entity: Event.receiveEquityCapital(
-                    amount: startingCapital
-                ),
-                timestamp: startingPeriod
+        let eventCaptures: [Capture<Event>]
+
+        if startingCapital == .zero {
+            eventCaptures = []
+        } else {
+            eventCaptures = [
+                Capture(
+                    entity: Event.receiveEquityCapital(
+                        amount: startingCapital
+                    ),
+                    timestamp: startingPeriod
+                )
+            ]
+
+            ledger = ledger.applying(
+                events: [
+                    .postAsset(
+                        transaction: .debited(
+                            by: startingCapital
+                        ),
+                        accountID: reservesAccountID
+                    ),
+                    .postEquity(
+                        transaction: .credited(
+                            by: startingCapital
+                        ),
+                        accountID: equityCapitalAccountID
+                    )
+                ],
+                at: startingPeriod
             )
-        ]
+        }
 
         self.init(
             ledger: ledger,

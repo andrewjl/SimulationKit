@@ -27,12 +27,18 @@ final class LedgerTests: XCTestCase {
             1
         )
 
-        ledger = ledger.adding(
-            Liability(
-                id: UUID().uuidString,
-                name: "",
-                balance: 100.0
-            ),
+        let liabilityID = UUID().uuidString
+        ledger = ledger.applying(
+            events: [
+                .createLiability(
+                    name: "",
+                    accountID: liabilityID
+                ),
+                .postLiability(
+                    transaction: .init(amount: 100.0),
+                    accountID: liabilityID
+                )
+            ],
             at: 0
         )
 
@@ -42,7 +48,7 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(
             ledger.generalJournal.count,
-            2
+            3
         )
     }
 

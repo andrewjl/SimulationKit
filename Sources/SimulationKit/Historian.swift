@@ -25,12 +25,6 @@ extension Liability {
     }
 }
 
-extension Ledger.Event {
-    func tag() -> String {
-        return id
-    }
-}
-
 enum TimeSeriesContainer {
     case unsignedInteger(series: TimeSeries<UInt>)
     case decimal(series: TimeSeries<Decimal>)

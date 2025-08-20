@@ -38,22 +38,39 @@ class StateGenerator {
         }
 
         for case let Simulation.Event.createAsset(balance, name, ledgerID) in initialEvents {
+            let createdAssetID = UUID().uuidString
             ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
-                .adding(
-                    Asset.make(
-                        from: balance,
-                        name: name
+                .applying(
+                    event: .createAsset(
+                        name: name,
+                        accountID: createdAssetID
+                    ),
+                    at: 0
+                )
+                .applying(
+                    event: .postAsset(
+                        transaction: .init(amount: balance),
+                        accountID: createdAssetID
                     ),
                     at: 0
                 )
         }
 
         for case let Simulation.Event.createLiability(balance, name, ledgerID) in initialEvents {
+            let createdLiabilityID = UUID().uuidString
+
             ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
-                .adding(
-                    Liability.make(
-                        from: balance,
-                        name: name
+                .applying(
+                    event: .createLiability(
+                        name: name,
+                        accountID: createdLiabilityID
+                    ),
+                    at: 0
+                )
+                .applying(
+                    event: .postLiability(
+                        transaction: .init(amount: balance),
+                        accountID: createdLiabilityID
                     ),
                     at: 0
                 )
@@ -79,16 +96,39 @@ class Simulation {
                     bank: bank
                 )
             case .createAsset(balance: let balance, name: let name, ledgerID: let ledgerID):
+                let createdAssetID = UUID().uuidString
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Asset.make(
-                        from: balance,
-                        name: ""
-                    ), at: period) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(
+                        event: .createAsset(
+                            name: name,
+                            accountID: createdAssetID
+                        ),
+                        at: period
+                    ).applying(
+                        event: .postAsset(
+                            transaction: .init(amount: balance),
+                            accountID: createdAssetID
+                        ),
+                        at: period
+                    ) : $0 },
                     bank: bank
                 )
             case .createLiability(balance: let balance, name: let name, ledgerID: let ledgerID):
+                let createdLiabilityID = UUID().uuidString
                 return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.adding(Liability.make(from: balance), at: period) : $0 },
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(
+                        event: .createLiability(
+                            name: name,
+                            accountID: createdLiabilityID
+                        ),
+                        at: period
+                    ).applying(
+                        event: .postLiability(
+                            transaction: .init(amount: balance),
+                            accountID: createdLiabilityID
+                        ),
+                        at: period
+                    ) : $0 },
                     bank: bank
                 )
             case .createEmptyLedger(ledgerID: let ledgerID):

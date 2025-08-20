@@ -92,6 +92,86 @@ struct Ledger: Equatable {
                 expenses: expenses.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
                 generalJournal: updatedGeneralJournal
             )
+        case .createAsset(let name, let accountID):
+            return Ledger(
+                id: id,
+                assets: assets + [
+                    Asset(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ],
+                liabilities: liabilities,
+                equities: equities,
+                revenues: revenues,
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
+            )
+        case .createLiability(let name, let accountID):
+            return Ledger(
+                id: id,
+                assets: assets,
+                liabilities: liabilities + [
+                    Liability(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ],
+                equities: equities,
+                revenues: revenues,
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
+            )
+        case .createEquity(let name, let accountID):
+            return Ledger(
+                id: id,
+                assets: assets,
+                liabilities: liabilities,
+                equities: equities + [
+                    Equity(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ],
+                revenues: revenues,
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
+            )
+        case .createRevenue(let name, let accountID):
+            return Ledger(
+                id: id,
+                assets: assets,
+                liabilities: liabilities,
+                equities: equities,
+                revenues: revenues + [
+                    Revenue(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ],
+                expenses: expenses,
+                generalJournal: updatedGeneralJournal
+            )
+        case .createExpense(let name, let accountID):
+            return Ledger(
+                id: id,
+                assets: assets,
+                liabilities: liabilities,
+                equities: equities,
+                revenues: revenues,
+                expenses: expenses + [
+                    Expense(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ],
+                generalJournal: updatedGeneralJournal
+            )
         }
     }
 
@@ -100,7 +180,7 @@ struct Ledger: Equatable {
         at period: UInt32
     ) -> Self {
         var updatedAssets = assets
-        var uodatedLiabilities = liabilities
+        var updatedLiabilities = liabilities
         var updatedEquities = equities
         var updatedRevenues = revenues
         var updatedExpenses = expenses
@@ -119,28 +199,73 @@ struct Ledger: Equatable {
             case .postAsset(let transaction, let id):
                 updatedAssets = updatedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .postLiability(let transaction, let id):
-                uodatedLiabilities = uodatedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
+                updatedLiabilities = updatedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .postEquity(transaction: let transaction, accountID: let id):
                 updatedEquities = updatedEquities.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .postRevenue(transaction: let transaction, accountID: let id):
                 updatedRevenues = updatedRevenues.map { $0.id == id ? $0.transacted(transaction) : $0 }
             case .postExpense(transaction: let transaction, accountID: let id):
                 updatedExpenses = updatedExpenses.map { $0.id == id ? $0.transacted(transaction) : $0 }
+            case .createAsset(name: let name, accountID: let accountID):
+                updatedAssets = updatedAssets + [
+                    Asset(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ]
+            case .createLiability(name: let name, accountID: let accountID):
+                updatedLiabilities = updatedLiabilities + [
+                    Liability(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ]
+            case .createEquity(name: let name, accountID: let accountID):
+                updatedEquities = updatedEquities + [
+                    Equity(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ]
+            case .createRevenue(name: let name, accountID: let accountID):
+                updatedRevenues = updatedRevenues + [
+                    Revenue(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ]
+            case .createExpense(name: let name, accountID: let accountID):
+                updatedExpenses = updatedExpenses + [
+                    Expense(
+                        id: accountID,
+                        name: name,
+                        transactions: []
+                    )
+                ]
             }
         }
         
         return Self(
             id: id,
             assets: updatedAssets,
-            liabilities: uodatedLiabilities,
+            liabilities: updatedLiabilities,
             equities: updatedEquities,
             revenues: updatedRevenues,
             expenses: updatedExpenses,
-            generalJournal: generalJournal
+            generalJournal: updatedGeneralJournal
         )
     }
 
     enum Event: Equatable {
+        case createAsset(name: String, accountID: String)
+        case createLiability(name: String, accountID: String)
+        case createEquity(name: String, accountID: String)
+        case createRevenue(name: String, accountID: String)
+        case createExpense(name: String, accountID: String)
         case postAsset(transaction: Asset.Transaction, accountID: String)
         case postLiability(transaction: Liability.Transaction, accountID: String)
         case postEquity(transaction: Equity.Transaction, accountID: String)
@@ -175,155 +300,18 @@ struct Ledger: Equatable {
                 accountID: _
             ):
                 return transaction.amount
+            case .createAsset(name: _, accountID: _):
+                return .zero
+            case .createLiability(name: _, accountID: _):
+                return .zero
+            case .createEquity(name: _, accountID: _):
+                return .zero
+            case .createRevenue(name: _, accountID: _):
+                return .zero
+            case .createExpense(name: _, accountID: _):
+                return .zero
             }
         }
-
-        var id: String {
-            switch self {
-            case .postAsset(
-                transaction: _,
-                accountID: let id
-            ):
-                return id
-            case .postLiability(
-                transaction: _,
-                accountID: let id
-            ):
-                return id
-            case .postEquity(
-                transaction: _,
-                accountID: let id
-            ):
-                return id
-            case .postRevenue(
-                transaction: _,
-                accountID: let id
-            ):
-                return id
-            case .postExpense(
-                transaction: _,
-                accountID: let id
-            ):
-                return id
-            }
-        }
-    }
-}
-
-extension Ledger {
-    func adding(
-        _ asset: Asset,
-        at period: UInt32
-    ) -> Self {
-        return Self(
-            id: id,
-            assets: assets + [asset],
-            liabilities: liabilities,
-            equities: equities,
-            revenues: revenues,
-            expenses: expenses,
-            generalJournal: generalJournal + asset.transactions.map {
-                Capture(
-                    entity: .postAsset(
-                        transaction: $0,
-                        accountID: asset.id
-                    ),
-                    timestamp: period
-                )
-            }
-        )
-    }
-
-    func adding(
-        _ liability: Liability,
-        at period: UInt32
-    ) -> Self {
-        return Self(
-            id: id,
-            assets: assets,
-            liabilities: liabilities + [liability],
-            equities: equities,
-            revenues: revenues,
-            expenses: expenses,
-            generalJournal: generalJournal + liability.transactions.map {
-                Capture(
-                    entity: .postLiability(
-                        transaction: $0,
-                        accountID: liability.id
-                    ),
-                    timestamp: period
-                )
-            }
-        )
-    }
-
-    func adding(
-        _ equity: Equity,
-        at period: UInt32
-    ) -> Self {
-        return Self(
-            id: id,
-            assets: assets,
-            liabilities: liabilities,
-            equities: equities + [equity],
-            revenues: revenues,
-            expenses: expenses,
-            generalJournal: generalJournal + equity.transactions.map {
-                Capture(
-                    entity: .postEquity(
-                        transaction: $0,
-                        accountID: equity.id
-                    ),
-                    timestamp: period
-                )
-            }
-        )
-    }
-
-    func adding(
-        _ revenue: Revenue,
-        at period: UInt32
-    ) -> Self {
-        return Self(
-            id: id,
-            assets: assets,
-            liabilities: liabilities,
-            equities: equities,
-            revenues: revenues + [revenue],
-            expenses: expenses,
-            generalJournal: generalJournal + revenue.transactions.map {
-                Capture(
-                    entity: .postRevenue(
-                        transaction: $0,
-                        accountID: revenue.id
-                    ),
-                    timestamp: period
-                )
-            }
-        )
-    }
-
-    func adding(
-        _ expense: Expense,
-        at period: UInt32
-    ) -> Self {
-        return Self(
-            id: id,
-            assets: assets,
-            liabilities: liabilities,
-            equities: equities,
-            revenues: revenues,
-            expenses: expenses + [expense],
-            generalJournal: generalJournal + expense.transactions.map {
-                Capture(
-                    entity: .postExpense(
-                        transaction: $0,
-                        accountID: expense.id
-                    ),
-                    timestamp: period
-                )
-            }
-        )
     }
 }
 
