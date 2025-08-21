@@ -110,6 +110,16 @@ final class BankTests: XCTestCase {
             bank.reserves.currentBalance(),
             10_000.0
         )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            1
+        )
+
+        XCTAssertEqual(
+            bank.ledger.generalJournal.count,
+            9
+        )
     }
 
     func testBankAccountCreation() throws {
