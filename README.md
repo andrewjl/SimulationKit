@@ -2,33 +2,33 @@
 
 A package for simulating economic models
 
-## WIP
+# Architecture
 
-This package is **WIP**
+Simulations are modeled using discrete events. Each entity has a corresponding set of events.
 
-# Package Design Document
+### Generic Simulation Entities
 
-## Conceptual Design
+- Conceptual Model: specifies entities and events
+- Executable Model: represents model used to calculate results of a simulation run
+- Run: results from a particular simulation calculation
+- Simulator: constructs executable model, executes model logic, collects and collates results
+- Period: Single iteration of the simulators execution of the executable model
+- Clock: Source of truth for the current period of the currently executing simulation
+- Tick: Timestamped value of what the current time is
+- Simulation event: A single event recorded at a particular time period
 
-### General Objects
+### Domain Specific Entities
 
-Conceptual Model: Specification of entities and events
-
-Executable Model: A representation of the model used to calculate results of a simulation run
-
-Run: Results from a particular simulation calculation
-
-Simulator: Calculation engine for a given model over a given time period. Constructs an executable model representation from a conceptual representation and then perform a simulation run which then gets output.
-
-Period: Single iteration of the simulators execution of the executable model
-
-Clock: Source of truth for the current period of the currently executing simulation
-
-Tick: Timestamped value of what the current time is
-
-Point: Timestamped value of a temporal variable
-
-Time Series: Chronologically ordered grouping of successive points of a particular value
+- Ledger: consists of one or more accounts and corresponds to an economic entity
+- Ledger event: a change in one or more accounts in the ledger
+- Bank: an entity that can take deposits and make loans
+- Bank event: a change in the bank state
+- Accounts
+    - Asset: something that has economic value now or in the future
+    - Liability: an obligation associated with an economic cost now or in the future
+    - Equity: residual value
+    - Income: money received through work or investments
+    - Expense: money paid out to satisfy an obligation or in exchange for something of value
 
 ### General Workflows
 
@@ -40,50 +40,20 @@ Simulation Lifecycle
 2 is a function: ConceptualModel -> ExecutableModel
 3 is a function: ExecutableModel -> Run
 
-A simulation is run over a fixed number of time periods. Each time period is represented by a tick on a simulator Clock.
+- A simulation is run over a fixed number of time periods. Each time period is represented by a tick on a simulator Clock.
+- Each run gets its own separate clock.
+- A clock is used to timestamp a point that goes onto a time series.
+- The collected time series are specified by an operational historian
 
-Each run gets its own separate clock.
-
-A clock is used to timestamp a point that goes onto a time series.
-
-The collected time series are specified by an operational historian
-
-Model -> Simulation
-
-Simulation -> Run
-
-### Domain Objects
-
-Simulation: Logical and mathematical representation of entities and operations
-
-Asset: A financial instrument whose balance increases over time at a fixed rate
-
-Liability: A financial instrument whose balance increases over time at a fixed rate
-
-Ledger: A grouping of any number of assets and liabilities that are related
-
-Balance: A timestamped quantity that indicates the monetary value of an asset or liability
-
-### Domain Workflows
-
-N/A
-
-### Current Questions
-
-Does the executable representation get modified?
-
-Concepts that are TBD:
-- Operational historian: collects time series data
-- Currentness: Temporal relation among points in a time series
-
-Example: time based ledger model
-
-Model specifies
-- Starting balances for assets and liabilities
-- Rate of return
-
-Simulation
-- Calculates the asset and liability balances for each period, records results in a run
-
-Run records:
-- Balance of each asset and liability over the simulation run
+### TODOs
+- [ ] Consistency between `Simulation` events and `Bank`/`Ledger` events
+- [ ] Allow stochastic simulation results
+- [ ] Make `Simulation` construction more generic
+    - [ ] Generic entities and events
+    - [ ] Entity identity
+- [ ] Record simulation statistics
+- [ ] Add `CentralBank` to set policy risk-free rate
+- [ ] Add `Company` economic agent
+- [ ] Add `Household` economic agent
+- [ ] Add utility calculations
+- [ ] Add intertemporal decision-making
