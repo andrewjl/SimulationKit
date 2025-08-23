@@ -37,43 +37,8 @@ class StateGenerator {
             ledgers[ledgerID] = Ledger(id: ledgerID, generalJournal: [])
         }
 
-        for case let Simulation.Event.createAsset(balance, name, ledgerID) in initialEvents {
-            let createdAssetID = UUID().uuidString
-            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
-                .applying(
-                    event: .createAsset(
-                        name: name,
-                        accountID: createdAssetID
-                    ),
-                    at: 0
-                )
-                .applying(
-                    event: .postAsset(
-                        transaction: .init(amount: balance),
-                        accountID: createdAssetID
-                    ),
-                    at: 0
-                )
-        }
-
-        for case let Simulation.Event.createLiability(balance, name, ledgerID) in initialEvents {
-            let createdLiabilityID = UUID().uuidString
-
-            ledgers[ledgerID] = ledgers[ledgerID, default: Ledger(id: ledgerID, generalJournal: [])]
-                .applying(
-                    event: .createLiability(
-                        name: name,
-                        accountID: createdLiabilityID
-                    ),
-                    at: 0
-                )
-                .applying(
-                    event: .postLiability(
-                        transaction: .init(amount: balance),
-                        accountID: createdLiabilityID
-                    ),
-                    at: 0
-                )
+        for case let Simulation.Event.ledgerEvent(event: event, ledgerID: ledgerID) in initialEvents {
+            ledgers[ledgerID] = ledgers[ledgerID]?.applying(event: event, at: 0)
         }
 
         return Array<Ledger>(ledgers.values)
@@ -93,42 +58,6 @@ class Simulation {
             case .ledgerEvent(event: let event, ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(event: event, at: period) : $0 },
-                    bank: bank
-                )
-            case .createAsset(balance: let balance, name: let name, ledgerID: let ledgerID):
-                let createdAssetID = UUID().uuidString
-                return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(
-                        event: .createAsset(
-                            name: name,
-                            accountID: createdAssetID
-                        ),
-                        at: period
-                    ).applying(
-                        event: .postAsset(
-                            transaction: .init(amount: balance),
-                            accountID: createdAssetID
-                        ),
-                        at: period
-                    ) : $0 },
-                    bank: bank
-                )
-            case .createLiability(balance: let balance, name: let name, ledgerID: let ledgerID):
-                let createdLiabilityID = UUID().uuidString
-                return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(
-                        event: .createLiability(
-                            name: name,
-                            accountID: createdLiabilityID
-                        ),
-                        at: period
-                    ).applying(
-                        event: .postLiability(
-                            transaction: .init(amount: balance),
-                            accountID: createdLiabilityID
-                        ),
-                        at: period
-                    ) : $0 },
                     bank: bank
                 )
             case .createEmptyLedger(ledgerID: let ledgerID):
@@ -247,8 +176,6 @@ extension Simulation.State: Equatable {
 extension Simulation {
     enum Event: Equatable {
         case ledgerEvent(event: Ledger.Event, ledgerID: String)
-        case createAsset(balance: Decimal, name: String, ledgerID: String)
-        case createLiability(balance: Decimal, name: String, ledgerID: String)
         case createEmptyLedger(ledgerID: String)
         case bankEvent(event: Bank.Event)
     }

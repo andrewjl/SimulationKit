@@ -21,13 +21,25 @@ final class SimulationTests: XCTestCase {
                     timestamp: 0
                 ),
                 Capture(
-                    entity: Simulation.Event.createAsset(
-                        balance: 400.0,
-                        name: "",
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .createAsset(
+                            name: "",
+                            accountID: "1"
+                        ),
                         ledgerID: ledgerID
                     ),
                     timestamp: 0
                 ),
+                Capture(
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .postAsset(
+                            transaction: .debited(by: 400.0),
+                            accountID: "1"
+                        ),
+                        ledgerID: ledgerID
+                    ),
+                    timestamp: 0
+                )
             ]
         )
         let simulation = Simulation.make(from: model)
@@ -105,12 +117,6 @@ final class SimulationTests: XCTestCase {
 
         let initialAssetsCount:Int = 2
 
-        let createAssetEvent = Simulation.Event.createAsset(
-            balance: 150.0,
-            name: "",
-            ledgerID: ledgerIDs[0]
-        )
-
         let model = Model.makeModel(
             plannedEvents: [
                 Capture(
@@ -118,15 +124,63 @@ final class SimulationTests: XCTestCase {
                     timestamp: 0
                 ),
                 Capture(
-                    entity: createAssetEvent,
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .createAsset(
+                            name: "",
+                            accountID: "1"
+                        ),
+                        ledgerID: ledgerIDs[0]
+                    ),
                     timestamp: 0
                 ),
                 Capture(
-                    entity: createAssetEvent,
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .postAsset(
+                            transaction: .debited(by: 150.0),
+                            accountID: "1"
+                        ),
+                        ledgerID: ledgerIDs[0]
+                    ),
                     timestamp: 0
                 ),
                 Capture(
-                    entity: createAssetEvent,
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .createAsset(
+                            name: "",
+                            accountID: "2"
+                        ),
+                        ledgerID: ledgerIDs[0]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .postAsset(
+                            transaction: .debited(by: 150.0),
+                            accountID: "2"
+                        ),
+                        ledgerID: ledgerIDs[0]
+                    ),
+                    timestamp: 0
+                ),
+                Capture(
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .createAsset(
+                            name: "",
+                            accountID: "3"
+                        ),
+                        ledgerID: ledgerIDs[0]
+                    ),
+                    timestamp: 3
+                ),
+                Capture(
+                    entity: Simulation.Event.ledgerEvent(
+                        event: .postAsset(
+                            transaction: .debited(by: 150.0),
+                            accountID: "3"
+                        ),
+                        ledgerID: ledgerIDs[0]
+                    ),
                     timestamp: 3
                 )
             ]
@@ -151,10 +205,6 @@ final class SimulationTests: XCTestCase {
             4
         )
 
-        XCTAssertTrue(
-            elapsedThirdPeriod.capture.entity.events.contains(createAssetEvent)
-        )
-
         let finalLedger = try XCTUnwrap(
             elapsedThirdPeriod
                 .capture
@@ -175,8 +225,37 @@ final class SimulationTests: XCTestCase {
 
     func testStateGenerator() throws {
         let initialEvents: [Simulation.Event] = [
-            Simulation.Event.createAsset(balance: 100.0, name: "", ledgerID: "0"),
-            Simulation.Event.createLiability(balance: 100.0, name: "", ledgerID: "0")
+            Simulation.Event.createEmptyLedger(
+                ledgerID: "0"
+            ),
+            Simulation.Event.ledgerEvent(
+                event: .createAsset(
+                    name: "",
+                    accountID: "1"
+                ),
+                ledgerID: "0"
+            ),
+            Simulation.Event.ledgerEvent(
+                event: .postAsset(
+                    transaction: .debited(by: 100.0),
+                    accountID: "1"
+                ),
+                ledgerID: "0"
+            ),
+            Simulation.Event.ledgerEvent(
+                event: .createLiability(
+                    name: "",
+                    accountID: "2"
+                ),
+                ledgerID: "0"
+            ),
+            Simulation.Event.ledgerEvent(
+                event: .postLiability(
+                    transaction: .credited(by: 100.0),
+                    accountID: "2"
+                ),
+                ledgerID: "0"
+            ),
         ]
 
         let state = StateGenerator.generate(from: initialEvents)
@@ -224,97 +303,241 @@ final class SimulationTests: XCTestCase {
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createAsset(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createAsset(
+                        name: "",
+                        accountID: "1"
+                    ),
                     ledgerID: "1"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createAsset(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postAsset(
+                        transaction: .debited(by: 100.0),
+                        accountID: "1"
+                    ),
+                    ledgerID: "1"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createAsset(
+                        name: "",
+                        accountID: "2"
+                    ),
                     ledgerID: "2"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createAsset(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postAsset(
+                        transaction: .debited(by: 100.0),
+                        accountID: "2"
+                    ),
+                    ledgerID: "2"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createAsset(
+                        name: "",
+                        accountID: "3"
+                    ),
                     ledgerID: "3"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createAsset(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postAsset(
+                        transaction: .debited(by: 100.0),
+                        accountID: "3"
+                    ),
+                    ledgerID: "3"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createAsset(
+                        name: "",
+                        accountID: "4"
+                    ),
                     ledgerID: "4"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createAsset(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postAsset(
+                        transaction: .debited(by: 100.0),
+                        accountID: "4"
+                    ),
+                    ledgerID: "4"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createAsset(
+                        name: "",
+                        accountID: "5"
+                    ),
                     ledgerID: "5"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createAsset(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postAsset(
+                        transaction: .debited(by: 100.0),
+                        accountID: "5"
+                    ),
+                    ledgerID: "5"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createAsset(
+                        name: "",
+                        accountID: "6"
+                    ),
                     ledgerID: "6"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createLiability(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postAsset(
+                        transaction: .debited(by: 100.0),
+                        accountID: "6"
+                    ),
+                    ledgerID: "6"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createLiability(
+                        name: "",
+                        accountID: "7"
+                    ),
                     ledgerID: "1"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createLiability(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postLiability(
+                        transaction: .credited(by: 100.0),
+                        accountID: "7"
+                    ),
+                    ledgerID: "1"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createLiability(
+                        name: "",
+                        accountID: "8"
+                    ),
                     ledgerID: "2"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createLiability(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postLiability(
+                        transaction: .credited(by: 100.0),
+                        accountID: "8"
+                    ),
+                    ledgerID: "2"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createLiability(
+                        name: "",
+                        accountID: "9"
+                    ),
                     ledgerID: "3"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createLiability(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postLiability(
+                        transaction: .credited(by: 100.0),
+                        accountID: "9"
+                    ),
+                    ledgerID: "3"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createLiability(
+                        name: "",
+                        accountID: "9"
+                    ),
                     ledgerID: "4"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createLiability(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postLiability(
+                        transaction: .credited(by: 100.0),
+                        accountID: "9"
+                    ),
+                    ledgerID: "4"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createLiability(
+                        name: "",
+                        accountID: "10"
+                    ),
                     ledgerID: "5"
                 ),
                 timestamp: 0
             ),
             Capture(
-                entity: Simulation.Event.createLiability(
-                    balance: 100.0,
-                    name: "",
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postLiability(
+                        transaction: .credited(by: 100.0),
+                        accountID: "10"
+                    ),
+                    ledgerID: "5"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .createLiability(
+                        name: "",
+                        accountID: "11"
+                    ),
+                    ledgerID: "6"
+                ),
+                timestamp: 0
+            ),
+            Capture(
+                entity: Simulation.Event.ledgerEvent(
+                    event: .postLiability(
+                        transaction: .credited(by: 100.0),
+                        accountID: "11"
+                    ),
                     ledgerID: "6"
                 ),
                 timestamp: 0
@@ -329,7 +552,11 @@ final class SimulationTests: XCTestCase {
 
         let assetEvents: [Simulation.Event] = try XCTUnwrap(
             initialEvents.compactMap {
-                guard case Simulation.Event.createAsset = $0 else {
+                guard case Simulation.Event.ledgerEvent(event: let event, ledgerID: _) = $0 else {
+                    return nil
+                }
+
+                guard case Ledger.Event.createAsset(name: _, accountID: _ ) = event else {
                     return nil
                 }
 
@@ -345,7 +572,11 @@ final class SimulationTests: XCTestCase {
 
         let liabilityEvents: [Simulation.Event] = try XCTUnwrap(
             initialEvents.compactMap {
-                guard case Simulation.Event.createLiability = $0 else {
+                guard case Simulation.Event.ledgerEvent(event: let event, ledgerID: _) = $0 else {
+                    return nil
+                }
+
+                guard case Ledger.Event.createLiability(name: _, accountID: _ ) = event else {
                     return nil
                 }
 
@@ -388,9 +619,20 @@ final class SimulationTests: XCTestCase {
         )
 
         let secondSuccessorState = firstSuccessorState.applying(
-            event: .createAsset(
-                balance: 100.0,
-                name: "",
+            event: Simulation.Event.ledgerEvent(
+                event: .createAsset(
+                    name: "",
+                    accountID: "1"
+                ),
+                ledgerID: ledgerID
+            ),
+            period: 1
+        ).applying(
+            event: Simulation.Event.ledgerEvent(
+                event: .postAsset(
+                    transaction: .debited(by: 100.0),
+                    accountID: "1"
+                ),
                 ledgerID: ledgerID
             ),
             period: 1
@@ -401,8 +643,9 @@ final class SimulationTests: XCTestCase {
             "Expected at least one extant ledger"
         )
 
-        XCTAssertTrue(
-            secondSuccessorStateLedger.assets.count == 1,
+        XCTAssertEqual(
+            secondSuccessorStateLedger.assets.count,
+            1,
             "Expected one assets ledger"
         )
     }
