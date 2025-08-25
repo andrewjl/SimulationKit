@@ -9,13 +9,16 @@ Simulations are modeled using discrete events. Each entity has a corresponding s
 ### Generic Simulation Entities
 
 - Conceptual Model: specifies entities and events
-- Executable Model: represents model used to calculate results of a simulation run
+- Simulation: calculates results of a simulation run
+- StateGenerator: creates initial state and initial set of events based on plan in conceptual model 
 - Run: results from a particular simulation calculation
 - Simulator: constructs executable model, executes model logic, collects and collates results
-- Period: Single iteration of the simulators execution of the executable model
-- Clock: Source of truth for the current period of the currently executing simulation
-- Tick: Timestamped value of what the current time is
-- Simulation event: A single event recorded at a particular time period
+- Period: single iteration of the simulators execution of the executable model
+- Clock: source of truth for the current period of the currently executing simulation
+- Tick: timestamped value of what the current time is
+- Step: single iteration of a simulation
+- Simulation.State : The state of the simulation at some step 
+- Simulation.Event: A single event recorded at a particular time period
 
 ### Domain Specific Entities
 
