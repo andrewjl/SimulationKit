@@ -594,9 +594,12 @@ final class SimulationTests: XCTestCase {
     func testSimulationState() throws {
         let state = Simulation.State(
             ledgers: [],
-            bank: Bank(
-                riskFreeRate: 4
-            )
+            banks: [
+                Bank(
+                    riskFreeRate: 4
+                ),
+            ],
+            riskFreeRate: 4
         )
 
         let ledgerID = UUID().uuidString
@@ -648,6 +651,24 @@ final class SimulationTests: XCTestCase {
             1,
             "Expected one assets ledger"
         )
+
+        let secondBankLedgerID = UUID().uuidString
+
+        let thirdSuccessorState = secondSuccessorState.applying(
+            event: .createBank(
+                startingCapital: 10_000,
+                bankLedgerID: secondBankLedgerID
+            ),
+            period: 2
+        )
+
+        thirdSuccessorState.banks.forEach { bank in
+            XCTAssertEqual(
+                bank.riskFreeRate,
+                4,
+                "Expected default risk free rate of 4%"
+            )
+        }
     }
 }
 

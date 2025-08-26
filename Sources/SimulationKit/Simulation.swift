@@ -24,7 +24,8 @@ class StateGenerator {
 
         return Simulation.State(
             ledgers: ledgers,
-            bank: bank
+            banks: [bank],
+            riskFreeRate: 0
         )
     }
 
@@ -48,18 +49,14 @@ class StateGenerator {
 class Simulation {
     struct State {
         var ledgers: [Ledger]
-        var bank: Bank
+        var banks: [Bank]
+        var riskFreeRate: Int
 
         func applying(
             event: Event,
             period: UInt32
         ) -> Self {
             switch event {
-            case .ledgerEvent(event: let event, ledgerID: let ledgerID):
-                return State(
-                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(event: event, at: period) : $0 },
-                    bank: bank
-                )
             case .createEmptyLedger(ledgerID: let ledgerID):
                 return State(
                     ledgers: ledgers + [
@@ -67,15 +64,36 @@ class Simulation {
                             id: ledgerID
                         )
                     ],
-                    bank: bank
+                    banks: banks,
+                    riskFreeRate: riskFreeRate
                 )
-            case .bankEvent(event: let bankEvent):
+            case .ledgerEvent(event: let event, ledgerID: let ledgerID):
+                return State(
+                    ledgers: ledgers.map { $0.id == ledgerID ? $0.applying(event: event, at: period) : $0 },
+                    banks: banks,
+                    riskFreeRate: riskFreeRate
+                )
+            case .createBank(startingCapital: let startingCapital, bankLedgerID: let bankLedgerID):
                 return State(
                     ledgers: ledgers,
-                    bank: bank.applyingEvent(
-                        event: bankEvent,
-                        period: period
-                    )
+                    banks: banks + [
+                        Bank(
+                            riskFreeRate: riskFreeRate,
+                            loanRate: riskFreeRate,
+                            startingCapital: startingCapital,
+                            startingPeriod: period,
+                            bankLedgerID: bankLedgerID
+                        )
+                    ],
+                    riskFreeRate: riskFreeRate
+                )
+            case .bankEvent(event: let bankEvent, bankLedgerID: let bankLedgerID):
+                return State(
+                    ledgers: ledgers,
+                    banks: banks.map {
+                        $0.ledger.id == bankLedgerID ? $0.applyingEvent(event: bankEvent, period: period) : $0
+                    },
+                    riskFreeRate: riskFreeRate
                 )
             }
         }
@@ -168,16 +186,17 @@ class Simulation {
 
 extension Simulation.State: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.bank == rhs.bank &&
+        lhs.banks == rhs.banks &&
         lhs.ledgers == rhs.ledgers
     }
 }
 
 extension Simulation {
     enum Event: Equatable {
-        case ledgerEvent(event: Ledger.Event, ledgerID: String)
         case createEmptyLedger(ledgerID: String)
-        case bankEvent(event: Bank.Event)
+        case ledgerEvent(event: Ledger.Event, ledgerID: String)
+        case createBank(startingCapital: Decimal, bankLedgerID: String)
+        case bankEvent(event: Bank.Event, bankLedgerID: String)
     }
 }
 

@@ -1121,13 +1121,14 @@ struct Bank: Equatable {
         riskFreeRate: Int,
         loanRate: Int,
         startingCapital: Decimal = .zero,
-        startingPeriod: UInt32 = 0
+        startingPeriod: UInt32 = 0,
+        bankLedgerID: String = UUID().uuidString
     ) {
         let equityCapitalAccountID = UUID().uuidString
         let reservesAccountID = UUID().uuidString
 
         var ledger = Ledger
-            .make()
+            .make(id: bankLedgerID)
             .applying(
                 event: .createAsset(
                     name: Bank.reservesAccountName,
