@@ -91,14 +91,14 @@ class Simulation {
                 return State(
                     ledgers: ledgers,
                     banks: banks.map {
-                        $0.ledger.id == bankLedgerID ? $0.applyingEvent(event: bankEvent, period: period) : $0
+                        $0.ledger.id == bankLedgerID ? $0.applying(event: bankEvent, at: period) : $0
                     },
                     riskFreeRate: riskFreeRate
                 )
             case .changeRiskFreeRate(newRiskFreeRate: let newRiskFreeRate):
                 return State(
                     ledgers: ledgers,
-                    banks: banks.map { $0.applyingEvent(event: .changeRiskFreeRate(rate: newRiskFreeRate), period: period) },
+                    banks: banks.map { $0.applying(event: .changeRiskFreeRate(rate: newRiskFreeRate), at: period) },
                     riskFreeRate: newRiskFreeRate
                 )
             }

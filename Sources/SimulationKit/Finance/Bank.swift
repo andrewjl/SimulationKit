@@ -1028,9 +1028,9 @@ struct Bank: Equatable {
         )
     }
 
-    func applyingEvent(
+    func applying(
         event: Bank.Event,
-        period: UInt32
+        at period: UInt32
     ) -> Self {
         switch event {
         case .receiveEquityCapital(amount: let amount):
