@@ -95,6 +95,12 @@ class Simulation {
                     },
                     riskFreeRate: riskFreeRate
                 )
+            case .changeRiskFreeRate(newRiskFreeRate: let newRiskFreeRate):
+                return State(
+                    ledgers: ledgers,
+                    banks: banks.map { $0.applyingEvent(event: .changeRiskFreeRate(rate: newRiskFreeRate), period: period) },
+                    riskFreeRate: newRiskFreeRate
+                )
             }
         }
     }
@@ -187,7 +193,8 @@ class Simulation {
 extension Simulation.State: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.banks == rhs.banks &&
-        lhs.ledgers == rhs.ledgers
+        lhs.ledgers == rhs.ledgers &&
+        lhs.riskFreeRate == rhs.riskFreeRate
     }
 }
 
@@ -197,6 +204,7 @@ extension Simulation {
         case ledgerEvent(event: Ledger.Event, ledgerID: String)
         case createBank(startingCapital: Decimal, bankLedgerID: String)
         case bankEvent(event: Bank.Event, bankLedgerID: String)
+        case changeRiskFreeRate(newRiskFreeRate: Int)
     }
 }
 

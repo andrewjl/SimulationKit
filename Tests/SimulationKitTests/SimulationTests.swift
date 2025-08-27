@@ -669,6 +669,26 @@ final class SimulationTests: XCTestCase {
                 "Expected default risk free rate of 4%"
             )
         }
+
+        let fourthSuccessorState = thirdSuccessorState.applying(
+            event: .changeRiskFreeRate(
+                newRiskFreeRate: 3
+            ),
+            period: 3
+        )
+
+        XCTAssertNotEqual(
+            thirdSuccessorState,
+            fourthSuccessorState
+        )
+
+        fourthSuccessorState.banks.forEach { bank in
+            XCTAssertEqual(
+                bank.riskFreeRate,
+                3,
+                "Expected risk free rate of 3%"
+            )
+        }
     }
 }
 
