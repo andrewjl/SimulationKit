@@ -7,10 +7,27 @@ import XCTest
 @testable import SimulationKit
 
 final class SimulatorTests: XCTestCase {
-    func testSimulation() throws {
+    func testSimulationDuration() throws {
         let model = Model()
         let simulator = Simulator()
-        let run = simulator.execute(model: model)
+        let runs = simulator.execute(
+            model: model,
+            runsCount: 1
+        )
+
+        XCTAssertEqual(
+            runs.count,
+            1
+        )
+
+        let run = try XCTUnwrap(
+            runs.first
+        )
+
+        XCTAssertEqual(
+            run.totalPeriods,
+            model.duration
+        )
     }
 
     func testSingleRun() throws {
