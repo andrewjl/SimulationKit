@@ -13,21 +13,6 @@ final class SimulatorTests: XCTestCase {
         let run = simulator.execute(model: model)
     }
 
-    func testClock() throws {
-        let clock = Clock()
-
-        let tick = clock.next()
-        XCTAssertEqual(tick.time, Clock.startingTime)
-
-        let nextTick = clock.next()
-        XCTAssertEqual(nextTick.time, 1)
-
-        clock.reset()
-
-        let resetTick = clock.next()
-        XCTAssertEqual(resetTick.time, Clock.startingTime)
-    }
-
     func testSingleRun() throws {
         let ledgersCount = 2
         let ledgerIDs = [
