@@ -125,22 +125,6 @@ class Historian {
         return records.first(where: { $0.id == handle })
     }
 
-//    func timeSeries(for tag: String, handle: UInt) -> TimeSeriesContainer? {
-//        guard let record = record(for: handle) else {
-//            return nil
-//        }
-//
-//        return record.allTimeSeries[tag]
-//    }
-//
-//    func allTags(for handle: UInt) -> [String] {
-//        guard let record = record(for: handle) else {
-//            return []
-//        }
-//
-//        return Array<String>(record.allTimeSeries.keys)
-//    }
-
     func reconstructedLedgers(
         at period: UInt32,
         for handle: UInt

@@ -26,13 +26,5 @@ class ConceptualModel {
     }
 }
 
-//extension ConceptualModel {
-//    class LedgerGenerator {
-//        func generate() -> [Ledger] {
-//            return []
-//        }
-//    }
-//}
-
 typealias Model = ConceptualModel
 
