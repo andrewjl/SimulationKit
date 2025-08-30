@@ -32,7 +32,7 @@ struct BankIncomeStatement: Equatable {
         }
 
         guard let previousInterestExpensesAccount = previousLedger
-            .revenues
+            .expenses
             .first(where: { $0.name == Bank.interestExpensesAccountName }) else {
             precondition(
                 false,
@@ -41,7 +41,7 @@ struct BankIncomeStatement: Equatable {
         }
 
         guard let currentInterestExpensesAccount = currentLedger
-            .revenues
+            .expenses
             .first(where: { $0.name == Bank.interestExpensesAccountName }) else {
             precondition(
                 false,

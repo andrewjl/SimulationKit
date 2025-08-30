@@ -1727,4 +1727,46 @@ final class BankTests: XCTestCase {
             5.0
         )
     }
+
+    func testBankIncomeStatement() throws {
+        var bank = Bank(riskFreeRate: 5).openAccount(
+            accountHolderID: 1,
+            period: 0
+        ).depositCash(
+            from: 1,
+            amount: 10_000,
+            at: 0
+        )
+
+        let previousLedger = bank.ledger
+
+        bank = bank.accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 1
+        ).openAccount(
+            accountHolderID: 2,
+            period: 1
+        ).provideLoan(
+            to: 2,
+            amount: 20_000,
+            at: 1
+        ).accrueLoanInterestOnAllAccounts(
+            period: 2
+        )
+
+        let incomeStatement = BankIncomeStatement(
+            previousLedger: previousLedger,
+            currentLedger: bank.ledger
+        )
+
+        XCTAssertEqual(
+            incomeStatement.totalExpenses,
+            500
+        )
+
+        XCTAssertEqual(
+            incomeStatement.totalRevenue,
+            1_000
+        )
+    }
 }
