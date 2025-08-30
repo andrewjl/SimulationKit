@@ -159,18 +159,65 @@ final class LedgerTests: XCTestCase {
                     name: "",
                     balance: 50.0
                 )
+            ],
+            equities: [
+                Equity(
+                    id: "3",
+                    name: "",
+                    balance: 200.0
+                )
             ]
         )
-        XCTAssertEqual(ledger.currentBalance(), 200.0)
+        XCTAssertEqual(ledger.currentBalance(), .zero)
         ledger = ledger
             .applying(
                 events: [
-                    .postAsset(transaction: .debited(by: 5.0), accountID: "0"),
-                    .postAsset(transaction: .debited(by: 5.0), accountID: "1"),
-                    .postLiability(transaction: .decreasing(by: 35.0), accountID: "2")
+                    .postAsset(transaction: .increasing(by: 15.0), accountID: "0"),
+                    .postAsset(transaction: .increasing(by: 20.0), accountID: "1"),
+                    .postLiability(transaction: .increasing(by: 35.0), accountID: "2")
                 ],
                 at: 0
             )
-        XCTAssertEqual(ledger.currentBalance(), 245.0)
+        XCTAssertEqual(ledger.currentBalance(), .zero)
+
+        ledger = ledger.applying(
+            event: .createExpense(
+                name: "",
+                accountID: "4"
+            ),
+            at: 0
+        ).applying(
+            event: .createRevenue(
+                name: "",
+                accountID: "5"
+            ),
+            at: 0
+        ).applying(
+            event: .createEquity(
+                name: "",
+                accountID: "6"
+            ),
+            at: 0
+        ).applying(
+            event: .postEquity(
+                transaction: .decreasing(by: 25.0),
+                accountID: "6"
+            ),
+            at: 0
+        ).applying(
+            event: .postExpense(
+                transaction: .increasing(by: 50.0),
+                accountID: "4"
+            ),
+            at: 0
+        ).applying(
+            event: .postRevenue(
+                transaction: .increasing(by: 75.0),
+                accountID: "5"
+            ),
+            at: 0
+        )
+
+        XCTAssertEqual(ledger.currentBalance(), .zero)
     }
 }

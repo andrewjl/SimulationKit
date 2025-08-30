@@ -78,6 +78,7 @@ struct Ledger: Equatable {
                 id: id,
                 assets: assets,
                 liabilities: liabilities,
+                equities: equities,
                 revenues: revenues.map { $0.id == accountID ? $0.transacted(transaction) : $0 },
                 expenses: expenses,
                 generalJournal: updatedGeneralJournal
