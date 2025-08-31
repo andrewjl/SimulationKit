@@ -1754,7 +1754,7 @@ final class BankTests: XCTestCase {
             period: 2
         )
 
-        let incomeStatement = BankIncomeStatement(
+        let incomeStatement = try BankIncomeStatement(
             previousLedger: previousLedger,
             currentLedger: bank.ledger
         )
@@ -1767,6 +1767,101 @@ final class BankTests: XCTestCase {
         XCTAssertEqual(
             incomeStatement.totalRevenue,
             1_000
+        )
+    }
+
+    func testInvalidBankIncomeStatementMissingInterestExpenseAccounts() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        ).openAccount(
+            accountHolderID: 1,
+            period: 0
+        ).depositCash(
+            from: 1,
+            amount: 10_000,
+            at: 0
+        )
+
+        let validPreviousLedger = bank.ledger
+
+        var invalidPreviousLedger = bank.ledger
+        invalidPreviousLedger.expenses.removeAll()
+
+        bank = bank.accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 1
+        )
+
+        XCTAssertThrowsError(
+            try BankIncomeStatement(
+                previousLedger: invalidPreviousLedger,
+                currentLedger: bank.ledger
+            ),
+            "Expected throw when previous ledger is missing interest expenses",
+            { error in
+                XCTAssertTrue(error is BankIncomeStatement.Error)
+            }
+        )
+
+        var invalidCurrentLedger = bank.ledger
+        invalidCurrentLedger.expenses.removeAll()
+
+        XCTAssertThrowsError(
+            try BankIncomeStatement(
+                previousLedger: validPreviousLedger,
+                currentLedger: invalidCurrentLedger
+            ),
+            "Expected throw when current ledger is missing interest expenses",
+            { error in
+                XCTAssertTrue(error is BankIncomeStatement.Error)
+            }
+        )
+    }
+
+    func testInvalidBankIncomeStatementMissingInterestRevenueAccounts() throws {
+        var bank = Bank(
+            riskFreeRate: 5
+        ).openAccount(
+            accountHolderID: 1,
+            period: 0
+        ).provideLoan(
+            to: 1,
+            amount: 20_000,
+            at: 0
+        )
+
+        let validPreviousLedger = bank.ledger
+
+        var invalidPreviousLedger = bank.ledger
+        invalidPreviousLedger.revenues.removeAll()
+
+        bank = bank.accrueLoanInterestOnAllAccounts(
+            period: 1
+        )
+
+        XCTAssertThrowsError(
+            try BankIncomeStatement(
+                previousLedger: invalidPreviousLedger,
+                currentLedger: bank.ledger
+            ),
+            "Expected throw when previous ledger is missing interest revenues",
+            { error in
+                XCTAssertTrue(error is BankIncomeStatement.Error)
+            }
+        )
+
+        var invalidCurrentLedger = bank.ledger
+        invalidCurrentLedger.revenues.removeAll()
+
+        XCTAssertThrowsError(
+            try BankIncomeStatement(
+                previousLedger: validPreviousLedger,
+                currentLedger: invalidCurrentLedger
+            ),
+            "Expected throw when current ledger is missing interest revenues",
+            { error in
+                XCTAssertTrue(error is BankIncomeStatement.Error)
+            }
         )
     }
 }
