@@ -163,15 +163,6 @@ extension Asset {
     }
 }
 
-extension Asset {
-    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
-        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
-        return Transaction(
-            amount: adjustmentAmount
-        )
-    }
-}
-
 extension Asset: CustomDebugStringConvertible {
     static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()

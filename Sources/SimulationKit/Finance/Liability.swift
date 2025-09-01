@@ -157,15 +157,6 @@ extension Liability {
     }
 }
 
-extension Liability {
-    func adjustmentTransaction(by percentageRate: Int) -> Self.Transaction {
-        let adjustmentAmount = currentBalance().decimalizedAdjustment(percentage: percentageRate)
-        return Transaction(
-            amount: adjustmentAmount
-        )
-    }
-}
-
 extension Liability: CustomDebugStringConvertible {
     static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()
