@@ -325,7 +325,17 @@ extension Ledger {
         revenues: [Revenue] = [],
         expenses: [Expense] = []
     ) -> Self {
-        let assetEvents = assets.reduce(into: []) { partialResult, asset in
+        let assetEvents: [Capture<Event>] = assets.reduce(into: []) { partialResult, asset in
+            partialResult += [
+                Capture(
+                    entity: Event.createAsset(
+                        name: asset.name,
+                        accountID: asset.id
+                    ),
+                    timestamp: 0
+                )
+            ]
+
             partialResult += asset.transactions.map {
                 Capture(
                     entity: Event.postAsset(
@@ -336,7 +346,18 @@ extension Ledger {
                 )
             }
         }
-        let liabilityEvents = liabilities.reduce(into: []) { partialResult, liability in
+        
+        let liabilityEvents: [Capture<Event>] = liabilities.reduce(into: []) { partialResult, liability in
+            partialResult += [
+                Capture(
+                    entity: Event.createLiability(
+                        name: liability.name,
+                        accountID: liability.id
+                    ),
+                    timestamp: 0
+                )
+            ]
+
             partialResult += liability.transactions.map {
                 Capture(
                     entity: Event.postLiability(
@@ -347,7 +368,18 @@ extension Ledger {
                 )
             }
         }
-        let equityEvents = equities.reduce(into: []) { partialResult, equity in
+
+        let equityEvents: [Capture<Event>] = equities.reduce(into: []) { partialResult, equity in
+            partialResult += [
+                Capture(
+                    entity: Event.createEquity(
+                        name: equity.name,
+                        accountID: equity.id
+                    ),
+                    timestamp: 0
+                )
+            ]
+
             partialResult += equity.transactions.map {
                 Capture(
                     entity: Event.postEquity(
@@ -359,7 +391,17 @@ extension Ledger {
             }
         }
 
-        let revenueEvents = revenues.reduce(into: []) { partialResult, revenue in
+        let revenueEvents: [Capture<Event>] = revenues.reduce(into: []) { partialResult, revenue in
+            partialResult += [
+                Capture(
+                    entity: Event.createRevenue(
+                        name: revenue.name,
+                        accountID: revenue.id
+                    ),
+                    timestamp: 0
+                )
+            ]
+
             partialResult += revenue.transactions.map {
                 Capture(
                     entity: Event.postRevenue(
@@ -371,7 +413,17 @@ extension Ledger {
             }
         }
 
-        let expenseEvents = expenses.reduce(into: []) { partialResult, expense in
+        let expenseEvents: [Capture<Event>] = expenses.reduce(into: []) { partialResult, expense in
+            partialResult += [
+                Capture(
+                    entity: Event.createExpense(
+                        name: expense.name,
+                        accountID: expense.id
+                    ),
+                    timestamp: 0
+                )
+            ]
+
             partialResult += expense.transactions.map {
                 Capture(
                     entity: Event.postExpense(
@@ -383,7 +435,7 @@ extension Ledger {
             }
         }
 
-        let generalJournal = assetEvents + liabilityEvents + equityEvents +
+        let generalJournal: [Capture<Event>] = assetEvents + liabilityEvents + equityEvents +
         revenueEvents + expenseEvents
 
         return Self(

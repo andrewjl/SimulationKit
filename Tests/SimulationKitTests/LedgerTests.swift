@@ -7,6 +7,53 @@ import XCTest
 @testable import SimulationKit
 
 final class LedgerTests: XCTestCase {
+    func testConstructor() throws {
+        let ledger = Ledger.make(
+            assets: [
+                Asset(
+                    id: "1",
+                    name: "",
+                    balance: 250.0
+                ),
+                Asset(
+                    id: "2",
+                    name: "",
+                    transactions: [
+                        .increasing(by: 100.0),
+                        .increasing(by: 200.0)
+                    ]
+                ),
+            ],
+            liabilities: [
+                Liability(
+                    id: "3",
+                    name: "",
+                    balance: 350.0
+                )
+            ],
+            equities: [
+                Equity(
+                    id: "4",
+                    name: "",
+                    balance: 200.0
+                ),
+                Equity(
+                    id: "5",
+                    name: "",
+                    transactions: [
+                        .increasing(by: 150.0),
+                        .decreasing(by: 50.0)
+                    ]
+                )
+            ]
+        )
+
+        XCTAssertEqual(
+            ledger.generalJournal.count,
+            12
+        )
+    }
+
     func testBalance() throws {
         var ledger = Ledger.make(
             assets: [
@@ -24,7 +71,7 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(
             ledger.generalJournal.count,
-            1
+            2
         )
 
         let liabilityID = UUID().uuidString
@@ -48,7 +95,7 @@ final class LedgerTests: XCTestCase {
         )
         XCTAssertEqual(
             ledger.generalJournal.count,
-            3
+            4
         )
     }
 
