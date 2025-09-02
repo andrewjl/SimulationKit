@@ -47,6 +47,27 @@ final class EquityTests: XCTestCase {
         )
     }
 
+    func testConvenienceMethods() throws {
+        let equity = Equity.make(
+            from: [],
+            name: ""
+        ).credited(
+            by: 150.0
+        ).debited(
+            by: 50.0
+        )
+
+        XCTAssertEqual(
+            equity.currentBalance(),
+            100.0
+        )
+
+        XCTAssertEqual(
+            equity.transactions.count,
+            2
+        )
+    }
+
     func testCredit() throws {
         var equity = Equity.make(
             from: .zero,
@@ -54,10 +75,7 @@ final class EquityTests: XCTestCase {
         )
 
         equity = equity.transacted(
-            .credit(
-                id: UUID().uuidString,
-                amount: 100.0
-            )
+            .credited(by: 100.0)
         )
 
         XCTAssertEqual(
@@ -80,11 +98,15 @@ final class EquityTests: XCTestCase {
             name: ""
         )
 
+        let transaction = Equity.Transaction.debited(by: 25)
+
+        XCTAssertEqual(
+            transaction.amount,
+            -25.0
+        )
+
         equity = equity.transacted(
-            .debit(
-                id: UUID().uuidString,
-                amount: 25.0
-            )
+            transaction
         )
 
         XCTAssertEqual(
