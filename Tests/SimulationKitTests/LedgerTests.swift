@@ -45,12 +45,32 @@ final class LedgerTests: XCTestCase {
                         .decreasing(by: 50.0)
                     ]
                 )
+            ],
+            revenues: [
+                Revenue(
+                    id: "6",
+                    name: "",
+                    transactions: [
+                        .increasing(by: 500.0),
+                        .increasing(by: 700.0),
+                    ]
+                )
+            ],
+            expenses: [
+                Expense(
+                    id: "7",
+                    name: "",
+                    transactions: [
+                        .increasing(by: 500.0),
+                        .increasing(by: 700.0),
+                    ]
+                )
             ]
         )
 
         XCTAssertEqual(
             ledger.generalJournal.count,
-            12
+            18
         )
     }
 
@@ -96,6 +116,83 @@ final class LedgerTests: XCTestCase {
         XCTAssertEqual(
             ledger.generalJournal.count,
             4
+        )
+    }
+
+    func testLedgerEventAmount() throws {
+        XCTAssertEqual(
+            Ledger.Event.createAsset(name: "", accountID: "1").amount,
+            .zero
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.createLiability(name: "", accountID: "1").amount,
+            .zero
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.createEquity(name: "", accountID: "1").amount,
+            .zero
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.createRevenue(name: "", accountID: "1").amount,
+            .zero
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.createExpense(name: "", accountID: "1").amount,
+            .zero
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postAsset(transaction: .increasing(by: 100.0), accountID: "1").amount,
+            100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postAsset(transaction: .decreasing(by: 100.0), accountID: "1").amount,
+            -100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postLiability(transaction: .increasing(by: 100.0), accountID: "1").amount,
+            100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postLiability(transaction: .decreasing(by: 100.0), accountID: "1").amount,
+            -100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postEquity(transaction: .increasing(by: 100.0), accountID: "1").amount,
+            100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postEquity(transaction: .decreasing(by: 100.0), accountID: "1").amount,
+            -100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postRevenue(transaction: .increasing(by: 100.0), accountID: "1").amount,
+            100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postRevenue(transaction: .decreasing(by: 100.0), accountID: "1").amount,
+            -100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postExpense(transaction: .increasing(by: 100.0), accountID: "1").amount,
+            100.0
+        )
+
+        XCTAssertEqual(
+            Ledger.Event.postExpense(transaction: .decreasing(by: 100.0), accountID: "1").amount,
+            -100.0
         )
     }
 
