@@ -27,6 +27,10 @@ final class ExpenseTests: XCTestCase {
             firstTransaction.isDebit
         )
 
+        XCTAssertFalse(
+            firstTransaction.isCredit
+        )
+
         XCTAssertEqual(
             firstTransaction.amount,
             100.0
@@ -51,6 +55,10 @@ final class ExpenseTests: XCTestCase {
 
         XCTAssertTrue(
             firstTransaction.isCredit
+        )
+
+        XCTAssertFalse(
+            firstTransaction.isDebit
         )
 
         XCTAssertEqual(
