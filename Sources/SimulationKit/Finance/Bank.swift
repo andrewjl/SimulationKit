@@ -852,7 +852,7 @@ struct Bank: Equatable {
             return self
         }
 
-        guard amount < account.deposits.currentBalance() else {
+        guard amount <= account.deposits.currentBalance() else {
             return self
         }
 

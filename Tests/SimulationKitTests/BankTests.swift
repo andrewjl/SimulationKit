@@ -1365,6 +1365,26 @@ final class BankTests: XCTestCase {
             account.reserves.currentBalance(),
             80.0
         )
+
+        bank = bank.withdrawCash(
+            amount: 89.25,
+            from: 2,
+            period: 3
+        )
+
+        account = try XCTUnwrap(
+            bank.accounts[2]
+        )
+
+        XCTAssertEqual(
+            account.deposits.currentBalance(),
+            .zero
+        )
+
+        XCTAssertEqual(
+            account.interestExpenses.currentBalance(),
+            9.25
+        )
     }
 
     func testWithdrawCashMultipleAccounts() throws {
