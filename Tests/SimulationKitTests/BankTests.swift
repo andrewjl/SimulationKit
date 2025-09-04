@@ -1927,6 +1927,192 @@ final class BankTests: XCTestCase {
         )
     }
 
+    func testApplyingBankEvent() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        ).applying(
+            event: .receiveEquityCapital(
+                amount: 1_000_000.0
+            ),
+            at: 0
+        ).applying(
+            event: .openAccount(
+                accountHolderID: 1
+            ),
+            at: 1
+        ).applying(
+            event: .cashDeposit(
+                amount: 100_000,
+                accountHolderID: 1
+            ),
+            at: 1
+        ).applying(
+            event: .loanProvision(
+                amount: 50_000,
+                accountHolderID: 1
+            ),
+            at: 1
+        ).applying(
+            event: .changeRiskFreeRate(
+                rate: 6
+            ),
+            at: 2
+        ).applying(
+            event: .accrueDepositInterest(
+                rate: 6,
+                balance: 150_000,
+                accountHolderID: 1
+            ),
+            at: 2
+        ).applying(
+            event: .accrueLoanInterest(
+                rate: 6,
+                balance: 50_000,
+                accountHolderID: 1
+            ),
+            at: 2
+        ).applying(
+            event: .receiveLoanPayment(
+                amount: 5_000,
+                accountHolderID: 1
+            ),
+            at: 2
+        ).applying(
+            event: .withdrawCash(
+                amount: 10_000,
+                accountHolderID: 1
+            ),
+            at: 2
+        ).applying(
+            event: .openAccount(
+                accountHolderID: 2
+            ),
+            at: 2
+        ).applying(
+            event: .transfer(
+                amount: 10_000,
+                originAccountHolderID: 1,
+                destinationAccountHolderID: 2
+            ),
+            at: 2
+        ).applying(
+            event: .withdrawCash(
+                amount: 10_000,
+                accountHolderID: 2
+            ),
+            at: 2
+        ).applying(
+            event: .closeAccount(
+                accountHolderID: 2
+            ),
+            at: 3
+        )
+
+        let receiveEquityCapitalEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.receiveEquityCapital(amount: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            receiveEquityCapitalEvents.count,
+            1
+        )
+
+        let accountOpeningEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.openAccount(accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            accountOpeningEvents.count,
+            2
+        )
+
+        let cashDepositEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.cashDeposit(amount: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            cashDepositEvents.count,
+            1
+        )
+
+        let depositInterestAccrualEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.accrueDepositInterest(rate: _, balance: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            depositInterestAccrualEvents.count,
+            1
+        )
+
+        let receiveLoanPaymentEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.receiveLoanPayment(amount: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            receiveLoanPaymentEvents.count,
+            1
+        )
+
+        let withdrawalEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.withdrawCash(amount: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            withdrawalEvents.count,
+            2
+        )
+
+        let transferEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.transfer(amount: _, originAccountHolderID: _, destinationAccountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            transferEvents.count,
+            1
+        )
+
+        let accountClosingEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.closeAccount(accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            accountClosingEvents.count,
+            1
+        )
+    }
+
     func testBankIncomeStatement() throws {
         var bank = Bank(riskFreeRate: 5).openAccount(
             accountHolderID: 1,
