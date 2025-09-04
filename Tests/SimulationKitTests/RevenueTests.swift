@@ -38,10 +38,10 @@ final class RevenueTests: XCTestCase {
     }
 
     func testNegativeStartingBalance() throws {
-        let revenue = Revenue(
+        let revenue = Revenue.make(
+            from: -100.0,
             id: "1",
-            name: "",
-            balance: -100.0
+            name: ""
         )
 
         XCTAssertEqual(
@@ -68,12 +68,12 @@ final class RevenueTests: XCTestCase {
     }
 
     func testCredit() throws {
-        var revenue = Revenue(
-            id: "1",
-            name: "",
-            transactions: [
+        var revenue = Revenue.make(
+            from: [
                 .credited(by: 100.0)
-            ]
+            ],
+            id: "1",
+            name: ""
         )
 
         XCTAssertEqual(
@@ -90,12 +90,12 @@ final class RevenueTests: XCTestCase {
     }
 
     func testDebit() throws {
-        var revenue = Revenue(
-            id: "1",
-            name: "",
-            transactions: [
+        var revenue = Revenue.make(
+            from: [
                 .credited(by: 100.0)
-            ]
+            ],
+            id: "1",
+            name: ""
         )
 
         XCTAssertEqual(
