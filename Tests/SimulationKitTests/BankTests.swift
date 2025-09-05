@@ -664,6 +664,40 @@ final class BankTests: XCTestCase {
         )
     }
 
+    func testLoanInterestAccrualNoAccount() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .provideLoan(
+            to: 1,
+            amount: 100.0,
+            at: 0
+        )
+        .provideLoan(
+            to: 2,
+            amount: 100.0,
+            at: 0
+        )
+        .accrueLoanInterest(
+            rate: 5,
+            balance: 100.0,
+            accountHolderID: 3,
+            period: 1
+        )
+
+        let loanInterestAccrualEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.accrueLoanInterest(rate: _, balance: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertTrue(
+            loanInterestAccrualEvents.isEmpty
+        )
+    }
+
     func testDepositAccountInterestAccrual() throws {
         var bank = Bank(
             riskFreeRate: 5
@@ -867,6 +901,45 @@ final class BankTests: XCTestCase {
         XCTAssertEqual(
             secondAccount.deposits.currentBalance(),
             105.0
+        )
+    }
+
+    func testDepositAccountInterestAccrualNoAccount() throws {
+        let bank = Bank(
+            riskFreeRate: 5
+        )
+        .depositCash(
+            from: 1,
+            amount: 100,
+            at: 0
+        )
+        .depositCash(
+            from: 2,
+            amount: 100,
+            at: 0
+        )
+        .accrueDepositInterest(
+            rate: 5,
+            balance: 100,
+            accountHolderID: 3,
+            period: 1
+        )
+
+        XCTAssertEqual(
+            bank.eventCaptures.count,
+            4
+        )
+
+        let depositInterestAccrualEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.accrueDepositInterest(rate: _, balance: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertTrue(
+            depositInterestAccrualEvents.isEmpty
         )
     }
 
@@ -2091,6 +2164,32 @@ final class BankTests: XCTestCase {
 
         XCTAssertEqual(
             depositInterestAccrualEvents.count,
+            1
+        )
+
+        let loanProvisionEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.loanProvision(amount: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            loanProvisionEvents.count,
+            1
+        )
+
+        let loanInterestAccrualEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.accrueLoanInterest(rate: _, balance: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertEqual(
+            loanInterestAccrualEvents.count,
             1
         )
 
