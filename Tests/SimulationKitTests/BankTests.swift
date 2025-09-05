@@ -1387,6 +1387,40 @@ final class BankTests: XCTestCase {
         )
     }
 
+    func testWithdrawCashInsufficientBalance() throws {
+        let bank = Bank(
+            riskFreeRate: 5,
+            loanRate: 7,
+            startingCapital: 1_000.0
+        )
+        .depositCash(
+            from: 2,
+            amount: 100.0,
+            at: 1
+        )
+        .accrueDepositInterestOnAllAccounts(
+            rate: 5,
+            period: 2
+        )
+        .withdrawCash(
+            amount: 120.0,
+            from: 2,
+            period: 2
+        )
+
+        let withdrawalEvents = bank.eventCaptures.filter { bankEventCapture in
+            if case Bank.Event.withdrawCash(amount: _, accountHolderID: _) = bankEventCapture.entity {
+                return true
+            }
+
+            return false
+        }
+
+        XCTAssertTrue(
+            withdrawalEvents.isEmpty,
+        )
+    }
+
     func testWithdrawCashMultipleAccounts() throws {
         var bank = Bank(
             riskFreeRate: 5,
