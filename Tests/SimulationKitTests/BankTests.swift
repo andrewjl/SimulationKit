@@ -105,7 +105,7 @@ final class BankTests: XCTestCase {
     }
 
     func testReceiveEquityCapital() throws {
-        var bank = Bank(
+        let bank = Bank(
             riskFreeRate: 5
         )
         .receiveEquityCapital(
