@@ -190,8 +190,8 @@ final class SimulationTests: XCTestCase {
         let clock = Clock()
 
         let _ = simulation.start(tick: clock.next())
-        let elapsedFirstPeriod = simulation.tick(clock.next())
-        let elapsedSecondPeriod = simulation.tick(clock.next())
+        _ = simulation.tick(clock.next())
+        _ = simulation.tick(clock.next())
 
         XCTAssertEqual(
             clock.time,
