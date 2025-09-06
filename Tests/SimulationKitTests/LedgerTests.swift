@@ -65,7 +65,8 @@ final class LedgerTests: XCTestCase {
                         .increasing(by: 700.0),
                     ]
                 )
-            ]
+            ],
+            at: 0
         )
 
         XCTAssertEqual(
@@ -83,7 +84,8 @@ final class LedgerTests: XCTestCase {
                     balance: 100.0
                 )
             ],
-            liabilities: []
+            liabilities: [],
+            at: 0
         )
         XCTAssertEqual(
             ledger.currentBalance(),
@@ -205,7 +207,8 @@ final class LedgerTests: XCTestCase {
                     balance: 100.0
                 )
             ],
-            liabilities: []
+            liabilities: [],
+            at: 0
         )
         XCTAssertEqual(assetLedger.currentBalance(), 100.0)
 
@@ -243,7 +246,8 @@ final class LedgerTests: XCTestCase {
                     name: "",
                     balance: 100.0
                 )
-            ]
+            ],
+            at: 0
         )
         XCTAssertEqual(liabilityLedger.currentBalance(), -100.0)
 
@@ -310,7 +314,8 @@ final class LedgerTests: XCTestCase {
                     name: "",
                     balance: 200.0
                 )
-            ]
+            ],
+            at: 0
         )
         XCTAssertEqual(ledger.currentBalance(), .zero)
         ledger = ledger

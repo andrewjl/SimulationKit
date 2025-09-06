@@ -254,7 +254,8 @@ extension Ledger {
         liabilities: [Liability] = [],
         equities: [Equity] = [],
         revenues: [Revenue] = [],
-        expenses: [Expense] = []
+        expenses: [Expense] = [],
+        at period: UInt32
     ) -> Self {
         let assetEvents: [Capture<Event>] = assets.reduce(into: []) { partialResult, asset in
             partialResult += [
@@ -263,7 +264,7 @@ extension Ledger {
                         name: asset.name,
                         accountID: asset.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             ]
 
@@ -273,7 +274,7 @@ extension Ledger {
                         transaction: $0,
                         accountID: asset.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             }
         }
@@ -285,7 +286,7 @@ extension Ledger {
                         name: liability.name,
                         accountID: liability.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             ]
 
@@ -295,7 +296,7 @@ extension Ledger {
                         transaction: $0,
                         accountID: liability.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             }
         }
@@ -307,7 +308,7 @@ extension Ledger {
                         name: equity.name,
                         accountID: equity.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             ]
 
@@ -317,7 +318,7 @@ extension Ledger {
                         transaction: $0,
                         accountID: equity.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             }
         }
@@ -329,7 +330,7 @@ extension Ledger {
                         name: revenue.name,
                         accountID: revenue.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             ]
 
@@ -339,7 +340,7 @@ extension Ledger {
                         transaction: $0,
                         accountID: revenue.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             }
         }
@@ -351,7 +352,7 @@ extension Ledger {
                         name: expense.name,
                         accountID: expense.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             ]
 
@@ -361,7 +362,7 @@ extension Ledger {
                         transaction: $0,
                         accountID: expense.id
                     ),
-                    timestamp: 0
+                    timestamp: period
                 )
             }
         }

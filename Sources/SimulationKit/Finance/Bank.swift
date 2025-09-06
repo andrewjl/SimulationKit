@@ -102,7 +102,9 @@ struct Account: Equatable {
     ) {
         self.accountHolderID = accountHolderID
         self.ledger = Ledger
-            .make()
+            .make(
+                at: period
+            )
             .applying(
                 event: .createAsset(
                     name: Bank.reservesAccountName,
@@ -165,7 +167,7 @@ struct Bank: Equatable {
     static let interestExpensesAccountName: String = "Interest Expenses"
     static let interestIncomeAccountName: String = "Interest Income"
 
-    var ledger: Ledger = Ledger.make()
+    var ledger: Ledger
     var eventCaptures: [Capture<Event>] = []
 
     var riskFreeRate: Int
@@ -1128,7 +1130,10 @@ struct Bank: Equatable {
         let reservesAccountID = UUID().uuidString
 
         var ledger = Ledger
-            .make(id: bankLedgerID)
+            .make(
+                id: bankLedgerID,
+                at: startingPeriod
+            )
             .applying(
                 event: .createAsset(
                     name: Bank.reservesAccountName,
