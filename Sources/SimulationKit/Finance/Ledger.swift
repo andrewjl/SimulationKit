@@ -180,85 +180,16 @@ struct Ledger: Equatable {
         events: [Event],
         at period: UInt32
     ) -> Self {
-        var updatedAssets = assets
-        var updatedLiabilities = liabilities
-        var updatedEquities = equities
-        var updatedRevenues = revenues
-        var updatedExpenses = expenses
-
-        var updatedGeneralJournal = generalJournal
+        var ledger = self
 
         for event in events {
-            updatedGeneralJournal.append(
-                Capture(
-                    entity: event,
-                    timestamp: period
-                )
+            ledger = ledger.applying(
+                event: event,
+                at: period
             )
-
-            switch event {
-            case .postAsset(let transaction, let id):
-                updatedAssets = updatedAssets.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .postLiability(let transaction, let id):
-                updatedLiabilities = updatedLiabilities.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .postEquity(transaction: let transaction, accountID: let id):
-                updatedEquities = updatedEquities.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .postRevenue(transaction: let transaction, accountID: let id):
-                updatedRevenues = updatedRevenues.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .postExpense(transaction: let transaction, accountID: let id):
-                updatedExpenses = updatedExpenses.map { $0.id == id ? $0.transacted(transaction) : $0 }
-            case .createAsset(name: let name, accountID: let accountID):
-                updatedAssets = updatedAssets + [
-                    Asset(
-                        id: accountID,
-                        name: name,
-                        transactions: []
-                    )
-                ]
-            case .createLiability(name: let name, accountID: let accountID):
-                updatedLiabilities = updatedLiabilities + [
-                    Liability(
-                        id: accountID,
-                        name: name,
-                        transactions: []
-                    )
-                ]
-            case .createEquity(name: let name, accountID: let accountID):
-                updatedEquities = updatedEquities + [
-                    Equity(
-                        id: accountID,
-                        name: name,
-                        transactions: []
-                    )
-                ]
-            case .createRevenue(name: let name, accountID: let accountID):
-                updatedRevenues = updatedRevenues + [
-                    Revenue(
-                        id: accountID,
-                        name: name,
-                        transactions: []
-                    )
-                ]
-            case .createExpense(name: let name, accountID: let accountID):
-                updatedExpenses = updatedExpenses + [
-                    Expense(
-                        id: accountID,
-                        name: name,
-                        transactions: []
-                    )
-                ]
-            }
         }
-        
-        return Self(
-            id: id,
-            assets: updatedAssets,
-            liabilities: updatedLiabilities,
-            equities: updatedEquities,
-            revenues: updatedRevenues,
-            expenses: updatedExpenses,
-            generalJournal: updatedGeneralJournal
-        )
+
+        return ledger
     }
 
     enum Event: Equatable {
