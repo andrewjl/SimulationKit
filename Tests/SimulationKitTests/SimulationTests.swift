@@ -599,7 +599,10 @@ final class SimulationTests: XCTestCase {
                     riskFreeRate: 4
                 ),
             ],
-            riskFreeRate: 4
+            centralBank: CentralBank(
+                riskFreeRate: 4,
+                eventCaptures: []
+            )
         )
 
         let ledgerID = UUID().uuidString
@@ -671,8 +674,10 @@ final class SimulationTests: XCTestCase {
         }
 
         let fourthSuccessorState = thirdSuccessorState.applying(
-            event: .changeRiskFreeRate(
-                newRiskFreeRate: 3
+            event: .centralBankEvent(
+                event: .changeRiskFreeRate(
+                    rate: 3
+                )
             ),
             period: 3
         )

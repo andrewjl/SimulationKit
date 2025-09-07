@@ -55,7 +55,7 @@ Simulation Lifecycle
     - [ ] Generic entities and events
     - [ ] Entity identity
 - [ ] Record simulation statistics
-- [ ] Add `CentralBank` to set policy risk-free rate
+- [x] Add `CentralBank` to set policy risk-free rate
 - [ ] Add `Company` economic agent
 - [ ] Add `Household` economic agent
 - [ ] Add utility calculations
