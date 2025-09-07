@@ -8,11 +8,6 @@ import Foundation
 struct Tick {
     let tickDuration: UInt32
     let time: UInt32
-
-    func tick() -> Tick {
-        let next = time + tickDuration
-        return Tick(tickDuration: tickDuration, time: next)
-    }
 }
 
 extension Decimal {
