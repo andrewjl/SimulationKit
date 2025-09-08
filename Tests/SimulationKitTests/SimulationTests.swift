@@ -596,7 +596,7 @@ final class SimulationTests: XCTestCase {
             ledgers: [],
             banks: [
                 Bank(
-                    riskFreeRate: 4
+                    loanRate: 5
                 ),
             ],
             centralBank: CentralBank(
@@ -665,14 +665,6 @@ final class SimulationTests: XCTestCase {
             period: 2
         )
 
-        thirdSuccessorState.banks.forEach { bank in
-            XCTAssertEqual(
-                bank.riskFreeRate,
-                4,
-                "Expected default risk free rate of 4%"
-            )
-        }
-
         let fourthSuccessorState = thirdSuccessorState.applying(
             event: .centralBankEvent(
                 event: .changeRiskFreeRate(
@@ -686,14 +678,6 @@ final class SimulationTests: XCTestCase {
             thirdSuccessorState,
             fourthSuccessorState
         )
-
-        fourthSuccessorState.banks.forEach { bank in
-            XCTAssertEqual(
-                bank.riskFreeRate,
-                3,
-                "Expected risk free rate of 3%"
-            )
-        }
     }
 }
 

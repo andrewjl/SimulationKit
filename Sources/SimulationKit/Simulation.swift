@@ -16,7 +16,6 @@ class StateGenerator {
         let bank = Bank(
             ledger: .make(at: 0),
             eventCaptures: [],
-            riskFreeRate: 0,
             loanRate: 0,
             accounts: [:]
         )
@@ -82,7 +81,6 @@ class Simulation {
                     ledgers: ledgers,
                     banks: banks + [
                         Bank(
-                            riskFreeRate: centralBank.riskFreeRate,
                             loanRate: centralBank.riskFreeRate,
                             startingCapital: startingCapital,
                             startingPeriod: period,
@@ -100,32 +98,14 @@ class Simulation {
                     centralBank: centralBank
                 )
             case .centralBankEvent(event: let centralBankEvent):
-                if case let CentralBank.Event.changeRiskFreeRate(rate: rate) = centralBankEvent {
-                    return State(
-                        ledgers: ledgers,
-                        banks: banks.map {
-                            $0.changeRiskFreeRate(
-                                to: rate,
-                                period: period
-                            )
-                        },
-                        centralBank: centralBank.apply(
-                            event: centralBankEvent,
-                            at: period
-                        )
+                return State(
+                    ledgers: ledgers,
+                    banks: banks,
+                    centralBank: centralBank.apply(
+                        event: centralBankEvent,
+                        at: period
                     )
-                } else {
-                    return State(
-                        ledgers: ledgers,
-                        banks: banks,
-                        centralBank: centralBank.apply(
-                            event: centralBankEvent,
-                            at: period
-                        )
-                    )
-                }
-
-
+                )
             }
         }
     }

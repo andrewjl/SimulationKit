@@ -11,7 +11,6 @@ import XCTest
 final class BankTests: XCTestCase {
     func testBankCreation() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7,
             startingCapital: 10_000,
             startingPeriod: 1
@@ -20,11 +19,6 @@ final class BankTests: XCTestCase {
         XCTAssertEqual(
             bank.ledger.currentBalance(),
             0
-        )
-
-        XCTAssertEqual(
-            bank.riskFreeRate,
-            5
         )
 
         XCTAssertEqual(
@@ -94,20 +88,13 @@ final class BankTests: XCTestCase {
 
     func testBankCreationDefaults() throws {
         XCTAssertEqual(
-            Bank().riskFreeRate,
-            .zero
-        )
-
-        XCTAssertEqual(
             Bank().loanRate,
             .zero
         )
     }
 
     func testReceiveEquityCapital() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .receiveEquityCapital(
             amount: 10_000.0,
             period: 0
@@ -135,9 +122,7 @@ final class BankTests: XCTestCase {
     }
 
     func testBankAccountCreation() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        )
+        var bank = Bank()
 
         bank = bank.depositCash(
             from: 2,
@@ -175,9 +160,7 @@ final class BankTests: XCTestCase {
     }
 
     func testOpenAccount() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -199,9 +182,7 @@ final class BankTests: XCTestCase {
     }
 
     func testOpenAccountTwice() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -227,9 +208,7 @@ final class BankTests: XCTestCase {
     }
 
     func testCloseAccount() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -259,9 +238,7 @@ final class BankTests: XCTestCase {
     }
 
     func testCloseAccountWithNonZeroBalance() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        )
+        var bank = Bank()
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -292,7 +269,7 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueDepositInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
+            rate: 5,
             period: 2
         )
 
@@ -322,8 +299,7 @@ final class BankTests: XCTestCase {
 
     func testCloseAccountNoAccount() throws {
         let bank = Bank(
-            riskFreeRate: 5,
-            loanRate: 6,
+            loanRate: 5,
             startingCapital: 10_000
         )
         .closeAccount(
@@ -338,9 +314,7 @@ final class BankTests: XCTestCase {
     }
 
     func testReopenAccount() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -373,36 +347,8 @@ final class BankTests: XCTestCase {
         )
     }
 
-    func testRiskFreeRateChange() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        )
-        
-        bank = bank.changeRiskFreeRate(
-            to: 10,
-            period: 1
-        )
-
-        XCTAssertEqual(
-            bank.riskFreeRate,
-            10
-        )
-
-        XCTAssertEqual(
-            bank.loanRate,
-            5
-        )
-
-        XCTAssertEqual(
-            bank.eventCaptures.count,
-            1
-        )
-    }
-
     func testDepositCash() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        )
+        var bank = Bank()
 
         bank = bank.depositCash(
             from: 2,
@@ -441,9 +387,7 @@ final class BankTests: XCTestCase {
     }
 
     func testProvideLoan() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .provideLoan(
             to: 2,
             amount: 100.0,
@@ -482,7 +426,7 @@ final class BankTests: XCTestCase {
 
     func testLoanInterestAccrual() throws {
         var bank = Bank(
-            riskFreeRate: 5
+            loanRate: 5
         )
         .provideLoan(
             to: 2,
@@ -555,7 +499,7 @@ final class BankTests: XCTestCase {
 
     func testLoanInterestAccrualMultipleAccounts() throws {
         var bank = Bank(
-            riskFreeRate: 5
+            loanRate: 5
         )
         .provideLoan(
             to: 1,
@@ -665,9 +609,7 @@ final class BankTests: XCTestCase {
     }
 
     func testLoanInterestAccrualNoAccount() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .provideLoan(
             to: 1,
             amount: 100.0,
@@ -699,16 +641,14 @@ final class BankTests: XCTestCase {
     }
 
     func testDepositAccountInterestAccrual() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        )
+        var bank = Bank()
 
         bank = bank.depositCash(
             from: 2,
             amount: 100.0,
             at: 0
         ).accrueDepositInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
+            rate: 5,
             period: 1
         )
 
@@ -726,11 +666,7 @@ final class BankTests: XCTestCase {
             105.00
         )
 
-        bank = bank.changeRiskFreeRate(
-            to: 10,
-            period: 1
-        )
-        .accrueDepositInterestOnAllAccounts(
+        bank = bank.accrueDepositInterestOnAllAccounts(
             rate: 10,
             period: 2
         )
@@ -752,7 +688,7 @@ final class BankTests: XCTestCase {
 
     func testDepositAccountInterestAccrualWhenEmpty() throws {
         var bank = Bank(
-            riskFreeRate: 5
+            loanRate: 5
         )
 
         bank = bank.depositCash(
@@ -777,7 +713,7 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueDepositInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
+            rate: 5,
             period: 1
         )
 
@@ -799,7 +735,7 @@ final class BankTests: XCTestCase {
 
     func testDepositAccountInterestAccrualMultipleAccounts() throws {
         var bank = Bank(
-            riskFreeRate: 5
+            loanRate: 5
         )
         .depositCash(
             from: 1,
@@ -856,7 +792,7 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueDepositInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
+            rate: 5,
             period: 1
         )
 
@@ -906,7 +842,7 @@ final class BankTests: XCTestCase {
 
     func testDepositAccountInterestAccrualNoAccount() throws {
         let bank = Bank(
-            riskFreeRate: 5
+            loanRate: 5
         )
         .depositCash(
             from: 1,
@@ -945,7 +881,6 @@ final class BankTests: XCTestCase {
 
     func testDepositAccountAndLoanCombinedInterestAccrual() throws {
         var bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7
         )
         .depositCash(
@@ -983,7 +918,7 @@ final class BankTests: XCTestCase {
             period: 2,
         )
         .accrueDepositInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
+            rate: 5,
             period: 2
         )
 
@@ -1025,7 +960,6 @@ final class BankTests: XCTestCase {
 
     func testReceivePaymentPrincipalAndInterest() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7
         )
         .provideLoan(
@@ -1116,7 +1050,6 @@ final class BankTests: XCTestCase {
 
     func testReceivePaymentPartialInterestOnly() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 20
         )
         .provideLoan(
@@ -1194,7 +1127,6 @@ final class BankTests: XCTestCase {
 
     func testReceivePaymentMultipleAccounts() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7
         )
         .provideLoan(
@@ -1301,7 +1233,6 @@ final class BankTests: XCTestCase {
 
     func testReceivePaymentNoAccount() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7,
             startingCapital: 100_000.0
         )
@@ -1347,7 +1278,6 @@ final class BankTests: XCTestCase {
 
     func testWithdrawCash() throws {
         var bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7,
             startingCapital: 1_000.0
         )
@@ -1401,7 +1331,7 @@ final class BankTests: XCTestCase {
         )
 
         bank = bank.accrueDepositInterestOnAllAccounts(
-            rate: bank.riskFreeRate,
+            rate: 5,
             period: 3
         )
 
@@ -1462,7 +1392,6 @@ final class BankTests: XCTestCase {
 
     func testWithdrawCashInsufficientBalance() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7,
             startingCapital: 1_000.0
         )
@@ -1496,7 +1425,6 @@ final class BankTests: XCTestCase {
 
     func testWithdrawCashMultipleAccounts() throws {
         var bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7,
             startingCapital: 1_000.0
         )
@@ -1639,7 +1567,6 @@ final class BankTests: XCTestCase {
 
     func testWithdrawCashNoAccount() throws {
         let bank = Bank(
-            riskFreeRate: 5,
             loanRate: 7,
             startingCapital: 1_000_000
         )
@@ -1701,9 +1628,7 @@ final class BankTests: XCTestCase {
     }
 
     func testTransfer() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        )
+        var bank = Bank()
         .depositCash(
             from: 1,
             amount: 500.0,
@@ -1853,9 +1778,7 @@ final class BankTests: XCTestCase {
     }
 
     func testTransferInsufficientBalance() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .depositCash(
             from: 1,
             amount: 500.0,
@@ -1942,9 +1865,7 @@ final class BankTests: XCTestCase {
     }
 
     func testTransferMissingDestinationAccount() throws {
-        let bank = Bank(
-            riskFreeRate: 5
-        )
+        let bank = Bank()
         .depositCash(
             from: 1,
             amount: 500.0,
@@ -2036,7 +1957,7 @@ final class BankTests: XCTestCase {
 
     func testApplyingBankEvent() throws {
         let bank = Bank(
-            riskFreeRate: 5
+            loanRate: 5
         ).applying(
             event: .receiveEquityCapital(
                 amount: 1_000_000.0
@@ -2059,11 +1980,6 @@ final class BankTests: XCTestCase {
                 accountHolderID: 1
             ),
             at: 1
-        ).applying(
-            event: .changeRiskFreeRate(
-                rate: 6
-            ),
-            at: 2
         ).applying(
             event: .accrueDepositInterest(
                 rate: 6,
@@ -2247,7 +2163,9 @@ final class BankTests: XCTestCase {
     }
 
     func testBankIncomeStatement() throws {
-        var bank = Bank(riskFreeRate: 5).openAccount(
+        var bank = Bank(
+            loanRate: 5
+        ).openAccount(
             accountHolderID: 1,
             period: 0
         ).depositCash(
@@ -2289,9 +2207,7 @@ final class BankTests: XCTestCase {
     }
 
     func testInvalidBankIncomeStatementMissingInterestExpenseAccounts() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        ).openAccount(
+        var bank = Bank().openAccount(
             accountHolderID: 1,
             period: 0
         ).depositCash(
@@ -2337,9 +2253,7 @@ final class BankTests: XCTestCase {
     }
 
     func testInvalidBankIncomeStatementMissingInterestRevenueAccounts() throws {
-        var bank = Bank(
-            riskFreeRate: 5
-        ).openAccount(
+        var bank = Bank().openAccount(
             accountHolderID: 1,
             period: 0
         ).provideLoan(

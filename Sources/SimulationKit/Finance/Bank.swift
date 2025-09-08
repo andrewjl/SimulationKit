@@ -170,7 +170,6 @@ struct Bank: Equatable {
     var ledger: Ledger
     var eventCaptures: [Capture<Event>] = []
 
-    var riskFreeRate: Int
     var loanRate: Int
 
     var accounts: [UInt: Account] = [:]
@@ -225,7 +224,6 @@ struct Bank: Equatable {
         case loanProvision(amount: Decimal, accountHolderID: UInt)
         case accrueDepositInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
         case accrueLoanInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
-        case changeRiskFreeRate(rate: Int)
         case receiveLoanPayment(amount: Decimal, accountHolderID: UInt)
         case withdrawCash(amount: Decimal, accountHolderID: UInt)
         case transfer(amount: Decimal, originAccountHolderID: UInt, destinationAccountHolderID: UInt)
@@ -275,7 +273,6 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: accounts
         )
@@ -304,7 +301,6 @@ struct Bank: Equatable {
                         timestamp: period
                     )
                 ],
-                riskFreeRate: riskFreeRate,
                 loanRate: loanRate,
                 accounts: updatedAccounts
             )
@@ -325,7 +321,6 @@ struct Bank: Equatable {
                         timestamp: period
                     )
                 ],
-                riskFreeRate: riskFreeRate,
                 loanRate: loanRate,
                 accounts: updatedAccounts
             )
@@ -359,7 +354,6 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: updatedAccounts
         )
@@ -442,7 +436,6 @@ struct Bank: Equatable {
             eventCaptures: eventCaptures + newlyRecordedEvents.map {
                 Capture(entity: $0, timestamp: period)
             },
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: accounts
         )
@@ -526,32 +519,11 @@ struct Bank: Equatable {
             eventCaptures: eventCaptures + newlyRecordedEvents.map {
                 Capture(entity: $0, timestamp: period)
             },
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: accounts
         )
 
         return bank
-    }
-
-    func changeRiskFreeRate(
-        to rate: Int,
-        period: UInt32
-    ) -> Self {
-        Self(
-            ledger: ledger,
-            eventCaptures: eventCaptures + [
-                Capture<Event>(
-                    entity: .changeRiskFreeRate(
-                        rate: rate
-                    ),
-                    timestamp: period
-                )
-            ],
-            riskFreeRate: rate,
-            loanRate: loanRate,
-            accounts: accounts
-        )
     }
 
     func accrueDepositInterestOnAllAccounts(
@@ -637,12 +609,12 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: rate,
             loanRate: loanRate,
             accounts: updatedAccounts
         )
     }
 
+    // TODO: Convert loan rate to interest spread and use external risk free rate to accrue interest on loans
     func accrueLoanInterestOnAllAccounts(
         period: UInt32
     ) -> Self {
@@ -731,7 +703,6 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: updatedAccounts
         )
@@ -839,7 +810,6 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: updatedAccounts
         )
@@ -911,7 +881,6 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: updatedAccounts
         )
@@ -1024,7 +993,6 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: updatedAccounts
         )
@@ -1076,11 +1044,6 @@ struct Bank: Equatable {
                 accountHolderID: accountHolderID,
                 period: period
             )
-        case .changeRiskFreeRate(rate: let rate):
-            return changeRiskFreeRate(
-                to: rate,
-                period: period
-            )
         case .receiveLoanPayment(amount: let amount, accountHolderID: let accountHolderID):
             return receivePayment(
                 amount: amount,
@@ -1105,22 +1068,11 @@ struct Bank: Equatable {
 
     init() {
         self.init(
-            riskFreeRate: 0,
             loanRate: 0
         )
     }
 
     init(
-        riskFreeRate: Int
-    ) {
-        self.init(
-            riskFreeRate: riskFreeRate,
-            loanRate: riskFreeRate
-        )
-    }
-
-    init(
-        riskFreeRate: Int,
         loanRate: Int,
         startingCapital: Decimal = .zero,
         startingPeriod: UInt32 = 0,
@@ -1220,7 +1172,6 @@ struct Bank: Equatable {
         self.init(
             ledger: ledger,
             eventCaptures: eventCaptures,
-            riskFreeRate: riskFreeRate,
             loanRate: loanRate,
             accounts: [:]
         )
@@ -1229,13 +1180,11 @@ struct Bank: Equatable {
     init(
         ledger: Ledger,
         eventCaptures: [Capture<Event>],
-        riskFreeRate: Int,
         loanRate: Int,
         accounts: [UInt: Account]
     ) {
         self.ledger = ledger
         self.eventCaptures = eventCaptures
-        self.riskFreeRate = riskFreeRate
         self.loanRate = loanRate
         self.accounts = accounts
     }
