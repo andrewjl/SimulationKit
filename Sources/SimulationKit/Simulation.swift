@@ -13,38 +13,23 @@ class StateGenerator {
     }
 
     static func generate(from initialEvents: [Simulation.Event]) -> Simulation.State {
-        let bank = Bank(
-            ledger: .make(at: 0),
-            eventCaptures: [],
-            loanRate: 0,
-            accounts: [:]
-        )
-        let ledgers = ledgers(from: initialEvents)
-
-        return Simulation.State(
-            ledgers: ledgers,
-            banks: [bank],
+        var state = Simulation.State(
+            ledgers: [],
+            banks: [],
             centralBank: CentralBank(
                 riskFreeRate: 0,
                 eventCaptures: []
             )
         )
-    }
 
-    static func ledgers(
-        from initialEvents: [Simulation.Event]
-    ) -> [Ledger] {
-        var ledgers = [String: Ledger]()
-
-        for case let Simulation.Event.createEmptyLedger(ledgerID) in initialEvents {
-            ledgers[ledgerID] = Ledger(id: ledgerID, generalJournal: [])
+        for event in initialEvents {
+            state = state.applying(
+                event: event,
+                period: 0
+            )
         }
 
-        for case let Simulation.Event.ledgerEvent(event: event, ledgerID: ledgerID) in initialEvents {
-            ledgers[ledgerID] = ledgers[ledgerID]?.applying(event: event, at: 0)
-        }
-
-        return Array<Ledger>(ledgers.values)
+        return state
     }
 }
 
