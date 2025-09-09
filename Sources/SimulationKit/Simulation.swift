@@ -5,34 +5,6 @@
 
 import Foundation
 
-class StateGenerator {
-    static func generate(from model: ConceptualModel) -> Simulation.State {
-        self.generate(
-            from: model.initialEvents()
-        )
-    }
-
-    static func generate(from initialEvents: [Simulation.Event]) -> Simulation.State {
-        var state = Simulation.State(
-            ledgers: [],
-            banks: [],
-            centralBank: CentralBank(
-                riskFreeRate: 0,
-                eventCaptures: []
-            )
-        )
-
-        for event in initialEvents {
-            state = state.applying(
-                event: event,
-                period: 0
-            )
-        }
-
-        return state
-    }
-}
-
 class Simulation {
     struct State {
         var ledgers: [Ledger]
@@ -108,8 +80,24 @@ class Simulation {
     init(
         model: ConceptualModel
     ) {
+        var state = Simulation.State(
+            ledgers: [],
+            banks: [],
+            centralBank: CentralBank(
+                riskFreeRate: 0,
+                eventCaptures: []
+            )
+        )
+
+        for event in model.initialEvents() {
+            state = state.applying(
+                event: event,
+                period: 0
+            )
+        }
+
         self.capture = Capture(
-            entity: StateGenerator.generate(from: model),
+            entity: state,
             timestamp: Clock.startingTime
         )
 

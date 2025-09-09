@@ -223,58 +223,6 @@ final class SimulationTests: XCTestCase {
         )
     }
 
-    func testStateGenerator() throws {
-        let initialEvents: [Simulation.Event] = [
-            Simulation.Event.createEmptyLedger(
-                ledgerID: "0"
-            ),
-            Simulation.Event.ledgerEvent(
-                event: .createAsset(
-                    name: "",
-                    accountID: "1"
-                ),
-                ledgerID: "0"
-            ),
-            Simulation.Event.ledgerEvent(
-                event: .postAsset(
-                    transaction: .debited(by: 100.0),
-                    accountID: "1"
-                ),
-                ledgerID: "0"
-            ),
-            Simulation.Event.ledgerEvent(
-                event: .createLiability(
-                    name: "",
-                    accountID: "2"
-                ),
-                ledgerID: "0"
-            ),
-            Simulation.Event.ledgerEvent(
-                event: .postLiability(
-                    transaction: .credited(by: 100.0),
-                    accountID: "2"
-                ),
-                ledgerID: "0"
-            ),
-        ]
-
-        let state = StateGenerator.generate(from: initialEvents)
-
-        XCTAssertEqual(
-            state.ledgers.count,
-            1
-        )
-
-        let ledger = try XCTUnwrap(
-            state.ledgers.first(where: { $0.id == "0" })
-        )
-
-        XCTAssertEqual(
-            ledger.currentBalance(),
-            0.0
-        )
-    }
-
     func testModel() throws {
 
         let plannedEvents = [
