@@ -38,7 +38,7 @@ class Simulation {
                     ledgers: ledgers,
                     banks: banks + [
                         Bank(
-                            loanRate: centralBank.riskFreeRate,
+                            loanRateSpread: centralBank.riskFreeRate,
                             startingCapital: startingCapital,
                             startingPeriod: period,
                             bankLedgerID: bankLedgerID

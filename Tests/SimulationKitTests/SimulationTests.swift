@@ -544,7 +544,7 @@ final class SimulationTests: XCTestCase {
             ledgers: [],
             banks: [
                 Bank(
-                    loanRate: 5
+                    loanRateSpread: 5
                 ),
             ],
             centralBank: CentralBank(

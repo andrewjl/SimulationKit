@@ -56,6 +56,7 @@ Simulation Lifecycle
     - [ ] Entity identity
 - [ ] Record simulation statistics
 - [x] Add `CentralBank` to set policy risk-free rate
+- [x] Compute bank loan interest with spread against risk-free rate
 - [ ] Add `Company` economic agent
 - [ ] Add `Household` economic agent
 - [ ] Add utility calculations

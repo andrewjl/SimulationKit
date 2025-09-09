@@ -121,7 +121,8 @@ struct Bank: Equatable {
     var ledger: Ledger
     var eventCaptures: [Capture<Event>] = []
 
-    var loanRate: Int
+    // TODO: Separate spread for each loan based on creditworthiness
+    var loanRateSpread: Int
 
     var accounts: [UInt: Account] = [:]
 
@@ -174,7 +175,7 @@ struct Bank: Equatable {
         case cashDeposit(amount: Decimal, accountHolderID: UInt)
         case loanProvision(amount: Decimal, accountHolderID: UInt)
         case accrueDepositInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
-        case accrueLoanInterest(rate: Int, balance: Decimal, accountHolderID: UInt)
+        case accrueLoanInterest(riskFreeRate: Int, loanRateSpread: Int, balance: Decimal, accountHolderID: UInt)
         case receiveLoanPayment(amount: Decimal, accountHolderID: UInt)
         case withdrawCash(amount: Decimal, accountHolderID: UInt)
         case transfer(amount: Decimal, originAccountHolderID: UInt, destinationAccountHolderID: UInt)
@@ -224,7 +225,7 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: accounts
         )
     }
@@ -252,7 +253,7 @@ struct Bank: Equatable {
                         timestamp: period
                     )
                 ],
-                loanRate: loanRate,
+                loanRateSpread: loanRateSpread,
                 accounts: updatedAccounts
             )
         } else {
@@ -272,7 +273,7 @@ struct Bank: Equatable {
                         timestamp: period
                     )
                 ],
-                loanRate: loanRate,
+                loanRateSpread: loanRateSpread,
                 accounts: updatedAccounts
             )
         }
@@ -305,7 +306,7 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: updatedAccounts
         )
     }
@@ -387,7 +388,7 @@ struct Bank: Equatable {
             eventCaptures: eventCaptures + newlyRecordedEvents.map {
                 Capture(entity: $0, timestamp: period)
             },
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: accounts
         )
 
@@ -470,7 +471,7 @@ struct Bank: Equatable {
             eventCaptures: eventCaptures + newlyRecordedEvents.map {
                 Capture(entity: $0, timestamp: period)
             },
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: accounts
         )
 
@@ -560,13 +561,13 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: updatedAccounts
         )
     }
 
-    // TODO: Convert loan rate to interest spread and use external risk free rate to accrue interest on loans
     func accrueLoanInterestOnAllAccounts(
+        riskFreeRate: Int,
         period: UInt32
     ) -> Self {
         var result = self
@@ -576,7 +577,8 @@ struct Bank: Equatable {
             $0.value.loanReceivables.currentBalance() > 0
         }) {
             result = result.accrueLoanInterest(
-                rate: loanRate,
+                riskFreeRate: riskFreeRate,
+                loanRateSpread: loanRateSpread,
                 balance: account.loanReceivables.currentBalance(),
                 accountHolderID: id,
                 period: period
@@ -587,7 +589,8 @@ struct Bank: Equatable {
     }
 
     func accrueLoanInterest(
-        rate: Int,
+        riskFreeRate: Int,
+        loanRateSpread: Int,
         balance: Decimal,
         accountHolderID: UInt,
         period: UInt32
@@ -599,7 +602,7 @@ struct Bank: Equatable {
         var updatedAccounts = accounts
 
         let accruedInterestAmount = balance.decimalizedAdjustment(
-            percentage: rate
+            percentage: riskFreeRate + loanRateSpread
         )
 
         account.ledger = account.ledger.applying(
@@ -647,14 +650,15 @@ struct Bank: Equatable {
             eventCaptures: eventCaptures + [
                 Capture(
                     entity: .accrueLoanInterest(
-                        rate: rate,
+                        riskFreeRate: riskFreeRate,
+                        loanRateSpread: loanRateSpread,
                         balance: balance,
                         accountHolderID: accountHolderID
                     ),
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: updatedAccounts
         )
     }
@@ -761,7 +765,7 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: updatedAccounts
         )
     }
@@ -832,7 +836,7 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: updatedAccounts
         )
     }
@@ -944,7 +948,7 @@ struct Bank: Equatable {
                     timestamp: period
                 )
             ],
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: updatedAccounts
         )
     }
@@ -988,9 +992,10 @@ struct Bank: Equatable {
                 accountHolderID: accountHolderID,
                 period: period
             )
-        case .accrueLoanInterest(rate: let rate, balance: let balance, accountHolderID: let accountHolderID):
+        case .accrueLoanInterest(riskFreeRate: let riskFreeRate, loanRateSpread: let loanRateSpread, balance: let balance, accountHolderID: let accountHolderID):
             return accrueLoanInterest(
-                rate: rate,
+                riskFreeRate: riskFreeRate,
+                loanRateSpread: loanRateSpread,
                 balance: balance,
                 accountHolderID: accountHolderID,
                 period: period
@@ -1019,12 +1024,12 @@ struct Bank: Equatable {
 
     init() {
         self.init(
-            loanRate: 0
+            loanRateSpread: 0
         )
     }
 
     init(
-        loanRate: Int,
+        loanRateSpread: Int,
         startingCapital: Decimal = .zero,
         startingPeriod: UInt32 = 0,
         bankLedgerID: String = UUID().uuidString
@@ -1123,7 +1128,7 @@ struct Bank: Equatable {
         self.init(
             ledger: ledger,
             eventCaptures: eventCaptures,
-            loanRate: loanRate,
+            loanRateSpread: loanRateSpread,
             accounts: [:]
         )
     }
@@ -1131,12 +1136,12 @@ struct Bank: Equatable {
     init(
         ledger: Ledger,
         eventCaptures: [Capture<Event>],
-        loanRate: Int,
+        loanRateSpread: Int,
         accounts: [UInt: Account]
     ) {
         self.ledger = ledger
         self.eventCaptures = eventCaptures
-        self.loanRate = loanRate
+        self.loanRateSpread = loanRateSpread
         self.accounts = accounts
     }
 }
