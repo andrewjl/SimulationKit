@@ -33,12 +33,12 @@ class Simulation {
                     banks: banks,
                     centralBank: centralBank
                 )
-            case .createBank(startingCapital: let startingCapital, bankLedgerID: let bankLedgerID):
+            case .createBank(startingCapital: let startingCapital, loanRateSpread: let loanRateSpread, bankLedgerID: let bankLedgerID):
                 return State(
                     ledgers: ledgers,
                     banks: banks + [
                         Bank(
-                            loanRateSpread: centralBank.riskFreeRate,
+                            loanRateSpread: loanRateSpread,
                             startingCapital: startingCapital,
                             startingPeriod: period,
                             bankLedgerID: bankLedgerID
@@ -180,7 +180,7 @@ extension Simulation {
     enum Event: Equatable {
         case createEmptyLedger(ledgerID: String)
         case ledgerEvent(event: Ledger.Event, ledgerID: String)
-        case createBank(startingCapital: Decimal, bankLedgerID: String)
+        case createBank(startingCapital: Decimal, loanRateSpread: Int, bankLedgerID: String)
         case bankEvent(event: Bank.Event, bankLedgerID: String)
         case centralBankEvent(event: CentralBank.Event)
     }

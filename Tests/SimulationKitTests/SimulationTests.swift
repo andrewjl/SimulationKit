@@ -608,9 +608,19 @@ final class SimulationTests: XCTestCase {
         let thirdSuccessorState = secondSuccessorState.applying(
             event: .createBank(
                 startingCapital: 10_000,
+                loanRateSpread: 1,
                 bankLedgerID: secondBankLedgerID
             ),
             period: 2
+        )
+
+        let newBank = try XCTUnwrap(
+            thirdSuccessorState.banks.last
+        )
+
+        XCTAssertEqual(
+            newBank.loanRateSpread,
+            1
         )
 
         let fourthSuccessorState = thirdSuccessorState.applying(
