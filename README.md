@@ -55,8 +55,22 @@ Simulation Lifecycle
     - [ ] Generic entities and events
     - [ ] Entity identity
 - [ ] Record simulation statistics
+- [x] Support 5 basic account types
+    - [x] Assets
+    - [x] Liabilities
+    - [x] Owners' Equity
+    - [x] Revenue
+    - [x] Expense
+- [x] Bank account openings
+- [x] Bank account closures
+- [x] Separate ledgers for each bank account
+- [x] Deposit interest accrual
+- [x] Loan interest accrual
+- [x] Bank account withdrawls
+- [x] Bank account transfers
 - [x] Add `CentralBank` to set policy risk-free rate
 - [x] Compute bank loan interest with spread against risk-free rate
+- [ ] Per-borrower loan interest spreads
 - [ ] Add `Company` economic agent
 - [ ] Add `Household` economic agent
 - [ ] Add utility calculations
