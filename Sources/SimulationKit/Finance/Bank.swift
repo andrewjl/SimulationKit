@@ -1022,12 +1022,6 @@ struct Bank: Equatable {
         }
     }
 
-    init() {
-        self.init(
-            loanRateSpread: 0
-        )
-    }
-
     init(
         loanRateSpread: Int,
         startingCapital: Decimal = .zero,

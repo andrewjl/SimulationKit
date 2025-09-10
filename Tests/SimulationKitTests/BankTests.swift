@@ -87,14 +87,17 @@ final class BankTests: XCTestCase {
     }
 
     func testBankCreationDefaults() throws {
+        let bank = Bank(loanRateSpread: 5)
+
         XCTAssertEqual(
-            Bank().loanRateSpread,
+            bank.equityCapital.currentBalance(),
             .zero
         )
     }
 
     func testReceiveEquityCapital() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .receiveEquityCapital(
             amount: 10_000.0,
             period: 0
@@ -122,9 +125,9 @@ final class BankTests: XCTestCase {
     }
 
     func testBankAccountCreation() throws {
-        var bank = Bank()
-
-        bank = bank.depositCash(
+        let bank = Bank
+        .fixture
+        .depositCash(
             from: 2,
             amount: 5.0,
             at: 0
@@ -160,7 +163,8 @@ final class BankTests: XCTestCase {
     }
 
     func testOpenAccount() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -182,7 +186,8 @@ final class BankTests: XCTestCase {
     }
 
     func testOpenAccountTwice() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -208,7 +213,8 @@ final class BankTests: XCTestCase {
     }
 
     func testCloseAccount() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -238,7 +244,8 @@ final class BankTests: XCTestCase {
     }
 
     func testCloseAccountWithNonZeroBalance() throws {
-        var bank = Bank()
+        var bank = Bank
+        .fixture
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -314,7 +321,8 @@ final class BankTests: XCTestCase {
     }
 
     func testReopenAccount() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .openAccount(
             accountHolderID: 1,
             period: 1
@@ -348,9 +356,9 @@ final class BankTests: XCTestCase {
     }
 
     func testDepositCash() throws {
-        var bank = Bank()
-
-        bank = bank.depositCash(
+        let bank = Bank
+        .fixture
+        .depositCash(
             from: 2,
             amount: 100.0,
             at: 0
@@ -387,7 +395,8 @@ final class BankTests: XCTestCase {
     }
 
     func testProvideLoan() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .provideLoan(
             to: 2,
             amount: 100.0,
@@ -611,7 +620,8 @@ final class BankTests: XCTestCase {
     }
 
     func testLoanInterestAccrualNoAccount() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .provideLoan(
             to: 1,
             amount: 100.0,
@@ -644,9 +654,9 @@ final class BankTests: XCTestCase {
     }
 
     func testDepositAccountInterestAccrual() throws {
-        var bank = Bank()
-
-        bank = bank.depositCash(
+        var bank = Bank
+        .fixture
+        .depositCash(
             from: 2,
             amount: 100.0,
             at: 0
@@ -1636,7 +1646,8 @@ final class BankTests: XCTestCase {
     }
 
     func testTransfer() throws {
-        var bank = Bank()
+        var bank = Bank
+        .fixture
         .depositCash(
             from: 1,
             amount: 500.0,
@@ -1786,7 +1797,8 @@ final class BankTests: XCTestCase {
     }
 
     func testTransferInsufficientBalance() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .depositCash(
             from: 1,
             amount: 500.0,
@@ -1873,7 +1885,8 @@ final class BankTests: XCTestCase {
     }
 
     func testTransferMissingDestinationAccount() throws {
-        let bank = Bank()
+        let bank = Bank
+        .fixture
         .depositCash(
             from: 1,
             amount: 500.0,
@@ -2217,7 +2230,9 @@ final class BankTests: XCTestCase {
     }
 
     func testInvalidBankIncomeStatementMissingInterestExpenseAccounts() throws {
-        var bank = Bank().openAccount(
+        var bank = Bank
+        .fixture
+        .openAccount(
             accountHolderID: 1,
             period: 0
         ).depositCash(
@@ -2263,7 +2278,9 @@ final class BankTests: XCTestCase {
     }
 
     func testInvalidBankIncomeStatementMissingInterestRevenueAccounts() throws {
-        var bank = Bank().openAccount(
+        var bank = Bank
+        .fixture
+        .openAccount(
             accountHolderID: 1,
             period: 0
         ).provideLoan(
