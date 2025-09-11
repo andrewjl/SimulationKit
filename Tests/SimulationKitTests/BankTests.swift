@@ -87,12 +87,35 @@ final class BankTests: XCTestCase {
     }
 
     func testBankCreationDefaults() throws {
-        let bank = Bank(loanRateSpread: 5)
+        let loanRateSpread = 5
+
+        let bank = Bank(
+            loanRateSpread: loanRateSpread
+        )
+
+        XCTAssertEqual(
+            bank.loanRateSpread,
+            loanRateSpread
+        )
 
         XCTAssertEqual(
             bank.equityCapital.currentBalance(),
             .zero
         )
+
+        bank.eventCaptures.forEach {
+            XCTAssertEqual(
+                $0.timestamp,
+                0
+            )
+        }
+
+        bank.ledger.generalJournal.forEach {
+            XCTAssertEqual(
+                $0.timestamp,
+                0
+            )
+        }
     }
 
     func testReceiveEquityCapital() throws {
