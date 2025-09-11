@@ -77,27 +77,22 @@ class Simulation {
     var totalPeriods: UInt32
     var plannedEvents: [Capture<Event>]
 
-    init(
-        model: ConceptualModel
-    ) {
-        var state = Simulation.State(
-            ledgers: [],
-            banks: [],
-            centralBank: CentralBank(
-                riskFreeRate: 0,
-                eventCaptures: []
-            )
-        )
+    let model: Model
 
-        for event in model.initialEvents() {
-            state = state.applying(
-                event: event,
-                period: 0
-            )
-        }
+    init(
+        model: Model
+    ) {
+        self.model = model
 
         self.capture = Capture(
-            entity: state,
+            entity: Simulation.State(
+                ledgers: [],
+                banks: [],
+                centralBank: CentralBank(
+                    riskFreeRate: 0,
+                    eventCaptures: []
+                )
+            ),
             timestamp: Clock.startingTime
         )
 
@@ -109,6 +104,20 @@ class Simulation {
         guard tick.time == Clock.startingTime else {
             fatalError("Can only start simulation once.")
         }
+
+        var state = state
+
+        for event in model.initialEvents() {
+            state = state.applying(
+                event: event,
+                period: tick.time
+            )
+        }
+
+        self.capture = Capture(
+            entity: state,
+            timestamp: tick.time
+        )
 
         let events: [Simulation.Event] = []
         let capture = SimulationCapture(entity: (state: state, events: events), timestamp: tick.time)
