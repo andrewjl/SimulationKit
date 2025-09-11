@@ -10,8 +10,10 @@ class ConceptualModel {
     var plannedEvents: [Capture<Simulation.Event>]
 
     init(
+        duration: UInt32,
         plannedEvents: [Capture<Simulation.Event>] = []
     ) {
+        self.duration = duration
         self.plannedEvents = plannedEvents
     }
 

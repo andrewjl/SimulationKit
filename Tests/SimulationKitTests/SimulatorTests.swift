@@ -8,7 +8,7 @@ import XCTest
 
 final class SimulatorTests: XCTestCase {
     func testSimulationDuration() throws {
-        let model = Model()
+        let model = Model(duration: 1)
         let simulator = Simulator()
         let runs = simulator.execute(
             model: model,
@@ -37,6 +37,7 @@ final class SimulatorTests: XCTestCase {
             UUID().uuidString,
         ]
         let model = Model(
+            duration: 1,
             plannedEvents: [
                 Capture(
                     entity: Simulation.Event.createEmptyLedger(
@@ -150,6 +151,7 @@ final class SimulatorTests: XCTestCase {
     func testMultipleRuns() {
         let ledgersCount = 1
         let model = Model.makeModel(
+            duration: 1,
             plannedEvents: [
                 Capture(
                     entity: Simulation.Event.createEmptyLedger(

@@ -66,13 +66,14 @@ class Simulation {
             }
         }
     }
-    private var capture: Capture<State>
-    var state: State {
-        capture.entity
+
+    enum ExecutionMode: Equatable {
+        case ready
+        case started(Capture<State>)
+        case completed(Capture<State>)
     }
-    var currentTime: UInt32 {
-        capture.timestamp + 1
-    }
+
+    var executionMode: ExecutionMode
 
     var totalPeriods: UInt32
     var plannedEvents: [Capture<Event>]
@@ -83,9 +84,20 @@ class Simulation {
         model: Model
     ) {
         self.model = model
+        self.executionMode = .ready
+        self.totalPeriods = model.duration
+        self.plannedEvents = model.plannedEvents
+    }
 
-        self.capture = Capture(
-            entity: Simulation.State(
+    func start(tick: Tick) throws -> Step {
+        guard case .ready = executionMode else {
+            throw Error(
+                description:"Can only start simulation once."
+            )
+        }
+
+        return successiveStep(
+            currentState: Simulation.State(
                 ledgers: [],
                 banks: [],
                 centralBank: CentralBank(
@@ -93,65 +105,53 @@ class Simulation {
                     eventCaptures: []
                 )
             ),
-            timestamp: Clock.startingTime
+            tick: tick
         )
-
-        self.totalPeriods = model.duration
-        self.plannedEvents = model.plannedEvents
     }
 
-    func start(tick: Tick) -> Step {
-        guard tick.time == Clock.startingTime else {
-            fatalError("Can only start simulation once.")
+    func tick(_ tick: Tick) throws -> Step {
+        guard case .started(let capture) = executionMode else {
+            throw Error(description:"Simulation not started yet.")
         }
 
-        var state = state
+        guard tick.time == capture.timestamp + tick.tickDuration else {
+            throw Error(description:"Simulation not synchronized.")
+        }
 
-        for event in model.initialEvents() {
-            state = state.applying(
-                event: event,
-                period: tick.time
+        let step = successiveStep(
+            currentState: capture.entity,
+            tick: tick
+        )
+
+        if step.isFinal {
+            self.executionMode = .completed(
+                Capture(
+                    entity: step.capture.entity.state,
+                    timestamp: step.capture.timestamp
+                )
             )
         }
 
-        self.capture = Capture(
-            entity: state,
-            timestamp: tick.time
-        )
-
-        let events: [Simulation.Event] = []
-        let capture = SimulationCapture(entity: (state: state, events: events), timestamp: tick.time)
-
-        return Step(
-            capture: capture,
-            totalPeriods: totalPeriods
-        )
+        return step
     }
 
-    func tick(_ tick: Tick) -> Step {
-        guard tick.time > Clock.startingTime else {
-            fatalError("Simulation not started yet.")
-        }
+    func successiveStep(
+        currentState: State,
+        tick: Tick
+    ) -> Step {
+        let events = upcomingEvents(tick: tick)
+        let successiveState = events.reduce(currentState, { $0.applying(event: $1, period: tick.time) })
 
-        guard tick.time == currentTime else {
-            fatalError("Simulation not synchronized.")
-        }
-
-        return successiveStep(tick: tick)
-    }
-
-    func successiveStep(tick: Tick) -> Step {
-        let events = upcomingEvents(state: state, tick: tick)
-        let successiveState = events.reduce(state, { $0.applying(event: $1, period: tick.time) })
-
-        capture = Capture(
-            entity: successiveState,
-            timestamp: tick.time
+        self.executionMode = .started(
+            Capture(
+                entity: successiveState,
+                timestamp: tick.time
+            )
         )
 
         let simulationCapture = SimulationCapture(
             entity: (
-                state: state,
+                state: successiveState,
                 events: events
             ),
             timestamp: tick.time
@@ -170,10 +170,13 @@ class Simulation {
     }
 
     func upcomingEvents(
-        state: State,
         tick: Tick
     ) -> [Simulation.Event] {
         return preplannedEvents(tick: tick)
+    }
+
+    struct Error: Swift.Error, CustomStringConvertible {
+        var description: String
     }
 }
 

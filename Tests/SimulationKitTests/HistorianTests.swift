@@ -10,7 +10,7 @@ final class HistorianTests: XCTestCase {
     func testOutputFirst() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)
-        let model = Model.makeModel()
+        let model = Model.makeModel(duration: 7)
 
         let runs = simulator.execute(model: model)
         let run = try XCTUnwrap(runs.first)
@@ -27,7 +27,7 @@ final class HistorianTests: XCTestCase {
     func testOutputSecond() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)
-        let model = Model.makeModel()
+        let model = Model.makeModel(duration: 7)
 
         let runs = simulator.execute(model: model)
         let run = try XCTUnwrap(runs.first)
@@ -44,7 +44,7 @@ final class HistorianTests: XCTestCase {
     func testOutputLast() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)
-        let model = Model.makeModel()
+        let model = Model.makeModel(duration: 4)
 
         let runs = simulator.execute(model: model)
         let run = try XCTUnwrap(runs.first)
@@ -69,7 +69,9 @@ final class HistorianTests: XCTestCase {
     func testRecordAccess() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)
-        let model = Model.makeModel()
+        let model = Model.makeModel(
+            duration: 1
+        )
 
         simulator.execute(model: model)
 
@@ -82,7 +84,7 @@ final class HistorianTests: XCTestCase {
     func testReset() throws {
         let historian = Historian()
         let simulator = Simulator(historian: historian)
-        let model = Model.makeModel()
+        let model = Model.makeModel(duration: 1)
 
         simulator.execute(model: model)
 

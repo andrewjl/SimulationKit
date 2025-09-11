@@ -8,11 +8,14 @@ import XCTest
 
 final class SimulationTests: XCTestCase {
     func testSingleRunSteps() throws {
+        var steps: [Step] = []
+
         let ledgersCount = 1
 
         let ledgerID = UUID().uuidString
 
         let model = Model.makeModel(
+            duration: 3,
             plannedEvents: [
                 Capture(
                     entity: Simulation.Event.createEmptyLedger(
@@ -45,48 +48,71 @@ final class SimulationTests: XCTestCase {
         let simulation = Simulation.make(from: model)
         let clock = Clock()
         let tick = clock.next()
-        let initial = simulation.start(tick: tick)
+        steps.append(
+            try simulation.start(tick: tick)
+        )
 
-        XCTAssertEqual(initial.currentPeriod, 0)
-        XCTAssertEqual(initial.totalPeriods, model.duration)
-        XCTAssertEqual(initial.capture.entity.state.ledgers.count, 1)
+        XCTAssertEqual(steps[0].currentPeriod, 0)
+        XCTAssertEqual(steps[0].totalPeriods, model.duration)
+        XCTAssertEqual(steps[0].capture.entity.state.ledgers.count, 1)
 
         XCTAssertEqual(
-            initial.capture.entity.state.ledgers.first?.currentBalance(),
+            steps[0].capture.entity.state.ledgers.first?.currentBalance(),
             400.0
         )
 
         XCTAssertEqual(clock.time, 1)
 
-        let step1 = simulation.tick(clock.next())
+        steps.append(
+            try simulation.tick(clock.next())
+        )
 
-        XCTAssertEqual(step1.currentPeriod, 1)
-        XCTAssertEqual(step1.totalPeriods, model.duration)
-        XCTAssertEqual(step1.capture.entity.state.ledgers.count, ledgersCount)
+        XCTAssertEqual(steps[1].currentPeriod, 1)
+        XCTAssertEqual(steps[1].totalPeriods, model.duration)
+        XCTAssertEqual(steps[1].capture.entity.state.ledgers.count, ledgersCount)
 
         XCTAssertEqual(
-            step1.capture.entity.state.ledgers.first?.currentBalance(),
+            steps[1].capture.entity.state.ledgers.first?.currentBalance(),
             400.0
         )
 
         XCTAssertEqual(clock.time, 2)
 
-        let step2 = simulation.tick(clock.next())
+        steps.append(
+            try simulation.tick(clock.next())
+        )
 
-        XCTAssertEqual(step2.currentPeriod, 2)
-        XCTAssertEqual(step2.totalPeriods, model.duration)
-        XCTAssertEqual(step2.capture.entity.state.ledgers.count, ledgersCount)
+        XCTAssertEqual(steps[2].currentPeriod, 2)
+        XCTAssertEqual(steps[2].totalPeriods, model.duration)
+        XCTAssertFalse(steps[2].isFinal)
+        XCTAssertEqual(steps[2].capture.entity.state.ledgers.count, ledgersCount)
 
         XCTAssertEqual(
-            step2.capture.entity.state.ledgers.first?.currentBalance(),
+            steps[2].capture.entity.state.ledgers.first?.currentBalance(),
             400.0
         )
 
         XCTAssertEqual(clock.time, 3)
+
+        steps.append(
+            try simulation.tick(clock.next())
+        )
+
+        XCTAssertTrue(steps[3].isFinal)
+
+        XCTAssertEqual(
+            simulation.executionMode,
+            .completed(
+                Capture(
+                    entity: steps[3].capture.entity.state,
+                    timestamp: 3
+                )
+            )
+        )
     }
 
     func testClock() throws {
-        let model = Model.makeModel()
+        let model = Model.makeModel(duration: 2)
         let simulation = Simulation.make(from: model)
         let clock = Clock()
 
@@ -95,14 +121,14 @@ final class SimulationTests: XCTestCase {
             Clock.startingTime
         )
 
-        let _ = simulation.start(tick: clock.next())
+        let _ = try simulation.start(tick: clock.next())
 
         XCTAssertEqual(
             clock.time,
             1
         )
 
-        let _ = simulation.tick(clock.next())
+        let _ = try simulation.tick(clock.next())
 
         XCTAssertEqual(
             clock.time,
@@ -118,6 +144,7 @@ final class SimulationTests: XCTestCase {
         let initialAssetsCount:Int = 2
 
         let model = Model.makeModel(
+            duration: 3,
             plannedEvents: [
                 Capture(
                     entity: Simulation.Event.createEmptyLedger(ledgerID: ledgerIDs[0]),
@@ -189,16 +216,16 @@ final class SimulationTests: XCTestCase {
         let simulation = Simulation.make(from: model)
         let clock = Clock()
 
-        let _ = simulation.start(tick: clock.next())
-        _ = simulation.tick(clock.next())
-        _ = simulation.tick(clock.next())
+        let _ = try simulation.start(tick: clock.next())
+        _ = try simulation.tick(clock.next())
+        _ = try simulation.tick(clock.next())
 
         XCTAssertEqual(
             clock.time,
             3
         )
 
-        let elapsedThirdPeriod = simulation.tick(clock.next())
+        let elapsedThirdPeriod = try simulation.tick(clock.next())
 
         XCTAssertEqual(
             clock.time,
@@ -493,6 +520,7 @@ final class SimulationTests: XCTestCase {
         ]
 
         let model = Model(
+            duration: 1,
             plannedEvents: plannedEvents
         )
 

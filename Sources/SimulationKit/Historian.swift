@@ -88,9 +88,9 @@ class Historian {
     func prepare(
         simulation: Simulation,
         startingTick: Tick
-    ) {
+    ) throws {
         process(
-            step: simulation.start(
+            step: try simulation.start(
                 tick: startingTick
             )
         )

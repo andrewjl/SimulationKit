@@ -33,28 +33,38 @@ class Simulator {
     private func run(
         model: Model
     ) -> Run {
-        let execModel = Simulation.make(from: model)
+        let simulation = Simulation.make(from: model)
         let clock = Clock()
 
         var steps: [Step] = []
 
         let tick = clock.next()
 
-        historian.prepare(
-            simulation: execModel,
-            startingTick: tick
-        )
+        do {
+            try historian.prepare(
+                simulation: simulation,
+                startingTick: tick
+            )
+        } catch {
+            print("Unable to start simulation")
+        }
 
         for _ in 0..<model.duration {
-            let step = execModel.tick(clock.next())
-            steps.append(step)
-            historian.process(step: step)
+            do {
+                let step = try simulation.tick(clock.next())
+                steps.append(step)
+                historian.process(step: step)
+            } catch {
+                print("Unable to start simulation")
+            }
         }
 
         let handle = historian.records.last?.id ?? 0
 
+        let finalState = steps[Int(model.duration)-1].capture.entity.state
+
         let run = Run(
-            finalState: execModel.state,
+            finalState: finalState,
             totalPeriods: model.duration,
             handle: handle
         )
