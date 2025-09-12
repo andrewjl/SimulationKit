@@ -3,16 +3,25 @@
 //  SimulationKit
 //
 
-struct CentralBank: Equatable {
+import Foundation
+
+public struct CentralBank: Equatable {
     var eventCaptures: [Capture<Event>] = []
 
-    var riskFreeRate: Int
+    public var riskFreeRate: Int
 
-    enum Event: Equatable {
-        case changeRiskFreeRate(rate: Int)
+    public enum Event: Equatable {
+        case changeRiskFreeRate(id: String, rate: Int)
+
+        var id: String {
+            switch self {
+            case .changeRiskFreeRate(id: let id, rate: _):
+                return id
+            }
+        }
     }
 
-    init(
+    public init(
         riskFreeRate: Int,
         eventCaptures: [Capture<Event>]
     ) {
@@ -29,6 +38,7 @@ struct CentralBank: Equatable {
             eventCaptures: eventCaptures + [
                 Capture(
                     entity: .changeRiskFreeRate(
+                        id: UUID().uuidString,
                         rate: rate
                     ),
                     timestamp: period
@@ -37,12 +47,12 @@ struct CentralBank: Equatable {
         )
     }
 
-    func apply(
+    public func apply(
         event: Event,
         at period: UInt32
     ) -> Self {
         switch event {
-        case .changeRiskFreeRate(rate: let rate):
+        case .changeRiskFreeRate(id: _, rate: let rate):
             return changeRiskFreeRate(
                 rate: rate,
                 at: period

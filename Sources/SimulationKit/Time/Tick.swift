@@ -5,9 +5,9 @@
 
 import Foundation
 
-struct Tick {
-    let tickDuration: UInt32
-    let time: UInt32
+public struct Tick {
+    public let tickDuration: UInt32
+    public let time: UInt32
 }
 
 struct TimeSeries<Quantity> {

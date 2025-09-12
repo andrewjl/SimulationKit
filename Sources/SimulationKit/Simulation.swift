@@ -5,11 +5,11 @@
 
 import Foundation
 
-class Simulation {
-    struct State {
-        var ledgers: [Ledger]
-        var banks: [Bank]
-        var centralBank: CentralBank
+public class Simulation {
+    public struct State {
+        public var ledgers: [Ledger]
+        public var banks: [Bank]
+        public var centralBank: CentralBank
 
         func applying(
             event: Event,
@@ -67,13 +67,13 @@ class Simulation {
         }
     }
 
-    enum ExecutionMode: Equatable {
+    public enum ExecutionMode: Equatable {
         case ready
         case started(Capture<State>)
         case completed(Capture<State>)
     }
 
-    var executionMode: ExecutionMode
+    public var executionMode: ExecutionMode
 
     var totalPeriods: UInt32
     var plannedEvents: [Capture<Event>]
@@ -89,7 +89,7 @@ class Simulation {
         self.plannedEvents = model.plannedEvents
     }
 
-    func start(tick: Tick) throws -> Step {
+    public func start(tick: Tick) throws -> Step {
         guard case .ready = executionMode else {
             throw Error(
                 description:"Can only start simulation once."
@@ -109,7 +109,7 @@ class Simulation {
         )
     }
 
-    func tick(_ tick: Tick) throws -> Step {
+    public func tick(_ tick: Tick) throws -> Step {
         guard case .started(let capture) = executionMode else {
             throw Error(description:"Simulation not started yet.")
         }
@@ -135,7 +135,7 @@ class Simulation {
         return step
     }
 
-    func successiveStep(
+    public func successiveStep(
         currentState: State,
         tick: Tick
     ) -> Step {
@@ -181,7 +181,7 @@ class Simulation {
 }
 
 extension Simulation.State: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.banks == rhs.banks &&
         lhs.ledgers == rhs.ledgers &&
         lhs.centralBank == rhs.centralBank
@@ -189,17 +189,53 @@ extension Simulation.State: Equatable {
 }
 
 extension Simulation {
-    enum Event: Equatable {
+    public enum Event: Equatable {
         case createEmptyLedger(ledgerID: String)
         case ledgerEvent(event: Ledger.Event, ledgerID: String)
         case createBank(startingCapital: Decimal, loanRateSpread: Int, bankLedgerID: String)
         case bankEvent(event: Bank.Event, bankLedgerID: String)
         case centralBankEvent(event: CentralBank.Event)
+
+        public var id: String {
+            switch self {
+            case .createEmptyLedger(ledgerID: let ledgerID):
+                return ledgerID
+            case .ledgerEvent(event: let event, ledgerID: let ledgerID):
+                switch event {
+                case .createAsset(name: let name, accountID: let accountID):
+                    return accountID
+                case .createLiability(name: let name, accountID: let accountID):
+                    return accountID
+                case .createEquity(name: let name, accountID: let accountID):
+                    return accountID
+                case .createRevenue(name: let name, accountID: let accountID):
+                    return accountID
+                case .createExpense(name: let name, accountID: let accountID):
+                    return accountID
+                case .postAsset(transaction: let transaction, accountID: let accountID):
+                    return transaction.id
+                case .postLiability(transaction: let transaction, accountID: let accountID):
+                    return transaction.id
+                case .postEquity(transaction: let transaction, accountID: let accountID):
+                    return transaction.id
+                case .postRevenue(transaction: let transaction, accountID: let accountID):
+                    return transaction.id
+                case .postExpense(transaction: let transaction, accountID: let accountID):
+                    return transaction.id
+                }
+            case .createBank(startingCapital: let startingCapital, loanRateSpread: let loanRateSpread, bankLedgerID: let bankLedgerID):
+                return bankLedgerID
+            case .bankEvent(event: let event, bankLedgerID: let bankLedgerID):
+                return bankLedgerID
+            case .centralBankEvent(event: let event):
+                return event.id
+            }
+        }
     }
 }
 
 extension Simulation {
-    static func make(from model: Model) -> Simulation {
+    public static func make(from model: Model) -> Simulation {
         let simulation = Simulation(
             model: model
         )
@@ -210,14 +246,14 @@ extension Simulation {
 
 typealias SimulationCapture = Capture<(state: Simulation.State, events: [Simulation.Event])>
 
-struct Step {
+public struct Step {
     var capture: SimulationCapture
     var totalPeriods: UInt32
 
-    var currentPeriod: UInt32 {
+    public var currentPeriod: UInt32 {
         capture.timestamp
     }
-    var isFinal: Bool {
+    public var isFinal: Bool {
         return currentPeriod == totalPeriods
     }
 }

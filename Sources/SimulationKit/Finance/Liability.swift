@@ -7,7 +7,7 @@ import Foundation
 
 // Credit: Increase
 // Debit: Decrease
-struct Liability: Equatable {
+public struct Liability: Equatable {
     let id: String
     let name: String
     var transactions: [Self.Transaction] = []
@@ -37,9 +37,18 @@ struct Liability: Equatable {
         return balance
     }
 
-    enum Transaction: Equatable {
+    public enum Transaction: Equatable {
         case credit(id: String, amount: Decimal)
         case debit(id: String, amount: Decimal)
+
+        var id: String {
+            switch self {
+            case .credit(id: let id, amount: _):
+                return id
+            case .debit(id: let id, amount: _):
+                return id
+            }
+        }
 
         var amount: Decimal {
             switch self {

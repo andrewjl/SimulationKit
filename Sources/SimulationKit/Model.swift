@@ -5,11 +5,11 @@
 
 import Foundation
 
-class ConceptualModel {
-    var duration: UInt32 = 7
-    var plannedEvents: [Capture<Simulation.Event>]
+public class ConceptualModel {
+    public var duration: UInt32 = 7
+    public var plannedEvents: [Capture<Simulation.Event>]
 
-    init(
+    public init(
         duration: UInt32,
         plannedEvents: [Capture<Simulation.Event>] = []
     ) {
@@ -17,16 +17,16 @@ class ConceptualModel {
         self.plannedEvents = plannedEvents
     }
 
-    func initialEvents() -> [Simulation.Event] {
+    public func initialEvents() -> [Simulation.Event] {
         events(at: Clock.startingTime)
     }
 
-    func events(at time: UInt32) -> [Simulation.Event] {
+    public func events(at time: UInt32) -> [Simulation.Event] {
         return plannedEvents
             .filter({ $0.timestamp == time })
             .map { $0.entity }
     }
 }
 
-typealias Model = ConceptualModel
+public typealias Model = ConceptualModel
 

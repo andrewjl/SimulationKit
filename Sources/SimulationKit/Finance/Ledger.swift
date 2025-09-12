@@ -11,7 +11,7 @@ extension Array where Array.Element == Ledger {
     }
 }
 
-struct Ledger: Equatable {
+public struct Ledger: Equatable {
     var id: String
     var assets: [Asset] = []
     var liabilities: [Liability] = []
@@ -192,7 +192,7 @@ struct Ledger: Equatable {
         return ledger
     }
 
-    enum Event: Equatable {
+    public enum Event: Equatable {
         case createAsset(name: String, accountID: String)
         case createLiability(name: String, accountID: String)
         case createEquity(name: String, accountID: String)

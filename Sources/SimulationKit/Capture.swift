@@ -5,9 +5,14 @@
 
 import Foundation
 
-struct Capture<Entity> {
-    var entity: Entity
-    var timestamp: UInt32
+public struct Capture<Entity> {
+    public var entity: Entity
+    public var timestamp: UInt32
+
+    public init(entity: Entity, timestamp: UInt32) {
+        self.entity = entity
+        self.timestamp = timestamp
+    }
 }
 
 extension Capture: Equatable where Entity: Equatable {}

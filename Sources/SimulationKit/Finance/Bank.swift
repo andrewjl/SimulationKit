@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Account: Equatable {
+public struct Account: Equatable {
     var accountHolderID: UInt
     var ledger: Ledger
 
@@ -109,7 +109,7 @@ struct Account: Equatable {
     }
 }
 
-struct Bank: Equatable {
+public struct Bank: Equatable {
     static let depositsAccountName: String = "Deposits"
     static let reservesAccountName: String = "Reserves"
     static let loanReceivablesAccountName: String = "Loan Receivables"
@@ -168,7 +168,7 @@ struct Bank: Equatable {
         })!
     }
 
-    enum Event: Equatable {
+    public enum Event: Equatable {
         case receiveEquityCapital(amount: Decimal)
         case openAccount(accountHolderID: UInt)
         case closeAccount(accountHolderID: UInt)

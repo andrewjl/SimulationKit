@@ -5,23 +5,29 @@
 
 import Foundation
 
-class Clock {
-    static let startingTime: UInt32 = 0
+public class Clock {
+    public static let startingTime: UInt32 = 0
 
-    var time: UInt32 = Clock.startingTime
+    public var time: UInt32 = Clock.startingTime
 
-    func next() -> Tick {
+    public init(
+        time: UInt32 = Clock.startingTime
+    ) {
+        self.time = time
+    }
+
+    public func next() -> Tick {
         defer {
             time = time + 1
         }
         return Tick(tickDuration: 1, time: time)
     }
 
-    func current() -> Tick {
+    public func current() -> Tick {
         return Tick(tickDuration: 1, time: time)
     }
 
-    func reset() {
+    public func reset() {
         time = Self.startingTime
     }
 }
